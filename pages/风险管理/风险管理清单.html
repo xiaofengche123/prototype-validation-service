@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>工作台 - 风险管理清单</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body class="page-body">
+<div id="page-content" class="prototype-page" data-page="FXGLQD01">
+
+  <!-- 页面标题 -->
+  <div class="page-header">
+    <div class="page-title">风险管理清单</div>
+    <div class="page-sub">工作台 · 风险事件查询与批量处理</div>
+  </div>
+
+  <!-- 查询条件区 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>查询条件</div>
+      <div class="actions">
+        <button class="btn" data-action="reset">重置</button>
+        <button class="btn btn-primary" data-action="search">查询</button>
+      </div>
+    </div>
+    <div class="query-grid">
+      <div class="form-item">
+        <label>风险分类</label>
+        <select id="qCategory">
+          <option value="">全部</option>
+          <option value="supplier">供应商风险</option>
+          <option value="contract">合同风险</option>
+          <option value="price">价格风险</option>
+          <option value="quality">质量风险</option>
+          <option value="delivery">交付风险</option>
+          <option value="finance">财务风险</option>
+          <option value="compliance">合规风险</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>风险等级</label>
+        <select id="qLevel">
+          <option value="">全部</option>
+          <option value="high">高风险</option>
+          <option value="mid">中风险</option>
+          <option value="low">低风险</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>发现来源</label>
+        <select id="qSource">
+          <option value="">全部</option>
+          <option value="system">系统预警</option>
+          <option value="manual">人工发现</option>
+          <option value="audit">审计发现</option>
+          <option value="external">外部举报</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>责任部门</label>
+        <select id="qDept">
+          <option value="">全部</option>
+          <option value="purchase">采购管理部</option>
+          <option value="quality">质量管理部</option>
+          <option value="finance">财务管理部</option>
+          <option value="legal">法务合规部</option>
+          <option value="production">生产运营部</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>当前状态</label>
+        <select id="qStatus">
+          <option value="">全部</option>
+          <option value="pending">待处理</option>
+          <option value="processing">处理中</option>
+          <option value="review">待审核</option>
+          <option value="closed">已关闭</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>风险编号</label>
+        <input type="text" id="qRiskCode" placeholder="请输入风险编号">
+      </div>
+      <div class="form-item">
+        <label>风险标题</label>
+        <input type="text" id="qRiskTitle" placeholder="请输入风险标题">
+      </div>
+      <div class="form-item">
+        <label>发现时间</label>
+        <div class="date-range">
+          <input type="date" id="qDateFrom">
+          <span class="sep">~</span>
+          <input type="date" id="qDateTo">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 数据表格区 -->
+  <div class="card list-card">
+    <div class="list-toolbar">
+      <div class="title">风险事件列表</div>
+      <div class="actions">
+        <button class="btn btn-sm" data-action="batch-export">批量导出</button>
+        <button class="btn btn-sm" data-action="batch-sign">批量签收</button>
+        <button class="btn btn-sm" data-action="batch-dispatch">批量派单</button>
+      </div>
+    </div>
+    <div class="batch-bar" id="batchBar">
+      <span>已选择 <b id="selCount">0</b> 项</span>
+      <button class="btn btn-sm" data-action="batch-export-sel">批量导出</button>
+      <button class="btn btn-sm" data-action="batch-sign-sel">批量签收</button>
+      <button class="btn btn-sm" data-action="batch-dispatch-sel">批量派单</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px;"><input type="checkbox" id="chkAll"></th>
+            <th>序号</th>
+            <th>风险编号</th>
+            <th>风险标题</th>
+            <th>风险分类</th>
+            <th>风险等级</th>
+            <th>涉及金额(万元)</th>
+            <th>责任部门</th>
+            <th>责任人</th>
+            <th>发现来源</th>
+            <th>当前状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="riskTableBody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span class="total">共 <b id="totalCount">8</b> 条</span>
+      <select class="pg-size" id="pageSize">
+        <option value="10">10条/页</option>
+        <option value="20" selected>20条/页</option>
+        <option value="50">50条/页</option>
+      </select>
+      <span class="pg active">1</span>
+      <span class="pg">2</span>
+      <span class="pg">3</span>
+      <span class="goto">前往 <input type="text" value="1"> 页</span>
+    </div>
+  </div>
+
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+(function() {
+  var riskData = [
+    { id: 1, code: 'FX202412150001', title: '供应商资质异常预警', category: '供应商风险', level: 'mid', amount: '128.50', dept: '采购管理部', person: '张三', source: '系统预警', status: 'pending' },
+    { id: 2, code: 'FX202412140002', title: '合同付款条款风险', category: '合同风险', level: 'high', amount: '560.00', dept: '法务合规部', person: '李四', source: '审计发现', status: 'processing' },
+    { id: 3, code: 'FX202412130003', title: '原材料价格波动预警', category: '价格风险', level: 'low', amount: '45.20', dept: '财务管理部', person: '王五', source: '系统预警', status: 'review' },
+    { id: 4, code: 'FX202412120004', title: '产品质量批次异常', category: '质量风险', level: 'high', amount: '320.80', dept: '质量管理部', person: '赵六', source: '人工发现', status: 'pending' },
+    { id: 5, code: 'FX202412110005', title: '交付延期风险', category: '交付风险', level: 'mid', amount: '89.60', dept: '生产运营部', person: '孙七', source: '系统预警', status: 'closed' },
+    { id: 6, code: 'FX202412100006', title: '供应商关联关系未披露', category: '合规风险', level: 'high', amount: '210.00', dept: '法务合规部', person: '周八', source: '外部举报', status: 'processing' },
+    { id: 7, code: 'FX202412090007', title: '采购成本异常偏高', category: '价格风险', level: 'mid', amount: '156.30', dept: '财务管理部', person: '吴九', source: '审计发现', status: 'pending' },
+    { id: 8, code: 'FX202412080008', title: '供应商环保资质过期', category: '供应商风险', level: 'low', amount: '32.00', dept: '采购管理部', person: '郑十', source: '人工发现', status: 'review' }
+  ];
+
+  var levelMap = { high: '高风险', mid: '中风险', low: '低风险' };
+  var levelClass = { high: 'level-high', mid: 'level-mid', low: 'level-low' };
+  var statusMap = { pending: '待处理', processing: '处理中', review: '待审核', closed: '已关闭' };
+  var statusClass = { pending: 'pending', processing: 'review', review: 'review', closed: 'pass' };
+  var sourceMap = { system: '系统预警', manual: '人工发现', audit: '审计发现', external: '外部举报' };
+
+  var selectedIds = new Set();
+
+  function renderTable() {
+    var html = riskData.map(function(r) {
+      var checked = selectedIds.has(r.id) ? 'checked' : '';
+      return '<tr>' +
+        '<td><input type="checkbox" class="row-chk" data-id="' + r.id + '" ' + checked + '></td>' +
+        '<td>' + r.id + '</td>' +
+        '<td><span class="link" data-nav="FXSJ01">' + r.code + '</span></td>' +
+        '<td class="text-left">' + r.title + '</td>' +
+        '<td>' + r.category + '</td>' +
+        '<td><span class="level-tag ' + levelClass[r.level] + '">' + levelMap[r.level] + '</span></td>' +
+        '<td>' + r.amount + '</td>' +
+        '<td>' + r.dept + '</td>' +
+        '<td>' + r.person + '</td>' +
+        '<td>' + sourceMap[r.source] + '</td>' +
+        '<td><span class="tag ' + statusClass[r.status] + '"><span class="td"></span>' + statusMap[r.status] + '</span></td>' +
+        '<td>' +
+          '<button class="op blue" data-action="view-detail" data-nav="FXSJ01">查看</button>' +
+          '<button class="op blue" data-action="edit-row">编辑</button>' +
+        '</td>' +
+      '</tr>';
+    }).join('');
+    document.getElementById('riskTableBody').innerHTML = html;
+    bindRowChecks();
+  }
+
+  function bindRowChecks() {
+    document.querySelectorAll('.row-chk').forEach(function(chk) {
+      chk.addEventListener('change', function() {
+        var id = parseInt(this.dataset.id);
+        if (this.checked) selectedIds.add(id);
+        else selectedIds.delete(id);
+        updateBatchBar();
+      });
+    });
+  }
+
+  function updateBatchBar() {
+    var count = selectedIds.size;
+    document.getElementById('selCount').textContent = count;
+    var listCard = document.querySelector('.list-card');
+    if (count > 0) listCard.classList.add('has-sel');
+    else listCard.classList.remove('has-sel');
+  }
+
+  document.getElementById('chkAll').addEventListener('change', function() {
+    if (this.checked) {
+      riskData.forEach(function(r) { selectedIds.add(r.id); });
+    } else {
+      selectedIds.clear();
+    }
+    renderTable();
+    updateBatchBar();
+  });
+
+  PR.on('search', function() { PR.toast('查询完成'); renderTable(); });
+  PR.on('reset', function() {
+    document.getElementById('qCategory').value = '';
+    document.getElementById('qLevel').value = '';
+    document.getElementById('qSource').value = '';
+    document.getElementById('qDept').value = '';
+    document.getElementById('qStatus').value = '';
+    document.getElementById('qRiskCode').value = '';
+    document.getElementById('qRiskTitle').value = '';
+    document.getElementById('qDateFrom').value = '';
+    document.getElementById('qDateTo').value = '';
+    selectedIds.clear();
+    updateBatchBar();
+    renderTable();
+    PR.toast('已重置');
+  });
+  PR.on('batch-export', function() { PR.toast('批量导出'); });
+  PR.on('batch-sign', function() { PR.toast('批量签收'); });
+  PR.on('batch-dispatch', function() { PR.toast('批量派单'); });
+  PR.on('batch-export-sel', function() { PR.toast('已选 ' + selectedIds.size + ' 项，批量导出'); });
+  PR.on('batch-sign-sel', function() { PR.toast('已选 ' + selectedIds.size + ' 项，批量签收'); });
+  PR.on('batch-dispatch-sel', function() { PR.toast('已选 ' + selectedIds.size + ' 项，批量派单'); });
+  PR.on('view-detail', function() { PR.toast('查看详情'); });
+  PR.on('edit-row', function() { PR.toast('编辑'); });
+
+  renderTable();
+  PR.bindActions();
+})();
+</script>
+</body>
+</html>

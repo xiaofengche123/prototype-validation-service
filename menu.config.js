@@ -23,6 +23,17 @@ window.MENU = [
     ]
   },
   {
+    group: '风险管理', icon: '⚠️', children: [
+      { code: 'FXDJSH01', cname: '等级调整审核', icon: 'edit', file: '风险管理/等级调整审核.html' },
+      { code: 'FXGLQD01', cname: '风险管理清单', icon: 'unordered-list', file: '风险管理/风险管理清单.html' },
+      { code: 'FXDJLR01', cname: '风险登记录入', icon: 'form', file: '风险管理/风险登记录入.html' },
+      { code: 'FXSJXQ01', cname: '风险事件详情', icon: 'file-text', file: '风险管理/风险事件详情.html' },
+      { code: 'FXJDSC01', cname: '风险监督场景', icon: 'eye', file: '风险管理/风险监督场景.html' },
+      { code: 'FXJSKT01', cname: '风险驾驶舱', icon: 'dashboard', file: '风险管理/风险驾驶舱.html' },
+      { code: 'FXTJBB01', cname: '统计报表', icon: 'bar-chart', file: '风险管理/统计报表.html' }
+    ]
+  },
+  {
     group: '风险事件池', icon: '📋', children: [
       { code: 'FXSJ01', cname: '风险事件池', icon: 'file-text', file: '风险事件池/风险事件池.html' }
     ]
@@ -35,7 +46,8 @@ window.MENU = [
   {
     group: '任务管理', icon: '🚀', children: [
       { code: 'RWJSC01', cname: '任务驾驶舱', icon: 'dashboard', file: '任务管理/任务驾驶舱.html' },
-      { code: 'RWGL01', cname: '任务管理列表', icon: 'unordered-list', file: '任务管理/任务管理列表.html' }
+      { code: 'RWGL01', cname: '任务管理列表', icon: 'unordered-list', file: '任务管理/任务管理列表.html' },
+      { code: 'RWCJ01', cname: '任务创建', icon: 'plus', file: '任务管理/任务创建.html' }
     ]
   },
   {

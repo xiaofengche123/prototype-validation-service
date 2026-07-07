@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>任务创建</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body class="page-body">
+<div id="page-content" class="prototype-page has-fixed-actions" data-page="RWCJ01">
+
+  <!-- 页面标题 -->
+  <div class="page-header">
+    <div class="page-title">任务创建</div>
+    <div class="page-sub">任务中心 · 从风险事件生成监督任务</div>
+  </div>
+
+  <!-- 步骤条 -->
+  <div class="prototype-steps">
+    <div class="prototype-step active">
+      <span class="step-num">1</span>
+      <span>选择风险</span>
+    </div>
+    <div class="prototype-step-line"></div>
+    <div class="prototype-step">
+      <span class="step-num">2</span>
+      <span>分配责任人</span>
+    </div>
+    <div class="prototype-step-line"></div>
+    <div class="prototype-step">
+      <span class="step-num">3</span>
+      <span>确认派发</span>
+    </div>
+  </div>
+
+  <!-- 查询条件区 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>查询风险事件</div>
+      <div class="actions">
+        <button class="btn" data-action="reset">重置</button>
+        <button class="btn btn-primary" data-action="search">查询</button>
+      </div>
+    </div>
+    <div class="query-grid">
+      <div class="form-item">
+        <label>风险分类</label>
+        <select id="qCategory">
+          <option value="">全部</option>
+          <option value="supplier">供应商风险</option>
+          <option value="contract">合同风险</option>
+          <option value="price">价格风险</option>
+          <option value="quality">质量风险</option>
+          <option value="delivery">交付风险</option>
+          <option value="finance">财务风险</option>
+          <option value="compliance">合规风险</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>风险等级</label>
+        <select id="qLevel">
+          <option value="">全部</option>
+          <option value="high">高风险</option>
+          <option value="mid">中风险</option>
+          <option value="low">低风险</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>任务类型</label>
+        <select id="qTaskType">
+          <option value="">全部</option>
+          <option value="risk">风险处置</option>
+          <option value="rectify">整改督办</option>
+          <option value="accept">验收审核</option>
+          <option value="track">跟踪检查</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>负责人</label>
+        <select id="qPerson">
+          <option value="">全部</option>
+          <option value="zhangsan">张三</option>
+          <option value="lisi">李四</option>
+          <option value="wangwu">王五</option>
+          <option value="zhaoliu">赵六</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>责任部门</label>
+        <select id="qDept">
+          <option value="">全部</option>
+          <option value="purchase">采购管理部</option>
+          <option value="quality">质量管理部</option>
+          <option value="finance">财务管理部</option>
+          <option value="legal">法务合规部</option>
+          <option value="production">生产运营部</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>优先级</label>
+        <select id="qPriority">
+          <option value="">全部</option>
+          <option value="high">高</option>
+          <option value="mid">中</option>
+          <option value="low">低</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>风险编号</label>
+        <input type="text" id="qRiskCode" placeholder="请输入风险编号">
+      </div>
+      <div class="form-item">
+        <label>风险标题</label>
+        <input type="text" id="qRiskTitle" placeholder="请输入风险标题">
+      </div>
+      <div class="form-item">
+        <label>任务编号</label>
+        <input type="text" id="qTaskCode" placeholder="请输入任务编号">
+      </div>
+      <div class="form-item">
+        <label>任务标题</label>
+        <input type="text" id="qTaskTitle" placeholder="请输入任务标题">
+      </div>
+      <div class="form-item">
+        <label>计划截止</label>
+        <input type="date" id="qDeadline">
+      </div>
+      <div class="form-item">
+        <label>涉及金额(万元)</label>
+        <div class="date-range">
+          <input type="text" placeholder="最小">
+          <span class="sep">~</span>
+          <input type="text" placeholder="最大">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 已选风险汇总 -->
+  <div class="card" id="selectedCard" style="display:none;">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>已选择 <b id="selCount">0</b> 项风险事件</div>
+      <div class="actions">
+        <button class="btn btn-sm" data-action="clear-sel">清空</button>
+      </div>
+    </div>
+    <div style="padding:16px;">
+      <div id="selectedTags" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+    </div>
+  </div>
+
+  <!-- 风险事件表格 -->
+  <div class="card list-card">
+    <div class="list-toolbar">
+      <div class="title">风险事件列表（点击「采纳」加入任务）</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>序号</th>
+            <th>风险编号</th>
+            <th>风险标题</th>
+            <th>风险分类</th>
+            <th>风险等级</th>
+            <th>涉及金额(万元)</th>
+            <th>责任部门</th>
+            <th>发现来源</th>
+            <th>当前状态</th>
+            <th>触发规则</th>
+            <th>发现时间</th>
+            <th>任务类型</th>
+            <th>负责人</th>
+            <th>优先级</th>
+            <th>计划截止</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="riskTableBody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span class="total">共 <b id="totalCount">8</b> 条</span>
+      <select class="pg-size" id="pageSize">
+        <option value="10">10条/页</option>
+        <option value="20" selected>20条/页</option>
+        <option value="50">50条/页</option>
+      </select>
+      <span class="pg active">1</span>
+      <span class="pg">2</span>
+      <span class="goto">前往 <input type="text" value="1"> 页</span>
+    </div>
+  </div>
+
+  <!-- 固定底部操作栏 -->
+  <div class="fixed-bottom-bar between">
+    <button class="btn" data-action="prev-step">上一步</button>
+    <div style="display:flex;gap:12px;">
+      <button class="btn" data-action="save-draft">保存草稿</button>
+      <button class="btn btn-primary" data-action="next-step" data-modal-target="dispatchModal">下一步：分配责任人</button>
+    </div>
+  </div>
+
+  <!-- 分配责任人弹窗 -->
+  <div class="modal-mask" id="dispatchModalMask" data-modal="dispatchModal">
+    <div class="modal modal-wide">
+      <div class="modal-title">分配责任人</div>
+      <div class="modal-body" style="display:block;padding:18px 24px;">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">请为已选择的 <b id="dispatchCount">0</b> 项风险事件分配负责人：</p>
+        <div class="table-wrap">
+          <table class="table-fit">
+            <thead>
+              <tr>
+                <th>风险编号</th>
+                <th>风险标题</th>
+                <th>风险等级</th>
+                <th>责任部门</th>
+                <th>负责人</th>
+                <th>任务类型</th>
+                <th>优先级</th>
+                <th>计划截止</th>
+                <th>操作</th>
+              </tr>
+            </thead>
+            <tbody id="dispatchBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-action="close-modal" data-modal-target="dispatchModal">取消</button>
+        <button class="btn btn-primary" data-action="confirm-dispatch" data-modal-target="dispatchModal">确认派发</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 确认派发弹窗 -->
+  <div class="modal-mask" id="confirmModalMask" data-modal="confirmModal">
+    <div class="modal" style="width:480px;">
+      <div class="modal-title">确认派发任务</div>
+      <div class="modal-body" style="display:block;padding:24px;text-align:center;">
+        <p style="font-size:14px;color:var(--text);">确定要派发 <b id="confirmCount">0</b> 个任务吗？</p>
+        <p style="font-size:12px;color:var(--text3);margin-top:8px;">派发后责任人将收到任务通知，请在"任务管理列表"中查看。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-action="close-modal" data-modal-target="confirmModal">取消</button>
+        <button class="btn btn-primary" data-action="final-confirm" data-modal-target="confirmModal">确认派发</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+(function() {
+  var riskData = [
+    { id: 1, code: 'FX202412150001', title: '供应商资质异常预警', category: '供应商风险', level: 'mid', amount: '128.50', dept: '采购管理部', source: '系统预警', status: 'pending', rule: '资质有效期<30天', time: '2024-12-15', taskType: '风险处置', person: '张三', priority: 'high', deadline: '2024-12-22' },
+    { id: 2, code: 'FX202412140002', title: '合同付款条款风险', category: '合同风险', level: 'high', amount: '560.00', dept: '法务合规部', source: '审计发现', status: 'pending', rule: '违约金>5%', time: '2024-12-14', taskType: '验收审核', person: '李四', priority: 'high', deadline: '2024-12-21' },
+    { id: 3, code: 'FX202412120004', title: '产品质量批次异常', category: '质量风险', level: 'high', amount: '320.80', dept: '质量管理部', source: '人工发现', status: 'pending', rule: '不合格率>5%', time: '2024-12-12', taskType: '整改督办', person: '赵六', priority: 'high', deadline: '2024-12-19' },
+    { id: 4, code: 'FX202412100006', title: '供应商关联关系未披露', category: '合规风险', level: 'high', amount: '210.00', dept: '法务合规部', source: '外部举报', status: 'pending', rule: '关联方未披露', time: '2024-12-10', taskType: '风险处置', person: '周八', priority: 'mid', deadline: '2024-12-17' },
+    { id: 5, code: 'FX202412090007', title: '采购成本异常偏高', category: '价格风险', level: 'mid', amount: '156.30', dept: '财务管理部', source: '审计发现', status: 'pending', rule: '价格偏差>10%', time: '2024-12-09', taskType: '风险处置', person: '吴九', priority: 'mid', deadline: '2024-12-16' },
+    { id: 6, code: 'FX202412080008', title: '供应商环保资质过期', category: '供应商风险', level: 'low', amount: '32.00', dept: '采购管理部', source: '人工发现', status: 'pending', rule: '资质有效期<60天', time: '2024-12-08', taskType: '整改督办', person: '郑十', priority: 'low', deadline: '2024-12-15' },
+    { id: 7, code: 'FX202412130003', title: '原材料价格波动预警', category: '价格风险', level: 'low', amount: '45.20', dept: '财务管理部', source: '系统预警', status: 'pending', rule: '价格波动>15%', time: '2024-12-13', taskType: '跟踪检查', person: '王五', priority: 'low', deadline: '2024-12-20' },
+    { id: 8, code: 'FX202412110005', title: '交付延期风险', category: '交付风险', level: 'mid', amount: '89.60', dept: '生产运营部', source: '系统预警', status: 'pending', rule: '延期天数>7天', time: '2024-12-11', taskType: '跟踪检查', person: '孙七', priority: 'mid', deadline: '2024-12-18' }
+  ];
+
+  var selectedItems = [];
+
+  var levelClass = { high: 'level-high', mid: 'level-mid', low: 'level-low' };
+  var levelMap = { high: '高风险', mid: '中风险', low: '低风险' };
+  var statusMap = { pending: '待处理', processing: '处理中', review: '待审核', closed: '已关闭' };
+  var statusClass = { pending: 'pending', processing: 'review', review: 'review', closed: 'pass' };
+  var priorityMap = { high: '高', mid: '中', low: '低' };
+  var priorityClass = { high: 'level-high', mid: 'level-mid', low: 'level-low' };
+
+  function renderTable() {
+    var html = riskData.map(function(r) {
+      var isAdopted = selectedItems.findIndex(function(s) { return s.id === r.id; }) >= 0;
+      var btnText = isAdopted ? '已采纳' : '采纳';
+      var btnClass = isAdopted ? 'btn-sm' : 'btn-sm btn-primary';
+      var btnAction = isAdopted ? 'cancel-adopt' : 'adopt-row';
+      return '<tr>' +
+        '<td>' + r.id + '</td>' +
+        '<td><span class="link" data-nav="FXSJXQ01">' + r.code + '</span></td>' +
+        '<td class="text-left">' + r.title + '</td>' +
+        '<td>' + r.category + '</td>' +
+        '<td><span class="level-tag ' + levelClass[r.level] + '">' + levelMap[r.level] + '</span></td>' +
+        '<td>' + r.amount + '</td>' +
+        '<td>' + r.dept + '</td>' +
+        '<td>' + r.source + '</td>' +
+        '<td><span class="tag ' + statusClass[r.status] + '"><span class="td"></span>' + statusMap[r.status] + '</span></td>' +
+        '<td><span class="type-tag type-rule">' + r.rule + '</span></td>' +
+        '<td>' + r.time + '</td>' +
+        '<td>' + r.taskType + '</td>' +
+        '<td>' + r.person + '</td>' +
+        '<td><span class="level-tag ' + priorityClass[r.priority] + '">' + priorityMap[r.priority] + '</span></td>' +
+        '<td>' + r.deadline + '</td>' +
+        '<td><button class="' + btnClass + '" data-action="' + btnAction + '" data-id="' + r.id + '">' + btnText + '</button></td>' +
+      '</tr>';
+    }).join('');
+    document.getElementById('riskTableBody').innerHTML = html;
+  }
+
+  function updateSelectedCard() {
+    var count = selectedItems.length;
+    document.getElementById('selCount').textContent = count;
+    document.getElementById('selectedCard').style.display = count > 0 ? 'block' : 'none';
+    var tagsHtml = selectedItems.map(function(s) {
+      return '<span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--primary-light);color:var(--primary-dark);border-radius:3px;font-size:12px;">' + s.code + ' <button style="background:none;border:none;cursor:pointer;color:var(--primary);font-size:14px;line-height:1;" data-action="remove-tag" data-id="' + s.id + '">×</button></span>';
+    }).join('');
+    document.getElementById('selectedTags').innerHTML = tagsHtml;
+  }
+
+  PR.on('adopt-row', function(el) {
+    var id = parseInt(el.dataset.id);
+    var item = riskData.find(function(r) { return r.id === id; });
+    if (item) {
+      selectedItems.push({ id: item.id, code: item.code, title: item.title, level: item.level, dept: item.dept, person: item.person, taskType: item.taskType, priority: item.priority, deadline: item.deadline });
+      updateSelectedCard();
+      renderTable();
+    }
+  });
+
+  PR.on('cancel-adopt', function(el) {
+    var id = parseInt(el.dataset.id);
+    selectedItems = selectedItems.filter(function(s) { return s.id !== id; });
+    updateSelectedCard();
+    renderTable();
+  });
+
+  PR.on('remove-tag', function(el) {
+    var id = parseInt(el.dataset.id);
+    selectedItems = selectedItems.filter(function(s) { return s.id !== id; });
+    updateSelectedCard();
+    renderTable();
+  });
+
+  PR.on('clear-sel', function() {
+    selectedItems = [];
+    updateSelectedCard();
+    renderTable();
+  });
+
+  PR.on('search', function() { PR.toast('查询完成'); renderTable(); });
+  PR.on('reset', function() {
+    document.getElementById('qCategory').value = '';
+    document.getElementById('qLevel').value = '';
+    document.getElementById('qTaskType').value = '';
+    document.getElementById('qPerson').value = '';
+    document.getElementById('qDept').value = '';
+    document.getElementById('qPriority').value = '';
+    document.getElementById('qRiskCode').value = '';
+    document.getElementById('qRiskTitle').value = '';
+    document.getElementById('qTaskCode').value = '';
+    document.getElementById('qTaskTitle').value = '';
+    document.getElementById('qDeadline').value = '';
+    renderTable();
+    PR.toast('已重置');
+  });
+
+  PR.on('prev-step', function() { PR.toast('已经是第一步'); });
+  PR.on('save-draft', function() { PR.toast('草稿已保存'); });
+  PR.on('next-step', function() {
+    if (selectedItems.length === 0) {
+      PR.toast('请先选择至少一项风险事件');
+      return;
+    }
+    document.getElementById('dispatchCount').textContent = selectedItems.length;
+    var html = selectedItems.map(function(s) {
+      return '<tr>' +
+        '<td>' + s.code + '</td>' +
+        '<td class="text-left">' + s.title + '</td>' +
+        '<td><span class="level-tag ' + levelClass[s.level] + '">' + levelMap[s.level] + '</span></td>' +
+        '<td>' + s.dept + '</td>' +
+        '<td><select><option>' + s.person + '</option><option>张三</option><option>李四</option><option>王五</option></select></td>' +
+        '<td><select><option>' + s.taskType + '</option><option>风险处置</option><option>整改督办</option><option>验收审核</option></select></td>' +
+        '<td><select><option>' + priorityMap[s.priority] + '</option><option>高</option><option>中</option><option>低</option></select></td>' +
+        '<td><input type="date" value="' + s.deadline + '"></td>' +
+        '<td><button class="op red" data-action="remove-dispatch" data-id="' + s.id + '">移除</button></td>' +
+      '</tr>';
+    }).join('');
+    document.getElementById('dispatchBody').innerHTML = html;
+    PR.openModal('dispatchModal');
+  });
+
+  PR.on('remove-dispatch', function(el) {
+    var id = parseInt(el.dataset.id);
+    selectedItems = selectedItems.filter(function(s) { return s.id !== id; });
+    document.getElementById('dispatchCount').textContent = selectedItems.length;
+    el.closest('tr').remove();
+    updateSelectedCard();
+    renderTable();
+  });
+
+  PR.on('confirm-dispatch', function() {
+    PR.closeModal('dispatchModal');
+    document.getElementById('confirmCount').textContent = selectedItems.length;
+    PR.openModal('confirmModal');
+  });
+
+  PR.on('final-confirm', function() {
+    PR.closeModal('confirmModal');
+    PR.toast('任务派发成功！共派发 ' + selectedItems.length + ' 个任务');
+    selectedItems = [];
+    updateSelectedCard();
+    renderTable();
+  });
+
+  renderTable();
+  PR.bindActions();
+})();
+</script>
+</body>
+</html>

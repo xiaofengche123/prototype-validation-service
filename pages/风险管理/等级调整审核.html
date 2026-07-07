@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>等级调整审核 - 绿星链通</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body class="page-body">
+<div id="page-content" class="prototype-page has-fixed-actions" data-page="FXDJSH01">
+
+  <!-- 页面标题 -->
+  <div class="page-header">
+    <div class="page-title">等级调整审核</div>
+    <div class="page-sub">绿星链通 · 风险事件等级调整审核</div>
+  </div>
+
+  <!-- 风险基本信息卡片 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>风险基本信息</div>
+    </div>
+    <div class="info-grid" style="padding:16px;">
+      <div class="info-item">
+        <span class="info-label">风险编号：</span>
+        <span class="info-value">FX202412150001</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">风险标题：</span>
+        <span class="info-value">供应商资质异常预警</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">当前等级：</span>
+        <span class="info-value"><span class="level-tag level-mid">中风险</span></span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">涉及金额：</span>
+        <span class="info-value">128.50 万元</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">责任部门：</span>
+        <span class="info-value">采购管理部</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">发现来源：</span>
+        <span class="info-value">系统预警</span>
+      </div>
+      <div class="info-item span-3">
+        <span class="info-label">风险描述：</span>
+        <span class="info-value normal">该供应商在资质审核过程中发现营业执照即将过期，且近三个月内存在两次合同纠纷记录，触发系统风险预警。</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 调整审核表单 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>等级调整审核</div>
+    </div>
+    <div class="query-grid" style="padding:16px;">
+      <div class="form-item">
+        <label>调整后等级<span class="req">*</span></label>
+        <select id="adjLevel">
+          <option value="">请选择</option>
+          <option value="high">高风险</option>
+          <option value="mid" selected>中风险</option>
+          <option value="low">低风险</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>影响程度<span class="req">*</span></label>
+        <select id="impactDegree">
+          <option value="">请选择</option>
+          <option value="5">极高（5分）</option>
+          <option value="4" selected>高（4分）</option>
+          <option value="3">中（3分）</option>
+          <option value="2">低（2分）</option>
+          <option value="1">极低（1分）</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>发生概率<span class="req">*</span></label>
+        <select id="probability">
+          <option value="">请选择</option>
+          <option value="5">极高（5分）</option>
+          <option value="4" selected>高（4分）</option>
+          <option value="3">中（3分）</option>
+          <option value="2">低（2分）</option>
+          <option value="1">极低（1分）</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>调整后分值</label>
+        <input type="text" id="adjScore" value="16" placeholder="自动计算或手动输入">
+      </div>
+    </div>
+    <div style="padding:0 16px 16px;">
+      <div class="form-item field-block">
+        <label>审核意见<span class="req">*</span></label>
+        <textarea id="auditOpinion" rows="4" placeholder="请输入审核意见，说明调整理由..."></textarea>
+      </div>
+      <div class="form-item field-block" style="margin-top:12px;">
+        <label>备注</label>
+        <textarea id="remark" rows="3" placeholder="请输入备注信息（可选）..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 审核历史 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>审核历史</div>
+    </div>
+    <div class="table-wrap" style="padding:0 16px 16px;">
+      <table class="table-fit">
+        <thead>
+          <tr>
+            <th>序号</th>
+            <th>操作人</th>
+            <th>操作时间</th>
+            <th>操作类型</th>
+            <th>调整前等级</th>
+            <th>调整后等级</th>
+            <th>审核意见</th>
+          </tr>
+        </thead>
+        <tbody id="auditHistoryBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 固定底部操作栏 -->
+  <div class="fixed-bottom-bar between">
+    <button class="btn" data-action="return-list">返回列表</button>
+    <div style="display:flex;gap:12px;">
+      <button class="btn" data-action="reject-audit" data-modal-target="rejectModal">驳回</button>
+      <button class="btn btn-primary" data-action="approve-audit" data-modal-target="approveModal">审核通过</button>
+    </div>
+  </div>
+
+  <!-- 驳回确认弹窗 -->
+  <div class="modal-mask" id="rejectModalMask" data-modal="rejectModal">
+    <div class="modal" style="width:480px;">
+      <div class="modal-title">确认驳回</div>
+      <div class="modal-body" style="display:block;padding:18px 24px;">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">您确定要驳回该等级调整申请吗？驳回后申请人将收到通知并需重新提交。</p>
+        <div class="form-item">
+          <label>驳回原因<span class="req">*</span></label>
+          <textarea rows="3" placeholder="请输入驳回原因..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-action="close-modal" data-modal-target="rejectModal">取消</button>
+        <button class="btn btn-danger" data-action="confirm-reject" data-modal-target="rejectModal">确认驳回</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 审核通过确认弹窗 -->
+  <div class="modal-mask" id="approveModalMask" data-modal="approveModal">
+    <div class="modal" style="width:420px;">
+      <div class="modal-title">确认审核通过</div>
+      <div class="modal-body" style="display:block;padding:24px;text-align:center;">
+        <p style="font-size:14px;color:var(--text);">您确定要通过该等级调整申请吗？</p>
+        <p style="font-size:12px;color:var(--text3);margin-top:8px;">通过后风险等级将正式更新，并同步至相关责任部门。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-action="close-modal" data-modal-target="approveModal">取消</button>
+        <button class="btn btn-primary" data-action="confirm-approve" data-modal-target="approveModal">确认通过</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+(function() {
+  var auditHistory = [
+    { seq: 1, operator: '张三', time: '2024-12-15 09:30:00', type: '提交申请', before: '-', after: '中风险', opinion: '申请将风险等级从低风险调整为中风险' },
+    { seq: 2, operator: '李四', time: '2024-12-15 14:20:00', type: '初审通过', before: '低风险', after: '中风险', opinion: '经核实，供应商资质问题属实，同意调整' }
+  ];
+
+  function renderHistory() {
+    var html = auditHistory.map(function(r) {
+      return '<tr>' +
+        '<td>' + r.seq + '</td>' +
+        '<td>' + r.operator + '</td>' +
+        '<td>' + r.time + '</td>' +
+        '<td>' + r.type + '</td>' +
+        '<td>' + (r.before === '-' ? '-' : '<span class="level-tag ' + (r.before === '高风险' ? 'level-high' : r.before === '中风险' ? 'level-mid' : 'level-low') + '">' + r.before + '</span>') + '</td>' +
+        '<td>' + (r.after === '-' ? '-' : '<span class="level-tag ' + (r.after === '高风险' ? 'level-high' : r.after === '中风险' ? 'level-mid' : 'level-low') + '">' + r.after + '</span>') + '</td>' +
+        '<td class="text-left" style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="' + r.opinion + '">' + r.opinion + '</td>' +
+      '</tr>';
+    }).join('');
+    document.getElementById('auditHistoryBody').innerHTML = html;
+  }
+
+  PR.on('return-list', function() { PR.toast('返回列表'); });
+  PR.on('reject-audit', function() { PR.openModal('rejectModal'); });
+  PR.on('approve-audit', function() { PR.openModal('approveModal'); });
+  PR.on('confirm-reject', function() { PR.closeModal('rejectModal'); PR.toast('已驳回'); });
+  PR.on('confirm-approve', function() { PR.closeModal('approveModal'); PR.toast('审核通过'); });
+
+  renderHistory();
+  PR.bindActions();
+})();
+</script>
+</body>
+</html>

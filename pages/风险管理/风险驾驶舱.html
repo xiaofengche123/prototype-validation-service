@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>风险驾驶舱</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body class="page-body">
+<div id="page-content" class="prototype-page" data-page="FXJSKT01">
+
+  <!-- 页面标题 -->
+  <div class="page-header">
+    <div class="page-title">风险驾驶舱</div>
+    <div class="page-sub">风险管理 · 风险态势总览</div>
+  </div>
+
+  <!-- 顶部统计卡片 -->
+  <div class="stat-row">
+    <div class="stat-card rich">
+      <div class="ico ico-red">⚠️</div>
+      <div class="stat-info">
+        <div class="num num-danger">1,256</div>
+        <div class="label">风险总数</div>
+        <span class="trend trend-up">↑ 12.5% 较上月</span>
+      </div>
+    </div>
+    <div class="stat-card rich">
+      <div class="ico ico-orange">🔥</div>
+      <div class="stat-info">
+        <div class="num num-warning">89</div>
+        <div class="label">高风险事件</div>
+        <span class="trend trend-up">↑ 5.3% 较上月</span>
+      </div>
+    </div>
+    <div class="stat-card rich">
+      <div class="ico ico-blue">⏰</div>
+      <div class="stat-info">
+        <div class="num num-orange">34</div>
+        <div class="label">超期未处理</div>
+        <span class="trend trend-down">↓ 8.1% 较上月</span>
+      </div>
+    </div>
+    <div class="stat-card rich">
+      <div class="ico ico-green">✅</div>
+      <div class="stat-info">
+        <div class="num num-success">78.5%</div>
+        <div class="label">处置完成率</div>
+        <span class="trend trend-up">↑ 3.2% 较上月</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 两列布局：风险趋势 + 风险分布 -->
+  <div class="two-col-grid">
+    <div class="card">
+      <div class="card-head">
+        <div class="title"><span class="bar"></span>风险趋势（近6个月）</div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-line" style="height:200px;">
+          <div class="chart-y-axis">
+            <span>300</span><span>225</span><span>150</span><span>75</span><span>0</span>
+          </div>
+          <div class="chart-grid">
+            <div class="chart-grid-line" style="top:0%"></div>
+            <div class="chart-grid-line" style="top:25%"></div>
+            <div class="chart-grid-line" style="top:50%"></div>
+            <div class="chart-grid-line" style="top:75%"></div>
+            <div class="chart-grid-line" style="top:100%"></div>
+          </div>
+          <div class="chart-area" style="display:flex;align-items:flex-end;justify-content:space-around;padding:0 20px;gap:12px;">
+            <div style="width:36px;background:var(--primary);border-radius:3px 3px 0 0;height:45%;"></div>
+            <div style="width:36px;background:var(--primary);border-radius:3px 3px 0 0;height:60%;"></div>
+            <div style="width:36px;background:var(--primary);border-radius:3px 3px 0 0;height:55%;"></div>
+            <div style="width:36px;background:var(--primary);border-radius:3px 3px 0 0;height:75%;"></div>
+            <div style="width:36px;background:var(--primary);border-radius:3px 3px 0 0;height:85%;"></div>
+            <div style="width:36px;background:var(--primary);border-radius:3px 3px 0 0;height:100%;"></div>
+          </div>
+          <div class="chart-x-axis">
+            <span>7月</span><span>8月</span><span>9月</span><span>10月</span><span>11月</span><span>12月</span>
+          </div>
+        </div>
+        <div class="chart-legend">
+          <div class="chart-legend-item"><span class="chart-legend-bar" style="background:var(--primary)"></span>新增风险</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="title"><span class="bar"></span>风险等级分布</div>
+      </div>
+      <div class="pie-wrap" style="padding:20px;">
+        <div class="pie" style="background:conic-gradient(var(--danger) 0deg 64.8deg, var(--warning) 64.8deg 194.4deg, var(--primary) 194.4deg 360deg);">
+          <div class="pie-hole">
+            <div style="text-align:center;">
+              <div style="font-size:22px;font-weight:bold;">1,256</div>
+              <div style="font-size:11px;color:var(--text3);">风险总数</div>
+            </div>
+          </div>
+        </div>
+        <div class="pie-legend">
+          <div class="pie-legend-item"><span class="pie-legend-dot" style="background:var(--danger)"></span>高风险 89 (7.1%)</div>
+          <div class="pie-legend-item"><span class="pie-legend-dot" style="background:var(--warning)"></span>中风险 378 (30.1%)</div>
+          <div class="pie-legend-item"><span class="pie-legend-dot" style="background:var(--primary)"></span>低风险 789 (62.8%)</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 两列布局：场景分布 + 部门处置时效 -->
+  <div class="two-col-grid">
+    <div class="card">
+      <div class="card-head">
+        <div class="title"><span class="bar"></span>风险场景分布 TOP5</div>
+      </div>
+      <div style="padding:16px;">
+        <div class="scene-bar-row" style="margin-bottom:10px;">
+          <span class="scene-bar-label">供应商风险</span>
+          <div class="scene-bar-track"><div class="scene-bar-fill" style="width:85%;background:var(--danger);">85</div></div>
+          <span class="scene-bar-value num-danger">425</span>
+        </div>
+        <div class="scene-bar-row" style="margin-bottom:10px;">
+          <span class="scene-bar-label">合同风险</span>
+          <div class="scene-bar-track"><div class="scene-bar-fill" style="width:65%;background:var(--warning);">65</div></div>
+          <span class="scene-bar-value num-warning">312</span>
+        </div>
+        <div class="scene-bar-row" style="margin-bottom:10px;">
+          <span class="scene-bar-label">价格风险</span>
+          <div class="scene-bar-track"><div class="scene-bar-fill" style="width:48%;background:var(--primary);">48</div></div>
+          <span class="scene-bar-value">238</span>
+        </div>
+        <div class="scene-bar-row" style="margin-bottom:10px;">
+          <span class="scene-bar-label">质量风险</span>
+          <div class="scene-bar-track"><div class="scene-bar-fill" style="width:35%;background:var(--primary);">35</div></div>
+          <span class="scene-bar-value">176</span>
+        </div>
+        <div class="scene-bar-row">
+          <span class="scene-bar-label">交付风险</span>
+          <div class="scene-bar-track"><div class="scene-bar-fill" style="width:22%;background:var(--primary);">22</div></div>
+          <span class="scene-bar-value">105</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="title"><span class="bar"></span>部门处置时效</div>
+      </div>
+      <div class="efficiency-chart" style="padding:16px;">
+        <div class="efficiency-bar">
+          <div class="efficiency-bar-fill" style="height:80%;background:var(--success);"></div>
+          <span class="efficiency-bar-value">2.3天</span>
+          <span class="efficiency-bar-label">采购部</span>
+        </div>
+        <div class="efficiency-bar">
+          <div class="efficiency-bar-fill" style="height:65%;background:var(--primary);"></div>
+          <span class="efficiency-bar-value">3.1天</span>
+          <span class="efficiency-bar-label">质量部</span>
+        </div>
+        <div class="efficiency-bar">
+          <div class="efficiency-bar-fill" style="height:50%;background:var(--primary);"></div>
+          <span class="efficiency-bar-value">4.2天</span>
+          <span class="efficiency-bar-label">财务部</span>
+        </div>
+        <div class="efficiency-bar">
+          <div class="efficiency-bar-fill" style="height:40%;background:var(--warning);"></div>
+          <span class="efficiency-bar-value">5.5天</span>
+          <span class="efficiency-bar-label">法务部</span>
+        </div>
+        <div class="efficiency-bar">
+          <div class="efficiency-bar-fill" style="height:30%;background:var(--danger);"></div>
+          <span class="efficiency-bar-value">7.8天</span>
+          <span class="efficiency-bar-label">生产部</span>
+        </div>
+      </div>
+      <div class="efficiency-summary">
+        <span>平均处置时效：<b style="color:var(--primary);">3.8天</b></span>
+        <span>最快：<b style="color:var(--success);">采购管理部 2.3天</b></span>
+        <span>最慢：<b style="color:var(--danger);">生产运营部 7.8天</b></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 部门风险排名表格 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>部门风险排名</div>
+    </div>
+    <div class="table-wrap" style="padding:0 16px 16px;">
+      <table class="table-fit">
+        <thead>
+          <tr>
+            <th>排名</th>
+            <th>部门</th>
+            <th>风险数</th>
+            <th>高风险</th>
+            <th>中风险</th>
+            <th>低风险</th>
+            <th>超期率</th>
+            <th>处置进度</th>
+            <th>平均处置时效</th>
+            <th>风险编号</th>
+            <th>风险标题</th>
+            <th>最新状态</th>
+          </tr>
+        </thead>
+        <tbody id="rankTableBody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span class="total">共 <b>8</b> 条</span>
+      <span class="pg active">1</span>
+      <span class="pg">2</span>
+      <span class="goto">前往 <input type="text" value="1"> 页</span>
+    </div>
+  </div>
+
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+(function() {
+  var rankData = [
+    { rank: 1, dept: '采购管理部', total: 356, high: 32, mid: 98, low: 226, overdue: '8.5%', progress: 82, avgDays: 2.3, code: 'FX202412150001', title: '供应商资质异常预警', status: 'pending' },
+    { rank: 2, dept: '质量管理部', total: 278, high: 28, mid: 76, low: 174, overdue: '12.3%', progress: 75, avgDays: 3.1, code: 'FX202412120004', title: '产品质量批次异常', status: 'processing' },
+    { rank: 3, dept: '法务合规部', total: 245, high: 15, mid: 89, low: 141, overdue: '6.8%', progress: 88, avgDays: 5.5, code: 'FX202412140002', title: '合同付款条款风险', status: 'review' },
+    { rank: 4, dept: '财务管理部', total: 198, high: 8, mid: 65, low: 125, overdue: '15.2%', progress: 68, avgDays: 4.2, code: 'FX202412130003', title: '原材料价格波动预警', status: 'closed' },
+    { rank: 5, dept: '生产运营部', total: 179, high: 6, mid: 50, low: 123, overdue: '18.6%', progress: 55, avgDays: 7.8, code: 'FX202412110005', title: '交付延期风险', status: 'pending' }
+  ];
+
+  var statusMap = { pending: '待处理', processing: '处理中', review: '待审核', closed: '已关闭' };
+  var statusClass = { pending: 'pending', processing: 'review', review: 'review', closed: 'pass' };
+
+  function renderRank() {
+    var html = rankData.map(function(r) {
+      var rankClass = r.rank <= 3 ? 'top' : '';
+      var progressColor = r.progress >= 80 ? 'var(--success)' : r.progress >= 60 ? 'var(--primary)' : 'var(--warning)';
+      return '<tr>' +
+        '<td><span class="rank-num ' + rankClass + '">' + r.rank + '</span></td>' +
+        '<td>' + r.dept + '</td>' +
+        '<td><b>' + r.total + '</b></td>' +
+        '<td><span class="text-danger">' + r.high + '</span></td>' +
+        '<td><span class="text-warning">' + r.mid + '</span></td>' +
+        '<td>' + r.low + '</td>' +
+        '<td><span class="text-danger">' + r.overdue + '</span></td>' +
+        '<td>' +
+          '<div class="progress-track" style="width:100px;display:inline-block;vertical-align:middle;">' +
+            '<div class="progress-fill" style="width:' + r.progress + '%;background:' + progressColor + ';"></div>' +
+          '</div>' +
+          '<span style="margin-left:8px;font-size:11px;">' + r.progress + '%</span>' +
+        '</td>' +
+        '<td>' + r.avgDays + '天</td>' +
+        '<td><span class="link" data-nav="FXSJXQ01">' + r.code + '</span></td>' +
+        '<td class="text-left">' + r.title + '</td>' +
+        '<td><span class="tag ' + statusClass[r.status] + '"><span class="td"></span>' + statusMap[r.status] + '</span></td>' +
+      '</tr>';
+    }).join('');
+    document.getElementById('rankTableBody').innerHTML = html;
+  }
+
+  renderRank();
+  PR.bindActions();
+})();
+</script>
+</body>
+</html>

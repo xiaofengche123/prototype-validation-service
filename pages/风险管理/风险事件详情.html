@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>风险事件详情 - 风险事件池</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body class="page-body">
+<div id="page-content" class="prototype-page has-fixed-actions" data-page="FXSJXQ01">
+
+  <!-- 页面标题 + 操作区 -->
+  <div class="page-header">
+    <div class="page-title">风险事件详情</div>
+    <div class="page-sub">风险事件池 · 单据编号：CG202412150001</div>
+    <div class="actions">
+      <button class="btn" data-action="return-list">返回列表</button>
+      <button class="btn btn-primary" data-action="generate-task" data-modal-target="taskModal">生成监督任务</button>
+    </div>
+  </div>
+
+  <!-- 供应商基本信息 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>供应商基本信息</div>
+      <div class="actions">
+        <button class="btn btn-sm" data-action="view-portrait">📈 供应商画像</button>
+        <button class="btn btn-sm" data-action="add-blacklist" data-modal-target="blacklistModal">加入黑名单</button>
+      </div>
+    </div>
+    <div class="info-grid" style="padding:16px;">
+      <div class="info-item">
+        <span class="info-label">供应商名称：</span>
+        <span class="info-value">广西铝业物资有限公司</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">统一社会信用代码：</span>
+        <span class="info-value">91450100MA5KXXXXXX</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">准入日期：</span>
+        <span class="info-value">2023-06-15</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">准入品类：</span>
+        <span class="info-value">原材料、辅助材料</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">审批状态：</span>
+        <span class="info-value"><span class="tag pass"><span class="td"></span>已准入</span></span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">合作年限：</span>
+        <span class="info-value">1.5 年</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">法定代表人：</span>
+        <span class="info-value">李明华</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">注册资本：</span>
+        <span class="info-value">5,000 万元</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">注册地址：</span>
+        <span class="info-value normal">广西壮族自治区南宁市青秀区XX路XX号</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 合同信息 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>合同信息</div>
+    </div>
+    <div class="info-grid" style="padding:16px;">
+      <div class="info-item">
+        <span class="info-label">合同编号：</span>
+        <span class="info-value">HT202411010015</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">签订日期：</span>
+        <span class="info-value">2024-11-01</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">合同金额：</span>
+        <span class="info-value">320.80 万元</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">合同状态：</span>
+        <span class="info-value"><span class="tag pending"><span class="td"></span>执行中</span></span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">付款方式：</span>
+        <span class="info-value">分期付款</span>
+      </div>
+      <div class="info-item">
+        <span class="info-label">质保期：</span>
+        <span class="info-value">12 个月</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 风险触发记录 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>风险触发记录</div>
+      <div class="actions">
+        <button class="btn btn-sm" data-action="mark-false" data-modal-target="falseModal">标记误报</button>
+      </div>
+    </div>
+    <div class="table-wrap" style="padding:0 16px 16px;">
+      <table class="table-fit">
+        <thead>
+          <tr>
+            <th>序号</th>
+            <th>触发时间</th>
+            <th>风险场景</th>
+            <th>风险点</th>
+            <th>触发规则</th>
+            <th>风险等级</th>
+            <th>处置状态</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody id="riskRecordBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 历史处置记录 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>历史处置记录</div>
+    </div>
+    <div class="table-wrap" style="padding:0 16px 16px;">
+      <table class="table-fit">
+        <thead>
+          <tr>
+            <th>序号</th>
+            <th>处置时间</th>
+            <th>处置人</th>
+            <th>处置类型</th>
+            <th>处置结果</th>
+            <th>备注</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 固定底部操作栏 -->
+  <div class="fixed-bottom-bar between">
+    <button class="btn" data-action="prev-record">上一条</button>
+    <div style="display:flex;gap:12px;">
+      <button class="btn" data-action="mark-false-bar" data-modal-target="falseModal">标记误报</button>
+      <button class="btn btn-primary" data-action="generate-task-bar" data-modal-target="taskModal">生成监督任务</button>
+    </div>
+    <button class="btn" data-action="next-record">下一条</button>
+  </div>
+
+  <!-- 生成监督任务弹窗 -->
+  <div class="modal-mask" id="taskModalMask" data-modal="taskModal">
+    <div class="modal" style="width:520px;">
+      <div class="modal-title">生成监督任务</div>
+      <div class="modal-body" style="display:block;padding:18px 24px;">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">请确认任务信息：</p>
+        <div class="info-grid" style="gap:10px 16px;">
+          <div class="info-item span-3">
+            <span class="info-label">风险事件：</span>
+            <span class="info-value normal">供应商资质异常预警（FX202412150001）</span>
+          </div>
+          <div class="info-item span-3">
+            <span class="info-label">任务标题：</span>
+            <span class="info-value normal">供应商资质复核 - 广西铝业物资有限公司</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">责任部门：</span>
+            <span class="info-value normal">采购管理部</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">优先级：</span>
+            <span class="info-value normal"><span class="level-tag level-high">高</span></span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">要求完成：</span>
+            <span class="info-value normal">2024-12-22</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-action="close-modal" data-modal-target="taskModal">取消</button>
+        <button class="btn btn-primary" data-action="confirm-task" data-modal-target="taskModal">确认生成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 标记误报弹窗 -->
+  <div class="modal-mask" id="falseModalMask" data-modal="falseModal">
+    <div class="modal" style="width:480px;">
+      <div class="modal-title">标记误报</div>
+      <div class="modal-body" style="display:block;padding:18px 24px;">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">您确定要将该风险事件标记为误报吗？标记后将不再纳入风险统计。</p>
+        <div class="form-item">
+          <label>误报原因<span class="req">*</span></label>
+          <textarea rows="3" placeholder="请说明标记为误报的原因..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-action="close-modal" data-modal-target="falseModal">取消</button>
+        <button class="btn btn-danger" data-action="confirm-false" data-modal-target="falseModal">确认标记</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 加入黑名单弹窗 -->
+  <div class="modal-mask" id="blacklistModalMask" data-modal="blacklistModal">
+    <div class="modal" style="width:480px;">
+      <div class="modal-title">加入黑名单</div>
+      <div class="modal-body" style="display:block;padding:18px 24px;">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:12px;">您确定要将该供应商加入黑名单吗？加入后将禁止参与后续采购活动。</p>
+        <div class="form-item">
+          <label>拉黑原因<span class="req">*</span></label>
+          <textarea rows="3" placeholder="请输入拉黑原因..."></textarea>
+        </div>
+        <div class="form-item" style="margin-top:12px;">
+          <label>拉黑期限</label>
+          <select>
+            <option value="6">6个月</option>
+            <option value="12" selected>12个月</option>
+            <option value="24">24个月</option>
+            <option value="permanent">永久</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-action="close-modal" data-modal-target="blacklistModal">取消</button>
+        <button class="btn btn-danger" data-action="confirm-blacklist" data-modal-target="blacklistModal">确认加入</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+(function() {
+  var riskRecords = [
+    { seq: 1, time: '2024-12-15 10:30:00', scene: '供应商资质', point: '营业执照即将过期', rule: '资质有效期<30天', level: 'high', status: 'pending' },
+    { seq: 2, time: '2024-12-10 09:15:00', scene: '合同纠纷', point: '近三月两次合同纠纷', rule: '合同纠纷次数≥2', level: 'mid', status: 'processing' },
+    { seq: 3, time: '2024-12-05 14:20:00', scene: '价格异常', point: '报价高于市场价15%', rule: '价格偏差>10%', level: 'low', status: 'closed' }
+  ];
+
+  var historyRecords = [
+    { seq: 1, time: '2024-12-15 11:00:00', person: '张三', type: '风险登记', result: '已录入', remark: '系统预警触发' },
+    { seq: 2, time: '2024-12-15 14:30:00', person: '李四', type: '等级初审', result: '确认高风险', remark: '资质问题属实' }
+  ];
+
+  var levelClass = { high: 'level-high', mid: 'level-mid', low: 'level-low' };
+  var levelMap = { high: '高风险', mid: '中风险', low: '低风险' };
+  var statusMap = { pending: '待处理', processing: '处理中', closed: '已关闭' };
+  var statusClass = { pending: 'pending', processing: 'review', closed: 'pass' };
+
+  function renderRiskRecords() {
+    var html = riskRecords.map(function(r) {
+      return '<tr>' +
+        '<td>' + r.seq + '</td>' +
+        '<td>' + r.time + '</td>' +
+        '<td>' + r.scene + '</td>' +
+        '<td>' + r.point + '</td>' +
+        '<td><span class="type-tag type-rule">' + r.rule + '</span></td>' +
+        '<td><span class="level-tag ' + levelClass[r.level] + '">' + levelMap[r.level] + '</span></td>' +
+        '<td><span class="tag ' + statusClass[r.status] + '"><span class="td"></span>' + statusMap[r.status] + '</span></td>' +
+        '<td><button class="op blue" data-action="view-record">查看</button></td>' +
+      '</tr>';
+    }).join('');
+    document.getElementById('riskRecordBody').innerHTML = html;
+  }
+
+  function renderHistory() {
+    var html = historyRecords.map(function(r) {
+      return '<tr>' +
+        '<td>' + r.seq + '</td>' +
+        '<td>' + r.time + '</td>' +
+        '<td>' + r.person + '</td>' +
+        '<td>' + r.type + '</td>' +
+        '<td>' + r.result + '</td>' +
+        '<td class="text-left">' + r.remark + '</td>' +
+      '</tr>';
+    }).join('');
+    document.getElementById('historyBody').innerHTML = html;
+  }
+
+  PR.on('return-list', function() { PR.toast('返回列表'); });
+  PR.on('generate-task', function() { PR.openModal('taskModal'); });
+  PR.on('generate-task-bar', function() { PR.openModal('taskModal'); });
+  PR.on('confirm-task', function() { PR.closeModal('taskModal'); PR.toast('监督任务已生成'); });
+  PR.on('view-portrait', function() { PR.toast('查看供应商画像'); });
+  PR.on('add-blacklist', function() { PR.openModal('blacklistModal'); });
+  PR.on('confirm-blacklist', function() { PR.closeModal('blacklistModal'); PR.toast('已加入黑名单'); });
+  PR.on('mark-false', function() { PR.openModal('falseModal'); });
+  PR.on('mark-false-bar', function() { PR.openModal('falseModal'); });
+  PR.on('confirm-false', function() { PR.closeModal('falseModal'); PR.toast('已标记为误报'); });
+  PR.on('view-record', function() { PR.toast('查看记录'); });
+  PR.on('prev-record', function() { PR.toast('上一条记录'); });
+  PR.on('next-record', function() { PR.toast('下一条记录'); });
+
+  renderRiskRecords();
+  renderHistory();
+  PR.bindActions();
+})();
+</script>
+</body>
+</html>
