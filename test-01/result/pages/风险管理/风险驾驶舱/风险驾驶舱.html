@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../../assets/app.css">
+<link rel="stylesheet" href="../../../assets/theme.css">
+<title>风险驾驶舱</title>
+</head>
+<body class="page-body">
+<!--
+  编码：FXKB01    名称：风险驾驶舱    类型：数据看板页
+  核心内容：6个统计卡片 + 风险趋势图 + 状态分布图 + 部门排名表 + 超期预警表 + 场景分布 + 处置时效
+  跳转：统计卡片 → FXSC01；进入统计报表 → FXKB02
+-->
+<div id="page-content" data-page="FXKB01" class="prototype-page">
+
+  <!-- 页头 -->
+  <div class="page-header">
+    <div class="page-title">风险驾驶舱</div>
+    <div class="actions">
+      <button class="btn btn-primary" data-nav="FXKB02">进入统计报表</button>
+    </div>
+  </div>
+
+  <!-- 统计卡片 -->
+  <div class="stat-row prototype-stat-row">
+    <div class="stat-card rich prototype-stat-card" data-nav="FXSC01">
+      <span class="ico ico-blue">📊</span>
+      <div class="stat-info">
+        <div class="num">312</div>
+        <div class="label">当前全部风险</div>
+        <span class="trend trend-up">↑ 较上月 +18</span>
+      </div>
+    </div>
+    <div class="stat-card rich prototype-stat-card" data-nav="FXSC01">
+      <span class="ico ico-red">⚠️</span>
+      <div class="stat-info">
+        <div class="num num-danger">46</div>
+        <div class="label">高风险数</div>
+        <span class="trend trend-up">↑ 较上周 +5</span>
+      </div>
+    </div>
+    <div class="stat-card rich prototype-stat-card" data-nav="FXSC01">
+      <span class="ico ico-orange">🔔</span>
+      <div class="stat-info">
+        <div class="num num-warning">89</div>
+        <div class="label">中风险数</div>
+        <span class="trend trend-flat">占比 28.5%</span>
+      </div>
+    </div>
+    <div class="stat-card rich prototype-stat-card" data-nav="FXSC01">
+      <span class="ico ico-yellow">📋</span>
+      <div class="stat-info">
+        <div class="num num-orange">142</div>
+        <div class="label">低风险数</div>
+        <span class="trend trend-flat">占比 45.5%</span>
+      </div>
+    </div>
+    <div class="stat-card rich prototype-stat-card" data-nav="FXSC01">
+      <span class="ico ico-red">⏰</span>
+      <div class="stat-info">
+        <div class="num num-muted">23</div>
+        <div class="label">超期数</div>
+        <span class="trend trend-up">↑ 较上周 +3</span>
+      </div>
+    </div>
+    <div class="stat-card rich prototype-stat-card" data-nav="FXSC01">
+      <span class="ico ico-green">✅</span>
+      <div class="stat-info">
+        <div class="num num-success">156</div>
+        <div class="label">已累计关闭风险</div>
+        <span class="trend trend-down">↓ 本月关闭 +12</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 图表行1：风险趋势(2/3) + 状态分布(1/3) -->
+  <div class="dash-grid-21">
+  <div class="card prototype-card card-shrink">
+    <div class="card-head prototype-card-head">
+      <div class="title"><span class="bar"></span>风险趋势分析（近6个月）</div>
+    </div>
+    <div class="chart-wrap">
+      <div class="chart-line">
+        <div class="chart-y-axis"><span>60</span><span>45</span><span>30</span><span>15</span><span>0</span></div>
+        <div class="chart-grid">
+          <div class="chart-grid-line" style="top:0;"></div>
+          <div class="chart-grid-line" style="top:25%;"></div>
+          <div class="chart-grid-line" style="top:50%;"></div>
+          <div class="chart-grid-line" style="top:75%;"></div>
+          <svg class="chart-area" preserveAspectRatio="none" viewBox="0 0 100 100">
+            <polyline points="8,55 25,50 42,38 58,30 75,22 92,18" fill="none" stroke="#e53935" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="8,40 25,42 42,35 58,32 75,28 92,25" fill="none" stroke="#fb8c00" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>
+            <polyline points="8,25 25,28 42,22 58,20 75,18 92,15" fill="none" stroke="#f57f17" stroke-width="2.5" vector-effect="non-scaling-stroke" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="chart-x-axis"><span>7月</span><span>8月</span><span>9月</span><span>10月</span><span>11月</span><span>12月</span></div>
+      </div>
+      <div class="chart-legend">
+        <span class="chart-legend-item"><span class="chart-legend-bar" style="background:#e53935;"></span>高风险</span>
+        <span class="chart-legend-item"><span class="chart-legend-bar" style="background:#fb8c00;"></span>中风险</span>
+        <span class="chart-legend-item"><span class="chart-legend-bar" style="background:#f57f17;"></span>低风险</span>
+      </div>
+    </div>
+  </div>
+
+    <div class="card prototype-card card-shrink">
+      <div class="card-head prototype-card-head">
+        <div class="title"><span class="bar"></span>风险状态分布</div>
+      </div>
+      <div class="chart-wrap">
+        <div class="pie-wrap">
+          <div class="pie" style="background:conic-gradient(#e53935 0% 14.7%, #fb8c00 14.7% 43.3%, #43a047 43.3% 88.8%, #999 88.8% 100%);">
+            <div class="pie-hole">312</div>
+          </div>
+          <div class="pie-legend">
+            <div class="pie-legend-item"><span class="pie-legend-dot" style="background:#e53935;"></span><span>高风险 14.7%</span></div>
+            <div class="pie-legend-item"><span class="pie-legend-dot" style="background:#fb8c00;"></span><span>中风险 28.5%</span></div>
+            <div class="pie-legend-item"><span class="pie-legend-dot" style="background:#43a047;"></span><span>低风险 45.5%</span></div>
+            <div class="pie-legend-item"><span class="pie-legend-dot" style="background:#999;"></span><span>已关闭 11.3%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /图表行1 -->
+
+  <!-- 图表行2：部门排名 + 超期预警 -->
+  <div class="two-col-grid">
+    <div class="card prototype-card card-shrink">
+      <div class="card-head prototype-card-head">
+        <div class="title"><span class="bar"></span>部门风险排名（本月）</div>
+      </div>
+      <div class="table-wrap prototype-table-wrap panel-padding">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:60px;">排名</th>
+              <th>部门</th>
+              <th style="width:70px;">风险数</th>
+              <th style="width:70px;">高风险</th>
+              <th style="width:70px;">超期率</th>
+              <th style="width:120px;">处置进度</th>
+            </tr>
+          </thead>
+          <tbody id="rankBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card prototype-card card-shrink">
+      <div class="card-head prototype-card-head">
+        <div class="title"><span class="bar"></span>超期预警列表</div>
+      </div>
+      <div class="table-wrap prototype-table-wrap panel-padding">
+        <table>
+          <thead>
+            <tr>
+              <th>风险编号</th>
+              <th>风险标题</th>
+              <th>责任部门</th>
+              <th style="width:80px;">截止日</th>
+              <th style="width:80px;">超期天数</th>
+              <th style="width:70px;">预警等级</th>
+            </tr>
+          </thead>
+          <tbody id="warnBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div><!-- /图表行2 -->
+
+  <!-- 图表行3：场景分布 + 处置时效 -->
+  <div class="two-col-grid">
+    <div class="card prototype-card card-shrink">
+      <div class="card-head prototype-card-head">
+        <div class="title"><span class="bar"></span>风险场景分布</div>
+      </div>
+      <div class="chart-wrap" id="sceneBody"></div>
+    </div>
+
+    <div class="card prototype-card card-shrink">
+    <div class="card-head prototype-card-head">
+      <div class="title"><span class="bar"></span>风险处置时效分析</div>
+    </div>
+    <div class="chart-wrap">
+      <div class="efficiency-chart">
+        <div class="efficiency-bar">
+          <div class="efficiency-bar-fill" style="height:35%;background:var(--success);"></div>
+          <span class="efficiency-bar-label">≤3天</span>
+          <span class="efficiency-bar-value">85</span>
+        </div>
+        <div class="efficiency-bar">
+          <div class="efficiency-bar-fill" style="height:55%;background:var(--primary-light);"></div>
+          <span class="efficiency-bar-label">4-7天</span>
+          <span class="efficiency-bar-value">132</span>
+        </div>
+        <div class="efficiency-bar">
+          <div class="efficiency-bar-fill" style="height:28%;background:var(--warning);"></div>
+          <span class="efficiency-bar-label">8-15天</span>
+          <span class="efficiency-bar-value">68</span>
+        </div>
+        <div class="efficiency-bar">
+          <div class="efficiency-bar-fill" style="height:15%;background:var(--danger);"></div>
+          <span class="efficiency-bar-label">&gt;15天</span>
+          <span class="efficiency-bar-value">27</span>
+        </div>
+      </div>
+      <div class="efficiency-summary">
+        <span>平均处置时长: <strong style="color:var(--primary);">6.8天</strong></span>
+        <span>环比: <strong style="color:var(--success);">↓ 0.5天</strong></span>
+      </div>
+    </div>
+  </div>
+  </div><!-- /图表行3 -->
+
+</div>
+
+<script src="../../../assets/page-runtime.js"></script>
+<script>
+const RANK_DATA = [
+  { rank: 1, dept: '采购部', count: 58, high: 12, overdue: '3.4%', progress: 78, color: 'blue' },
+  { rank: 2, dept: '财务部', count: 45, high: 8, overdue: '6.7%', progress: 65, color: 'blue' },
+  { rank: 3, dept: '仓储物流部', count: 42, high: 9, overdue: '11.9%', progress: 52, color: 'orange' },
+  { rank: 4, dept: '质量管理部', count: 35, high: 5, overdue: '2.9%', progress: 71, color: 'blue' },
+  { rank: 5, dept: '销售部', count: 28, high: 4, overdue: '7.1%', progress: 61, color: 'blue' },
+  { rank: 6, dept: '生产运营部', count: 24, high: 6, overdue: '12.5%', progress: 48, color: 'red' }
+];
+const WARN_DATA = [
+  { code: 'FX20241101005', title: '围标串标风险-氧化铝采购', dept: '采购部', deadline: '2024-11-30', days: '+7天', level: '红色' },
+  { code: 'FX20241108012', title: '供应商关联关系未披露', dept: '采购部', deadline: '2024-12-01', days: '+6天', level: '红色' },
+  { code: 'FX20241115008', title: '价格异常波动-铝锭采购', dept: '财务部', deadline: '2024-12-03', days: '+4天', level: '红色' },
+  { code: 'FX20241120003', title: '合同变更未履行审批', dept: '法务部', deadline: '2024-12-05', days: '+2天', level: '橙色' },
+  { code: 'FX20241125006', title: '质检数据异常-原料入库', dept: '质量管理部', deadline: '2024-12-06', days: '今日到期', level: '黄色' }
+];
+const SCENE_DATA = [
+  { name: '围标串标', value: 58, color: '#1565c0' },
+  { name: '价格异常', value: 49, color: '#fb8c00' },
+  { name: '供应商关联', value: 41, color: '#5e35b1' },
+  { name: '合同合规', value: 33, color: '#e53935' },
+  { name: '质检造假', value: 29, color: '#00897b' },
+  { name: '库存损耗', value: 24, color: '#43a047' },
+  { name: '其他', value: 15, color: '#1565c0' }
+];
+const LEVEL_TAG = {
+  '红色': { cls: 'reject' },
+  '橙色': { cls: 'pending' },
+  '黄色': { cls: 'review' }
+};
+const PROGRESS_COLOR = {
+  blue: '#1565c0',
+  orange: '#fb8c00',
+  red: '#e53935'
+};
+const OVERDUE_COLOR = {
+  blue: '#43a047',
+  orange: '#fb8c00',
+  red: '#e53935'
+};
+
+function render() {
+  document.getElementById('rankBody').innerHTML = RANK_DATA.map(d => `
+    <tr>
+      <td><span class="rank-num ${d.rank <= 3 ? 'top' : ''}">${d.rank}</span></td>
+      <td>${d.dept}</td>
+      <td>${d.count}</td>
+      <td><span class="tag reject"><span class="td"></span>${d.high}</span></td>
+      <td class="${d.color === 'red' ? 'text-danger' : d.color === 'orange' ? 'text-warning' : 'text-success'}">${d.overdue}</td>
+      <td><div class="progress-track"><div class="progress-fill" style="width:${d.progress}%;background:${PROGRESS_COLOR[d.color]};"></div></div></td>
+    </tr>
+  `).join('');
+
+  document.getElementById('warnBody').innerHTML = WARN_DATA.map(d => {
+    const st = LEVEL_TAG[d.level];
+    const dayColor = d.level === '红色' ? 'var(--danger)' : d.level === '橙色' ? 'var(--warning)' : '#f57f17';
+    return `<tr>
+      <td><span class="link" data-nav="FXSC03">${d.code}</span></td>
+      <td class="text-left">${d.title}</td>
+      <td>${d.dept}</td>
+      <td>${d.deadline}</td>
+      <td style="color:${dayColor};font-weight:bold;">${d.days}</td>
+      <td><span class="tag ${st.cls}"><span class="td"></span>${d.level}</span></td>
+    </tr>`;
+  }).join('');
+
+  const max = Math.max(...SCENE_DATA.map(s => s.value));
+  document.getElementById('sceneBody').innerHTML = SCENE_DATA.map(d => `
+    <div class="scene-bar-row">
+      <div class="scene-bar-label">${d.name}</div>
+      <div class="scene-bar-track">
+        <div class="scene-bar-fill" style="width:${(d.value / max * 100).toFixed(0)}%;background:${d.color};">${d.value}</div>
+      </div>
+      <div class="scene-bar-value">${d.value}</div>
+    </div>
+  `).join('');
+
+  PR.bindActions();
+}
+
+render();
+</script>
+</body>
+</html>

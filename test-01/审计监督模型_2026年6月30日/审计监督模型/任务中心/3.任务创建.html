@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务创建 - 审计监督</title>
+    <style>
+        :root { --primary: #1565c0; --primary-dark: #0d47a1; --primary-light: #e3f2fd; --success: #43a047; --warning: #fb8c00; --danger: #e53935; --info: #5e35b1; --text-primary: #333; --text-secondary: #666; --text-muted: #999; --border-color: #e0e0e0; --bg-body: #f0f2f5; --bg-card: #fff; --sidebar-width: 220px; --header-height: 56px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; font-size: 13px; color: var(--text-primary); background: var(--bg-body); overflow: hidden; height: 100%; }
+
+        .top-header { height: var(--header-height); background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: #fff; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; gap: 2px; }
+        .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; }
+        .brand-version { font-size: 10px; opacity: .85; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; }
+        .logo-text .en { font-size: 9px; opacity: .75; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .company-info { font-size: 13px; opacity: .95; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .menu-item .arrow { width: 12px; height: 12px; transition: transform .2s; opacity: .4; }
+        .submenu { display: none; background: #fafafa; }
+        .submenu.open { display: block; }
+        .submenu .menu-item { padding-left: 38px; height: 36px; font-size: 12px; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px; }
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; }
+        .page-title { font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .top-actions { display: flex; gap: 6px; }
+
+        .btn { height: 28px; padding: 0 12px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-ghost { background: transparent; border-color: transparent; color: var(--text-secondary); }
+        .btn-ghost:hover { background: #f5f5f5; }
+
+        .step-bar { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 12px; background: #fff; padding: 14px 16px; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); flex-shrink: 0; }
+        .step-item { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); user-select: none; }
+        .step-item.active { color: var(--primary); font-weight: bold; }
+        .step-item.completed { color: var(--success); }
+        .step-item .step-num { width: 26px; height: 26px; border-radius: 50%; background: #e0e0e0; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; flex-shrink: 0; }
+        .step-item.active .step-num { background: var(--primary); }
+        .step-item.completed .step-num { background: var(--success); }
+        .step-line { width: 60px; height: 2px; background: #e0e0e0; margin: 0 10px; }
+        .step-line.completed { background: var(--success); }
+
+        .scroll-content { flex: 1; overflow-y: auto; }
+        .scroll-content::-webkit-scrollbar { width: 6px; }
+        .scroll-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+
+        .step-content { display: none; }
+        .step-content.active { display: block; }
+
+        .form-card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; }
+        .form-card-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .form-card-header::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .form-card-body { padding: 14px 16px; }
+
+        .query-form { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 16px; }
+        .form-row { display: flex; align-items: center; gap: 8px; }
+        .form-row .form-label { width: 90px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+        .form-row .form-input, .form-row .form-select { flex: 1; height: 28px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; outline: none; font-family: inherit; }
+        .form-row .form-input:focus, .form-row .form-select:focus { border-color: var(--primary); }
+        .form-row .form-textarea { flex: 1; min-height: 60px; border: 1px solid var(--border-color); border-radius: 3px; padding: 6px 8px; font-size: 12px; outline: none; resize: vertical; font-family: inherit; }
+        .form-row .form-textarea:focus { border-color: var(--primary); }
+        .form-row-full { grid-column: span 2; }
+        .form-row-three { grid-column: span 3; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 24px; }
+        .info-item { display: flex; gap: 8px; }
+        .info-label { color: var(--text-secondary); font-size: 12px; width: 100px; flex-shrink: 0; }
+        .info-value { color: var(--text-primary); font-size: 12px; font-weight: bold; }
+
+        .detail-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .detail-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 8px 6px; text-align: center; border-bottom: 1px solid #bbdefb; }
+        .detail-table tbody td { padding: 8px 6px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .detail-table tbody tr:hover { background: #f5f7fa; }
+        .col-link { color: var(--primary); text-decoration: none; }
+        .col-link:hover { text-decoration: underline; }
+
+        .tip-box { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 4px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #e65100; }
+        .tip-box .tip-action { color: var(--primary); cursor: pointer; font-weight: bold; }
+
+        .bottom-actions { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-top: 12px; flex-shrink: 0; }
+
+        /* 系统推荐卡片 */
+        .recommend-card { border: 1px solid #bbdefb !important; background: linear-gradient(to bottom, #fff, #f8fbff) !important; }
+        .recommend-card .form-card-header { color: var(--primary-dark); }
+        .recommend-card .form-card-header::before { background: var(--success); }
+        .recommend-item { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border-bottom: 1px dashed #e0e0e0; }
+        .recommend-item:last-child { border-bottom: none; }
+        .recommend-num { width: 24px; height: 24px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; flex-shrink: 0; }
+        .recommend-body { flex: 1; }
+        .recommend-title { font-size: 13px; font-weight: bold; color: var(--text-primary); margin-bottom: 6px; }
+        .recommend-title .recommend-name { color: var(--primary); font-size: 14px; }
+        .recommend-rules { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
+        .rule-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 3px; font-size: 11px; background: var(--primary-light); color: var(--primary-dark); }
+        .recommend-actions { display: flex; gap: 8px; }
+        .recommend-detail { padding: 12px 16px; background: #f5f7fa; border-top: 1px solid #e0e0e0; }
+        .recommend-detail-title { font-size: 12px; font-weight: bold; color: var(--text-secondary); margin-bottom: 8px; }
+        .score-detail { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 12px; }
+        .score-item { text-align: center; padding: 6px; background: #fff; border-radius: 3px; }
+        .score-item .score-label { color: var(--text-muted); font-size: 11px; }
+        .score-item .score-value { font-weight: bold; color: var(--primary); }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system"><span class="brand-name">绿星链通</span><span class="brand-version">2.0</span></div>
+            <div class="brand-divider"></div>
+            <div class="logo-text"><span class="cn">中国铝业集团有限公司</span><span class="en">ALUMINUM CORPORATION OF CHINA</span></div>
+        </div>
+        <div class="header-center">
+            <div class="header-search"><input type="text" placeholder="请输入页面号"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg></div>
+        </div>
+        <div class="header-right"><span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span><div class="user-avatar">潘</div></div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险驾驶舱</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128203;</span><span>风险事件池</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128188;</span><span>我的工作台</span></div></div></div>
+            <div class="menu-group"><div class="menu-item active"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务管理</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#9989;</span><span>验收审核</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128226;</span><span>超期督办</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>统计分析</span></div></div></div>
+        </aside>
+
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a href="2.任务管理列表.html">任务管理</a><span class="sep">&gt;</span><a href="2.任务管理列表.html">任务列表</a><span class="sep">&gt;</span><span>创建任务</span>
+            </div>
+
+            <div class="page-header">
+                <div class="page-title"><span>任务创建</span></div>
+                <div class="top-actions">
+                    <a href="2.任务管理列表.html" class="btn btn-default">返回列表</a>
+                </div>
+            </div>
+
+            <div class="step-bar">
+                <div class="step-item active" id="step1Label">
+                    <div class="step-num">1</div><span>选择风险</span>
+                </div>
+                <div class="step-line" id="line1"></div>
+                <div class="step-item" id="step2Label">
+                    <div class="step-num">2</div><span>填写任务信息</span>
+                </div>
+                <div class="step-line" id="line2"></div>
+                <div class="step-item" id="step3Label">
+                    <div class="step-num">3</div><span>确认派发</span>
+                </div>
+            </div>
+
+            <div class="scroll-content">
+                <!-- 步骤1：选择风险 -->
+                <div class="step-content active" id="step1">
+                    <div class="tip-box">
+                        <span>&#128161;</span>
+                        <span>系统检测到 <strong>3个风险</strong> 涉及同一供应商【广西铝业设备制造有限公司】，<span class="tip-action" onclick="alert('已自动勾选')">一键聚合</span></span>
+                    </div>
+                    <div class="form-card">
+                        <div class="form-card-header">风险清单（请选择要关联的风险）</div>
+                        <div class="form-card-body">
+                            <div class="query-form" style="margin-bottom:12px;padding:0;">
+                                <div class="form-row"><label class="form-label">风险编号</label><input type="text" class="form-input" placeholder="请输入"></div>
+                                <div class="form-row"><label class="form-label">风险标题</label><input type="text" class="form-input" placeholder="请输入"></div>
+                                <div class="form-row">
+                                    <label class="form-label">风险分类</label>
+                                    <select class="form-select"><option>全部</option><option>招投标风险</option><option>供应商管理风险</option><option>价格与结算风险</option></select>
+                                </div>
+                                <div class="form-row">
+                                    <label class="form-label">风险等级</label>
+                                    <select class="form-select"><option>全部</option><option>红色-重大</option><option>橙色-较大</option><option>黄色-一般</option><option>蓝色-关注</option></select>
+                                </div>
+                            </div>
+                            <table class="detail-table">
+                                <thead>
+                                    <tr><th style="width:40px;"><input type="checkbox"></th><th>序号</th><th>风险编号</th><th>风险标题</th><th>风险分类</th><th>风险等级</th><th>涉及金额</th><th>责任部门</th></tr>
+                                </thead>
+                                <tbody>
+                                    <tr><td><input type="checkbox" checked></td><td>1</td><td><a href="#" class="col-link">FX20241201001</a></td><td style="text-align:left;">三家投标人MAC地址重合</td><td>招投标风险</td><td style="color:var(--danger);font-weight:bold;">红色-重大</td><td>386.50</td><td>招标办</td></tr>
+                                    <tr><td><input type="checkbox" checked></td><td>2</td><td><a href="#" class="col-link">FX20241201002</a></td><td style="text-align:left;">投标人报价呈等差数列</td><td>招投标风险</td><td style="color:var(--warning);font-weight:bold;">橙色-较大</td><td>386.50</td><td>招标办</td></tr>
+                                    <tr><td><input type="checkbox" checked></td><td>3</td><td><a href="#" class="col-link">FX20241201003</a></td><td style="text-align:left;">投标文件技术标高度雷同</td><td>招投标风险</td><td style="color:var(--warning);font-weight:bold;">橙色-较大</td><td>386.50</td><td>招标办</td></tr>
+                                    <tr><td><input type="checkbox"></td><td>4</td><td><a href="#" class="col-link">FX20241201004</a></td><td style="text-align:left;">供应商隐性关联未披露</td><td>供应商管理风险</td><td style="color:var(--warning);font-weight:bold;">橙色-较大</td><td>125.00</td><td>采购部</td></tr>
+                                    <tr><td><input type="checkbox"></td><td>5</td><td><a href="#" class="col-link">FX20241128003</a></td><td style="text-align:left;">单一来源定价高于市场价</td><td>价格与结算风险</td><td style="color:var(--danger);font-weight:bold;">红色-重大</td><td>520.80</td><td>财务部</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 系统推荐（基于规则引擎） -->
+                <div class="form-card recommend-card" id="recommendCard">
+                    <div class="form-card-header">&#128300; 系统推荐（基于规则引擎）</div>
+                    <div style="padding: 0;">
+                        <div class="recommend-item">
+                            <div class="recommend-num">1</div>
+                            <div class="recommend-body">
+                                <div class="recommend-title">主负责人：<span class="recommend-name">集团审计委员会</span></div>
+                                <div class="recommend-rules">
+                                    <span class="rule-tag">R102 金额≥500万</span>
+                                    <span class="rule-tag">R101 红色风险直报</span>
+                                </div>
+                                <div class="recommend-actions">
+                                    <button class="btn btn-success btn-sm" onclick="adoptRecommend(this)">&#10004; 采纳</button>
+                                    <button class="btn btn-default btn-sm" onclick="changePerson()">换其他人</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="recommend-item">
+                            <div class="recommend-num">2</div>
+                            <div class="recommend-body">
+                                <div class="recommend-title">协办人：<span class="recommend-name">审计部-张丽、招标办-王建国</span></div>
+                                <div class="recommend-rules">
+                                    <span class="rule-tag">R001 部门对口-招投标</span>
+                                </div>
+                                <div class="recommend-actions">
+                                    <button class="btn btn-success btn-sm" onclick="adoptRecommend(this)">&#10004; 采纳</button>
+                                    <button class="btn btn-default btn-sm" onclick="removeRecommend(this)">移除</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="recommend-detail" id="recommendDetail" style="display:none;">
+                            <div class="recommend-detail-title">规则命中得分明细</div>
+                            <div class="score-detail">
+                                <div class="score-item"><div class="score-label">R102 金额阈值</div><div class="score-value">200 × 1000 = 200,000</div></div>
+                                <div class="score-item"><div class="score-label">R101 红色直报</div><div class="score-value">150 × 333 = 49,950</div></div>
+                                <div class="score-item"><div class="score-label">R001 部门对口</div><div class="score-value">100 × 100 = 10,000</div></div>
+                                <div class="score-item"><div class="score-label">R301 负荷超载</div><div class="score-value">排除候选人</div></div>
+                            </div>
+                        </div>
+                        <div style="padding: 10px 16px; text-align: center; border-top: 1px solid #f0f0f0;">
+                            <button class="btn btn-default btn-sm" onclick="toggleRecommendDetail()">&#128220; 查看规则命中详情</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤2：填写任务信息 -->
+                <div class="step-content" id="step2">
+                    <div class="form-card">
+                        <div class="form-card-header">已选风险（3个）<a href="#" class="col-link" style="margin-left:auto;font-weight:normal;" onclick="goToStep(1)">重新选择</a></div>
+                        <div class="form-card-body">
+                            <table class="detail-table">
+                                <thead><tr><th>风险编号</th><th>风险标题</th><th>风险分类</th><th>风险等级</th></tr></thead>
+                                <tbody>
+                                    <tr><td>FX20241201001</td><td style="text-align:left;">三家投标人MAC地址重合</td><td>招投标风险</td><td style="color:var(--danger);font-weight:bold;">红色-重大</td></tr>
+                                    <tr><td>FX20241201002</td><td style="text-align:left;">投标人报价呈等差数列</td><td>招投标风险</td><td style="color:var(--warning);font-weight:bold;">橙色-较大</td></tr>
+                                    <tr><td>FX20241201003</td><td style="text-align:left;">投标文件技术标高度雷同</td><td>招投标风险</td><td style="color:var(--warning);font-weight:bold;">橙色-较大</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="form-card">
+                        <div class="form-card-header">任务信息</div>
+                        <div class="form-card-body">
+                            <div class="query-form">
+                                <div class="form-row"><label class="form-label">任务编号</label><input type="text" class="form-input" value="RW20241205001" readonly style="background:#f5f5f5;"></div>
+                                <div class="form-row"><label class="form-label required">任务标题</label><input type="text" class="form-input" value="某招标项目围标串标专项核查"></div>
+                                <div class="form-row">
+                                    <label class="form-label required">任务类型</label>
+                                    <select class="form-select"><option>风险处置</option><option>专项审计</option><option>日常巡检</option><option>督办整改</option></select>
+                                </div>
+                                <div class="form-row">
+                                    <label class="form-label required">负责人</label>
+                                    <select class="form-select"><option>请选择</option><option selected>王建国</option><option>李晓明</option><option>张丽娟</option></select>
+                                </div>
+                                <div class="form-row">
+                                    <label class="form-label required">责任部门</label>
+                                    <select class="form-select"><option>请选择</option><option selected>招标办</option><option>采购部</option><option>财务部</option></select>
+                                </div>
+                                <div class="form-row">
+                                    <label class="form-label required">计划截止</label>
+                                    <input type="date" class="form-input" value="2024-12-20">
+                                </div>
+                                <div class="form-row">
+                                    <label class="form-label required">优先级</label>
+                                    <select class="form-select"><option>紧急</option><option selected>高</option><option>中</option><option>低</option></select>
+                                </div>
+                                <div class="form-row"><label class="form-label">协办人</label><input type="text" class="form-input" placeholder="可选，支持多人"></div>
+                                <div class="form-row form-row-three"><label class="form-label required">任务描述</label><textarea class="form-textarea" rows="2">请对某招标项目三家投标人的关联关系、投标文件制作痕迹进行全面核查，形成专项调查报告。</textarea></div>
+                                <div class="form-row form-row-three"><label class="form-label required">验收标准</label><textarea class="form-textarea" rows="2">1.出具三家投标人关联关系核查报告；2.如确认围标串标，提供完整证据链；3.提出处理建议。</textarea></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 步骤3：确认派发 -->
+                <div class="step-content" id="step3">
+                    <div class="form-card">
+                        <div class="form-card-header">任务信息确认</div>
+                        <div class="form-card-body">
+                            <div class="info-grid">
+                                <div class="info-item"><span class="info-label">任务编号</span><span class="info-value">RW20241205001</span></div>
+                                <div class="info-item"><span class="info-label">任务类型</span><span class="info-value">风险处置</span></div>
+                                <div class="info-item"><span class="info-label">优先级</span><span class="info-value" style="color:var(--warning);">高</span></div>
+                                <div class="info-item"><span class="info-label">负责人</span><span class="info-value">王建国</span></div>
+                                <div class="info-item"><span class="info-label">责任部门</span><span class="info-value">招标办</span></div>
+                                <div class="info-item"><span class="info-label">计划截止</span><span class="info-value">2024-12-20</span></div>
+                                <div class="info-item" style="grid-column:span 3;"><span class="info-label">任务标题</span><span class="info-value">某招标项目围标串标专项核查</span></div>
+                                <div class="info-item" style="grid-column:span 3;"><span class="info-label">任务描述</span><span class="info-value" style="font-weight:normal;">请对某招标项目三家投标人的关联关系、投标文件制作痕迹进行全面核查，形成专项调查报告。</span></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-card">
+                        <div class="form-card-header">关联风险（3个）</div>
+                        <div class="form-card-body">
+                            <table class="detail-table">
+                                <thead><tr><th>风险编号</th><th>风险标题</th><th>风险分类</th><th>风险等级</th><th>涉及金额(万元)</th></tr></thead>
+                                <tbody>
+                                    <tr><td>FX20241201001</td><td style="text-align:left;">三家投标人MAC地址重合</td><td>招投标风险</td><td style="color:var(--danger);font-weight:bold;">红色-重大</td><td>386.50</td></tr>
+                                    <tr><td>FX20241201002</td><td style="text-align:left;">投标人报价呈等差数列</td><td>招投标风险</td><td style="color:var(--warning);font-weight:bold;">橙色-较大</td><td>386.50</td></tr>
+                                    <tr><td>FX20241201003</td><td style="text-align:left;">投标文件技术标高度雷同</td><td>招投标风险</td><td style="color:var(--warning);font-weight:bold;">橙色-较大</td><td>386.50</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-actions">
+                <button class="btn btn-default" id="btnPrev" onclick="prevStep()" style="display:none;">&#8592; 上一步</button>
+                <button class="btn btn-primary" id="btnNext" onclick="nextStep()">下一步 &#8594;</button>
+                <button class="btn btn-success" id="btnSubmit" onclick="submitForm()" style="display:none;">&#10004; 确认派发</button>
+                <button class="btn btn-danger" id="btnCloseRisk" onclick="closeRisk()">关闭风险</button>
+                <a href="2.任务管理列表.html" class="btn btn-ghost">取消</a>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 3;
+
+        function nextStep() {
+            if (currentStep < totalSteps) {
+                currentStep++;
+                updateStepUI();
+            }
+        }
+
+        function prevStep() {
+            if (currentStep > 1) {
+                currentStep--;
+                updateStepUI();
+            }
+        }
+
+        function goToStep(step) {
+            currentStep = step;
+            updateStepUI();
+        }
+
+        function updateStepUI() {
+            document.querySelectorAll('.step-item').forEach((item, idx) => {
+                item.classList.remove('active', 'completed');
+                if (idx + 1 < currentStep) item.classList.add('completed');
+                if (idx + 1 === currentStep) item.classList.add('active');
+            });
+            document.querySelectorAll('.step-line').forEach((line, idx) => {
+                line.classList.toggle('completed', idx + 1 < currentStep);
+            });
+            document.querySelectorAll('.step-content').forEach((content, idx) => {
+                content.classList.toggle('active', idx + 1 === currentStep);
+            });
+            document.getElementById('btnPrev').style.display = currentStep === 1 ? 'none' : 'inline-flex';
+            document.getElementById('btnNext').style.display = currentStep === totalSteps ? 'none' : 'inline-flex';
+            document.getElementById('btnSubmit').style.display = currentStep === totalSteps ? 'inline-flex' : 'none';
+            document.getElementById('btnCloseRisk').style.display = currentStep === 1 ? 'inline-flex' : 'none';
+        }
+
+        function closeRisk() {
+            if (confirm('确定要关闭选中的风险吗？关闭后该风险将不再进入任务管理。')) {
+                alert('风险已关闭！');
+                window.location.href = '2.任务管理列表.html';
+            }
+        }
+
+        function submitForm() {
+            alert('任务派发成功！');
+            window.location.href = '2.任务管理列表.html';
+        }
+
+        // 规则引擎推荐交互
+        function adoptRecommend(btn) {
+            btn.textContent = '已采纳';
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.parentElement.querySelectorAll('.btn').forEach(b => {
+                if (b !== btn) b.style.display = 'none';
+            });
+        }
+
+        function changePerson() {
+            alert('打开人员选择弹窗...');
+        }
+
+        function removeRecommend(btn) {
+            btn.closest('.recommend-item').remove();
+        }
+
+        function toggleRecommendDetail() {
+            const detail = document.getElementById('recommendDetail');
+            detail.style.display = detail.style.display === 'none' ? 'block' : 'none';
+        }
+    </script>
+</body>
+</html>

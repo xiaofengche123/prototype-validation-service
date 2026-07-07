@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>规则命中日志 - 审计监督</title>
+    <style>
+        :root {
+            --primary: #1565c0;
+            --primary-dark: #0d47a1;
+            --primary-light: #e3f2fd;
+            --success: #43a047;
+            --warning: #fb8c00;
+            --danger: #e53935;
+            --info: #5e35b1;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-muted: #999;
+            --border-color: #e0e0e0;
+            --bg-body: #f0f2f5;
+            --bg-card: #fff;
+            --sidebar-width: 220px;
+            --header-height: 56px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-body);
+            overflow: hidden;
+            height: 100%;
+        }
+
+        /* ========== 顶部 Banner ========== */
+        .top-header {
+            height: var(--header-height);
+            background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            color: #fff;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+            flex-shrink: 0;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; letter-spacing: 1px; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+
+        /* ========== 布局框架 ========== */
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+
+        /* ========== 左侧菜单 ========== */
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .menu-item .arrow { width: 12px; height: 12px; transition: transform .2s; opacity: .4; }
+        .menu-item.expanded .arrow { transform: rotate(90deg); }
+        .submenu { display: none; background: #fafafa; }
+        .submenu.open { display: block; }
+        .submenu .menu-item { padding-left: 38px; height: 36px; font-size: 12px; }
+        .submenu .submenu { background: #f5f5f5; }
+        .submenu .submenu .menu-item { padding-left: 56px; height: 34px; font-size: 12px; }
+
+        /* ========== 主内容区 ========== */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px 0; }
+        .main-content::-webkit-scrollbar { width: 6px; }
+        .main-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+
+        /* 面包屑 */
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); cursor: pointer; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+
+        /* 页面标题 */
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+        .page-title { font-size: 16px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .top-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+        /* ========== 查询区 ========== */
+        .query-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; flex-shrink: 0; }
+        .section-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: bold; color: var(--primary); }
+        .section-header .header-left-part { display: flex; align-items: center; gap: 8px; }
+        .section-header .section-icon { width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .section-actions { display: flex; align-items: center; gap: 8px; }
+        .query-form { padding: 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px 16px; }
+        .form-item { display: flex; align-items: center; gap: 8px; }
+        .form-item .form-label { width: 110px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+        .form-item .form-input, .form-item .form-select { flex: 1; height: 30px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; color: var(--text-primary); outline: none; transition: border-color .2s; min-width: 0; }
+        .form-item .form-input:focus, .form-item .form-select:focus { border-color: var(--primary); }
+        .form-item .form-input::placeholder { color: #bbb; }
+        .form-item .date-range { display: flex; align-items: center; gap: 6px; flex: 1; }
+        .form-item .date-range input { flex: 1; height: 30px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; color: var(--text-primary); outline: none; }
+        .form-item .date-range input:focus { border-color: var(--primary); }
+        .form-item .date-range .date-sep { color: var(--text-muted); font-size: 12px; }
+
+        /* ========== 按钮 ========== */
+        .btn { height: 28px; padding: 0 14px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-ghost { background: transparent; border-color: transparent; color: var(--text-secondary); }
+        .btn-ghost:hover { background: #f5f5f5; }
+        .btn-sm { height: 24px; padding: 0 10px; font-size: 11px; }
+
+        /* ========== 列表区 ========== */
+        .list-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+
+        .list-toolbar { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .toolbar-left { display: flex; align-items: center; gap: 10px; }
+        .toolbar-right { display: flex; align-items: center; gap: 8px; }
+        .section-title { font-size: 14px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+        .section-title .title-badge { font-size: 11px; padding: 1px 6px; border-radius: 10px; background: var(--primary); color: #fff; font-weight: normal; }
+
+        /* ========== 表格 ========== */
+        .data-table-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        .table-scroll-area { flex: 1; overflow: auto; min-height: 0; }
+        .table-scroll-area::-webkit-scrollbar { width: 6px; height: 6px; }
+        .table-scroll-area::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1200px; }
+        .data-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 10px 8px; text-align: center; border-bottom: 1px solid #bbdefb; white-space: nowrap; position: sticky; top: 0; z-index: 10; }
+        .data-table tbody td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #f0f0f0; color: var(--text-primary); }
+        .data-table tbody tr:hover { background: #f5f7fa; }
+        .data-table .col-left { text-align: left; }
+        .data-table .col-link { color: var(--primary); cursor: pointer; }
+        .data-table .col-link:hover { text-decoration: underline; }
+
+        /* 风险等级标签 */
+        .risk-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 3px; font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .risk-tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+        .risk-high { background: #ffebee; color: #c62828; }
+        .risk-high::before { background: #ef5350; }
+        .risk-medium { background: #fff3e0; color: #e65100; }
+        .risk-medium::before { background: #fb8c00; }
+        .risk-low { background: #e8f5e9; color: #2e7d32; }
+        .risk-low::before { background: #66bb6a; }
+
+        /* 分页 */
+        .pagination-bar { padding: 10px 16px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); background: #fff; flex-shrink: 0; }
+        .pagination-bar .page-info { color: var(--text-secondary); font-size: 12px; }
+        .page-btns { display: flex; align-items: center; gap: 4px; }
+        .page-btn { min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); background: #fff; border-radius: 3px; cursor: pointer; font-size: 12px; color: var(--text-secondary); padding: 0 6px; }
+        .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .page-btn.disabled { opacity: .4; cursor: not-allowed; }
+        .page-size-select { height: 28px; border: 1px solid var(--border-color); border-radius: 3px; font-size: 12px; padding: 0 4px; outline: none; }
+        .page-jump { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-secondary); }
+        .page-jump input { width: 40px; height: 28px; border: 1px solid var(--border-color); border-radius: 3px; text-align: center; font-size: 12px; outline: none; }
+
+        input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--primary); cursor: pointer; }
+        .empty-state { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; color: var(--text-muted); gap: 12px; }
+        .empty-state.show { display: flex; }
+        .empty-state-icon { font-size: 48px; opacity: .3; }
+        .empty-state-text { font-size: 14px; }
+
+        /* 文本省略 */
+        .text-ellipsis { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+        .text-ellipsis-wide { max-width: 280px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <!-- 顶部 Banner -->
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system">
+                <span class="brand-name">绿星链通</span>
+                <span class="brand-version">2.0</span>
+            </div>
+            <div class="brand-divider"></div>
+            <div class="logo-text">
+                <span class="cn">中国铝业集团有限公司</span>
+                <span class="en">ALUMINUM CORPORATION OF CHINA</span>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="header-search">
+                <input type="text" placeholder="请输入页面号">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="M21 21l-4.35-4.35"></path>
+                </svg>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span>
+            <div class="user-badge">
+                <div class="user-avatar">潘</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="layout">
+        <!-- 左侧菜单 -->
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险驾驶舱</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128203;</span><span>风险事件池</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128188;</span><span>我的工作台</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务管理</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#9989;</span><span>验收审核</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128226;</span><span>超期督办</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>统计分析</span></div></div></div>
+            <div class="menu-group">
+                <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#9881;</span><span>模型中心</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="submenu open">
+                    <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>规则模型</span></div>
+                    </div>
+                    <div class="submenu open">
+                        <div class="menu-item"><div class="menu-left"><span>规则配置管理</span></div></div>
+                        <div class="menu-item active"><div class="menu-left"><span>规则命中日志</span></div></div>
+                    </div>
+                    <div class="menu-item" style="opacity:0.5;cursor:not-allowed;" title="阶段二开放">
+                        <div class="menu-left"><span>风险模型</span></div>
+                        <span style="font-size:10px;color:var(--text-muted);margin-left:auto;background:#f5f5f5;padding:1px 4px;border-radius:2px;">后续</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <!-- 面包屑 -->
+            <div class="breadcrumb">
+                <a>模型中心</a><span class="sep">&gt;</span><a>规则模型</a><span class="sep">&gt;</span><span>规则命中日志</span>
+            </div>
+
+            <!-- 页面标题 -->
+            <div class="page-header">
+                <div class="page-title">
+                    <span>规则命中日志</span>
+                </div>
+                <div class="top-actions">
+                    <button class="btn btn-default">&#128229; 导出Excel</button>
+                </div>
+            </div>
+
+            <!-- 查询区 -->
+            <div class="query-section">
+                <div class="section-header">
+                    <div class="header-left-part">
+                        <span class="section-icon"></span>
+                        <span>查询条件</span>
+                    </div>
+                    <div class="section-actions">
+                        <button class="btn btn-default" onclick="resetForm()">&#8634; 重置</button>
+                        <button class="btn btn-primary" onclick="doSearch()">&#128269; 查询</button>
+                    </div>
+                </div>
+                <div class="query-form">
+                    <div class="form-item">
+                        <label class="form-label">规则名称</label>
+                        <input type="text" class="form-input" id="qRuleName" placeholder="请输入规则名称">
+                    </div>
+                    <div class="form-item">
+                        <label class="form-label">规则校验字段</label>
+                        <input type="text" class="form-input" id="qCheckField" placeholder="请输入校验字段">
+                    </div>
+                    <div class="form-item">
+                        <label class="form-label">数据源表/指标</label>
+                        <select class="form-select" id="qDataSource">
+                            <option value="">全部</option>
+                            <option value="供应商准入表">供应商准入表</option>
+                            <option value="采购订单表">采购订单表</option>
+                            <option value="采购方案表">采购方案表</option>
+                            <option value="合同执行表">合同执行表</option>
+                            <option value="结算付款表">结算付款表</option>
+                            <option value="授信管理表">授信管理表</option>
+                            <option value="供应商评价指标">供应商评价指标</option>
+                            <option value="采购时效指标">采购时效指标</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <label class="form-label">命中数据标识</label>
+                        <input type="text" class="form-input" id="qDataId" placeholder="单据号/供应商编码">
+                    </div>
+                    <div class="form-item">
+                        <label class="form-label">命中时间范围</label>
+                        <div class="date-range">
+                            <input type="datetime-local" id="qStartTime">
+                            <span class="date-sep">至</span>
+                            <input type="datetime-local" id="qEndTime">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 列表区 -->
+            <div class="list-section">
+                <div class="list-toolbar">
+                    <div class="toolbar-left">
+                        <span class="section-title">&#9776; 规则命中日志清单 <span class="title-badge" id="totalCount">0</span></span>
+                    </div>
+                    <div class="toolbar-right">
+                        <span style="font-size:12px;color:var(--text-muted);">共 <strong id="totalNum" style="color:var(--primary);">0</strong> 条记录</span>
+                    </div>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <div class="table-scroll-area">
+                        <table class="data-table" id="dataTable">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>规则名称</th>
+                                    <th>规则描述</th>
+                                    <th>规则校验字段</th>
+                                    <th>数据源表/指标配置</th>
+                                    <th>风险编号</th>
+                                    <th>风险等级</th>
+                                    <th>命中数据标识</th>
+                                    <th>命中时间</th>
+                                    <th>命中的具体字段值</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                            </tbody>
+                        </table>
+                        <div class="empty-state" id="emptyState">
+                            <div class="empty-state-icon">&#128196;</div>
+                            <div class="empty-state-text">暂无规则命中日志</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分页 -->
+                <div class="pagination-bar" id="paginationBar">
+                    <div class="page-info">
+                        <select class="page-size-select" id="pageSize" onchange="changePageSize()">
+                            <option value="10">10条/页</option>
+                            <option value="20" selected>20条/页</option>
+                            <option value="50">50条/页</option>
+                            <option value="100">100条/页</option>
+                        </select>
+                    </div>
+                    <div class="page-btns" id="pageBtns"></div>
+                    <div class="page-jump">
+                        <span>跳至</span>
+                        <input type="number" id="jumpPage" min="1" onkeydown="if(event.key==='Enter')jumpToPage()">
+                        <span>页</span>
+                        <button class="btn btn-sm btn-default" onclick="jumpToPage()">确定</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ========== 菜单展开/收起 ==========
+        function toggleMenu(el) {
+            el.classList.toggle('expanded');
+            const submenu = el.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                submenu.classList.toggle('open');
+            }
+        }
+
+        // ========== 模拟数据 ==========
+        const allLogs = [
+            { ruleName: '万能供应商分析', ruleDesc: '识别在多个品类中均有供应记录的万能供应商', checkField: '供应商编码,品类范围', dataSource: '供应商准入表', riskId: 'RSK-2024-001', riskLevel: 'high', dataId: 'SUP-2024-00891', hitTime: '2024-12-05 14:32:18', fieldValue: '供应品类数: 23个' },
+            { ruleName: '准入制造商校验', ruleDesc: '校验供应商是否具备对应制造商资质', checkField: '制造商资质等级', dataSource: '供应商准入表', riskId: 'RSK-2024-002', riskLevel: 'medium', dataId: 'SUP-2024-00765', hitTime: '2024-12-05 13:15:42', fieldValue: '资质等级: 无' },
+            { ruleName: '单一来源计划量异常', ruleDesc: '识别单一来源采购计划量显著高于历史均值的品类', checkField: '计划采购量,历史均值', dataSource: '采购订单表', riskId: 'RSK-2024-003', riskLevel: 'high', dataId: 'PO-2024-11238', hitTime: '2024-12-05 12:08:55', fieldValue: '计划量/均值比: 5.8倍' },
+            { ruleName: '单一来源专业户识别', ruleDesc: '识别长期采用单一来源采购的供应商', checkField: '采购方式,供应商编码', dataSource: '采购订单表', riskId: 'RSK-2024-004', riskLevel: 'medium', dataId: 'SUP-2024-00543', hitTime: '2024-12-05 11:45:30', fieldValue: '单一来源次数: 18次/年' },
+            { ruleName: '紧急计划频次监控', ruleDesc: '监控某部门短期内紧急采购计划提交频次', checkField: '紧急标记,申请日期', dataSource: '采购方案表', riskId: 'RSK-2024-005', riskLevel: 'low', dataId: 'DEPT-8300-MAT', hitTime: '2024-12-05 10:22:10', fieldValue: '近30天紧急数: 12笔' },
+            { ruleName: '紧急采购专业户分析', ruleDesc: '识别频繁发起紧急采购的申请人', checkField: '申请人编码,紧急标记', dataSource: '采购方案表', riskId: 'RSK-2024-006', riskLevel: 'medium', dataId: 'USER-10045231', hitTime: '2024-12-05 09:56:33', fieldValue: '紧急占比: 78%' },
+            { ruleName: '采购方式选择错误', ruleDesc: '校验采购方式是否符合物料分类要求', checkField: '采购方式,物料分类', dataSource: '采购方案表', riskId: 'RSK-2024-007', riskLevel: 'high', dataId: 'PLAN-2024-08912', hitTime: '2024-12-05 09:18:47', fieldValue: '应招未招: 是' },
+            { ruleName: '虚报少中及只报不中', ruleDesc: '识别报价异常行为模式', checkField: '报价次数,中标次数', dataSource: '供应商评价指标', riskId: 'RSK-2024-008', riskLevel: 'high', dataId: 'SUP-2024-00321', hitTime: '2024-12-05 08:45:22', fieldValue: '报价/中标比: 15:1' },
+            { ruleName: '供应商评价数据异常', ruleDesc: '识别评价数据存在异常波动的供应商', checkField: '评分变化率', dataSource: '供应商评价指标', riskId: 'RSK-2024-009', riskLevel: 'medium', dataId: 'SUP-2024-00987', hitTime: '2024-12-04 17:30:15', fieldValue: '评分月波动: -35分' },
+            { ruleName: '供应商关联关系识别', ruleDesc: '识别存在关联关系的供应商', checkField: '法人代表,注册地址', dataSource: '供应商准入表', riskId: 'RSK-2024-010', riskLevel: 'high', dataId: 'SUP-2024-00156,SUP-2024-00157', hitTime: '2024-12-04 16:55:08', fieldValue: '法人相同: 是' },
+            { ruleName: '报价文件作者相同', ruleDesc: '检测不同供应商报价文件作者或修改者相同', checkField: '文档作者,修改者', dataSource: '采购订单表', riskId: 'RSK-2024-011', riskLevel: 'high', dataId: 'BID-2024-0567,BID-2024-0568', hitTime: '2024-12-04 16:20:45', fieldValue: '作者相同: 张三' },
+            { ruleName: '应招未招识别', ruleDesc: '识别应公开招标但未执行的项目', checkField: '预算金额,采购方式', dataSource: '采购方案表', riskId: 'RSK-2024-012', riskLevel: 'high', dataId: 'PLAN-2024-09001', hitTime: '2024-12-04 15:48:12', fieldValue: '预算: 520万,方式: 询比价' },
+            { ruleName: '合同模板使用率监控', ruleDesc: '监控企业合同标准模板使用率', checkField: '标准模板标记', dataSource: '合同执行表', riskId: 'RSK-2024-013', riskLevel: 'low', dataId: 'CONT-2024-03456', hitTime: '2024-12-04 14:10:33', fieldValue: '非标准模板: 是' },
+            { ruleName: '应结未结算分析', ruleDesc: '识别已达到结算条件但未办理结算的项目', checkField: '应结算日期,结算状态', dataSource: '结算付款表', riskId: 'RSK-2024-014', riskLevel: 'medium', dataId: 'SETT-2024-01234', hitTime: '2024-12-04 13:35:28', fieldValue: '超期天数: 45天' },
+            { ruleName: '质量不合格仍结算', ruleDesc: '识别供应商商品质量不合格但仍办理结算的情况', checkField: '质检结果,结算状态', dataSource: '结算付款表', riskId: 'RSK-2024-015', riskLevel: 'high', dataId: 'SUP-2024-00678', hitTime: '2024-12-04 12:50:55', fieldValue: '质检: 不合格,已结算: 是' },
+            { ruleName: '超合同数量执行', ruleDesc: '识别实际执行数量超过合同约定的项目', checkField: '合同数量,执行数量', dataSource: '合同执行表', riskId: 'RSK-2024-016', riskLevel: 'high', dataId: 'CONT-2024-03891', hitTime: '2024-12-04 11:25:18', fieldValue: '超量比例: 32%' },
+            { ruleName: '合同超期未执行', ruleDesc: '识别超过交货截止日期仍未执行的合同', checkField: '交货截止日期,执行状态', dataSource: '合同执行表', riskId: 'RSK-2024-017', riskLevel: 'medium', dataId: 'CONT-2024-04012', hitTime: '2024-12-04 10:48:42', fieldValue: '超期天数: 60天' },
+            { ruleName: '供应商付款账期异常', ruleDesc: '识别供应商付款账期长期未核销的情况', checkField: '挂账日期,核销状态', dataSource: '结算付款表', riskId: 'RSK-2024-018', riskLevel: 'medium', dataId: 'SUP-2024-00456', hitTime: '2024-12-04 09:30:15', fieldValue: '未核销账龄: 180天' },
+            { ruleName: '授信额度超限', ruleDesc: '监控供应商授信额度使用情况', checkField: '已用额度,授信额度', dataSource: '授信管理表', riskId: 'RSK-2024-019', riskLevel: 'high', dataId: 'SUP-2024-00234', hitTime: '2024-12-04 08:55:33', fieldValue: '使用率: 108%' },
+            { ruleName: '紧急计划签报周期异常', ruleDesc: '识别紧急计划签报周期过长的情况', checkField: '签报发起日期,签报完成日期', dataSource: '采购时效指标', riskId: 'RSK-2024-020', riskLevel: 'low', dataId: 'PLAN-2024-09123', hitTime: '2024-12-03 17:15:48', fieldValue: '签报周期: 22天' },
+            { ruleName: '采购协同不足检查', ruleDesc: '检查采购方案与执行环节的协同情况', checkField: '方案变更次数', dataSource: '采购方案表', riskId: 'RSK-2024-021', riskLevel: 'medium', dataId: 'PLAN-2024-09234', hitTime: '2024-12-03 16:40:22', fieldValue: '变更次数: 5次' },
+            { ruleName: '企业应付账款支付异常', ruleDesc: '分析企业应付账款支付次数及规律', checkField: '付款频次,付款金额', dataSource: '结算付款表', riskId: 'RSK-2024-022', riskLevel: 'low', dataId: 'ENT-8300', hitTime: '2024-12-03 15:55:10', fieldValue: '月付款笔数: 3笔' },
+            { ruleName: '供应商等级准入校验', ruleDesc: '校验供应商等级是否符合准入要求', checkField: '供应商等级,准入等级要求', dataSource: '供应商准入表', riskId: 'RSK-2024-023', riskLevel: 'medium', dataId: 'SUP-2024-00789', hitTime: '2024-12-03 14:20:35', fieldValue: '实际等级: B级,要求: A级' },
+            { ruleName: '单一来源违规线索', ruleDesc: '识别违规采取单一来源的线索', checkField: '单一来源理由,审批状态', dataSource: '采购订单表', riskId: 'RSK-2024-024', riskLevel: 'high', dataId: 'PO-2024-11345', hitTime: '2024-12-03 13:48:18', fieldValue: '理由不充分: 是' },
+            { ruleName: '流量采购占比异常', ruleDesc: '监控流量采购占总采购的比例', checkField: '流量采购额,总采购额', dataSource: '采购订单表', riskId: 'RSK-2024-025', riskLevel: 'low', dataId: 'DEPT-8300-ALL', hitTime: '2024-12-03 11:05:42', fieldValue: '流量占比: 62%' }
+        ];
+
+        let filteredLogs = [...allLogs];
+        let currentPage = 1;
+        let pageSize = 20;
+
+        // ========== 初始化 ==========
+        function init() {
+            renderTable();
+            renderPagination();
+        }
+
+        // ========== 渲染表格 ==========
+        function renderTable() {
+            const tbody = document.getElementById('tableBody');
+            const emptyState = document.getElementById('emptyState');
+            const totalCount = document.getElementById('totalCount');
+            const totalNum = document.getElementById('totalNum');
+
+            const start = (currentPage - 1) * pageSize;
+            const end = start + pageSize;
+            const pageData = filteredLogs.slice(start, end);
+
+            totalCount.textContent = filteredLogs.length;
+            totalNum.textContent = filteredLogs.length;
+
+            if (pageData.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.classList.add('show');
+                return;
+            }
+
+            emptyState.classList.remove('show');
+            tbody.innerHTML = pageData.map((log, index) => {
+                const riskClass = log.riskLevel === 'high' ? 'risk-high' : log.riskLevel === 'medium' ? 'risk-medium' : 'risk-low';
+                const riskText = log.riskLevel === 'high' ? '高风险' : log.riskLevel === 'medium' ? '中风险' : '低风险';
+                const seq = start + index + 1;
+                return `<tr>
+                    <td>${seq}</td>
+                    <td><span class="col-link" title="${log.ruleName}">${log.ruleName}</span></td>
+                    <td class="col-left"><span class="text-ellipsis-wide" title="${log.ruleDesc}">${log.ruleDesc}</span></td>
+                    <td>${log.checkField}</td>
+                    <td>${log.dataSource}</td>
+                    <td><span class="col-link">${log.riskId}</span></td>
+                    <td><span class="risk-tag ${riskClass}">${riskText}</span></td>
+                    <td><span class="col-link" title="${log.dataId}">${log.dataId}</span></td>
+                    <td>${log.hitTime}</td>
+                    <td class="col-left"><span class="text-ellipsis" title="${log.fieldValue}">${log.fieldValue}</span></td>
+                </tr>`;
+            }).join('');
+        }
+
+        // ========== 渲染分页 ==========
+        function renderPagination() {
+            const totalPages = Math.ceil(filteredLogs.length / pageSize) || 1;
+            const pageBtns = document.getElementById('pageBtns');
+
+            let html = '';
+            html += `<button class="page-btn ${currentPage === 1 ? 'disabled' : ''}" onclick="goPage(${currentPage - 1})">&lt;</button>`;
+
+            const maxVisible = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisible / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisible - 1);
+            if (endPage - startPage < maxVisible - 1) {
+                startPage = Math.max(1, endPage - maxVisible + 1);
+            }
+
+            if (startPage > 1) {
+                html += `<button class="page-btn" onclick="goPage(1)">1</button>`;
+                if (startPage > 2) html += `<span class="page-btn disabled">...</span>`;
+            }
+
+            for (let i = startPage; i <= endPage; i++) {
+                html += `<button class="page-btn ${i === currentPage ? 'active' : ''}" onclick="goPage(${i})">${i}</button>`;
+            }
+
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) html += `<span class="page-btn disabled">...</span>`;
+                html += `<button class="page-btn" onclick="goPage(${totalPages})">${totalPages}</button>`;
+            }
+
+            html += `<button class="page-btn ${currentPage === totalPages ? 'disabled' : ''}" onclick="goPage(${currentPage + 1})">&gt;</button>`;
+            pageBtns.innerHTML = html;
+        }
+
+        function goPage(page) {
+            const totalPages = Math.ceil(filteredLogs.length / pageSize) || 1;
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderTable();
+            renderPagination();
+        }
+
+        function changePageSize() {
+            pageSize = parseInt(document.getElementById('pageSize').value);
+            currentPage = 1;
+            renderTable();
+            renderPagination();
+        }
+
+        function jumpToPage() {
+            const input = document.getElementById('jumpPage');
+            const page = parseInt(input.value);
+            if (page) goPage(page);
+        }
+
+        // ========== 查询 ==========
+        function doSearch() {
+            const qRuleName = document.getElementById('qRuleName').value.trim();
+            const qCheckField = document.getElementById('qCheckField').value.trim();
+            const qDataSource = document.getElementById('qDataSource').value;
+            const qDataId = document.getElementById('qDataId').value.trim();
+            const qStartTime = document.getElementById('qStartTime').value;
+            const qEndTime = document.getElementById('qEndTime').value;
+
+            filteredLogs = allLogs.filter(log => {
+                if (qRuleName && !log.ruleName.includes(qRuleName)) return false;
+                if (qCheckField && !log.checkField.includes(qCheckField)) return false;
+                if (qDataSource && log.dataSource !== qDataSource) return false;
+                if (qDataId && !log.dataId.includes(qDataId)) return false;
+                if (qStartTime && new Date(log.hitTime) < new Date(qStartTime)) return false;
+                if (qEndTime && new Date(log.hitTime) > new Date(qEndTime)) return false;
+                return true;
+            });
+
+            currentPage = 1;
+            renderTable();
+            renderPagination();
+        }
+
+        function resetForm() {
+            document.getElementById('qRuleName').value = '';
+            document.getElementById('qCheckField').value = '';
+            document.getElementById('qDataSource').value = '';
+            document.getElementById('qDataId').value = '';
+            document.getElementById('qStartTime').value = '';
+            document.getElementById('qEndTime').value = '';
+            filteredLogs = [...allLogs];
+            currentPage = 1;
+            renderTable();
+            renderPagination();
+        }
+
+        // 初始化
+        init();
+    </script>
+</body>
+</html>

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务验收审核 - 审计监督</title>
+    <style>
+        :root { --primary: #1565c0; --primary-dark: #0d47a1; --primary-light: #e3f2fd; --success: #43a047; --warning: #fb8c00; --danger: #e53935; --info: #5e35b1; --text-primary: #333; --text-secondary: #666; --text-muted: #999; --border-color: #e0e0e0; --bg-body: #f0f2f5; --bg-card: #fff; --sidebar-width: 220px; --header-height: 56px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; font-size: 13px; color: var(--text-primary); background: var(--bg-body); overflow: hidden; height: 100%; }
+
+        .top-header { height: var(--header-height); background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: #fff; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; gap: 2px; }
+        .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; }
+        .brand-version { font-size: 10px; opacity: .85; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; }
+        .logo-text .en { font-size: 9px; opacity: .75; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .company-info { font-size: 13px; opacity: .95; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .submenu { display: none; background: #fafafa; }
+        .submenu.open { display: block; }
+        .submenu .menu-item { padding-left: 38px; height: 36px; font-size: 12px; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px; }
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; }
+        .page-title { font-size: 16px; font-weight: bold; }
+        .top-actions { display: flex; gap: 6px; }
+
+        .btn { height: 28px; padding: 0 12px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-default { color: var(--text-secondary); }
+
+        .scroll-content { flex: 1; overflow-y: auto; }
+        .scroll-content::-webkit-scrollbar { width: 6px; }
+
+        .form-card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; }
+        .form-card-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .form-card-header::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .form-card-body { padding: 14px 16px; }
+
+        .info-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px 24px; }
+        .info-item { display: flex; gap: 8px; }
+        .info-label { color: var(--text-secondary); font-size: 12px; width: 90px; flex-shrink: 0; }
+        .info-value { color: var(--text-primary); font-size: 12px; font-weight: bold; }
+        .info-value.normal { font-weight: normal; }
+
+        .query-form { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 16px; }
+        .form-row { display: flex; align-items: center; gap: 8px; }
+        .form-row .form-label { width: 100px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+        .form-row .form-label.required::before { content: "*"; color: var(--danger); margin-right: 2px; }
+        .form-row .form-input, .form-row .form-select { flex: 1; height: 28px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; outline: none; font-family: inherit; }
+        .form-row .form-input:focus, .form-row .form-select:focus { border-color: var(--primary); }
+        .form-row .form-textarea { flex: 1; min-height: 80px; border: 1px solid var(--border-color); border-radius: 3px; padding: 6px 8px; font-size: 12px; outline: none; resize: vertical; font-family: inherit; }
+        .form-row .form-textarea:focus { border-color: var(--primary); }
+        .form-row-full { grid-column: span 2; }
+
+        .file-list { display: flex; flex-direction: column; gap: 8px; }
+        .file-item { display: flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1px solid var(--border-color); border-radius: 4px; background: #fafafa; }
+        .file-icon { font-size: 16px; }
+        .file-name { flex: 1; font-size: 12px; }
+        .file-size { font-size: 11px; color: var(--text-muted); }
+
+        .radio-group { display: flex; align-items: center; gap: 16px; }
+        .radio-item { display: flex; align-items: center; gap: 6px; cursor: pointer; font-size: 12px; }
+        .radio-item input { accent-color: var(--primary); }
+
+        .bottom-actions { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-top: 12px; flex-shrink: 0; }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system"><span class="brand-name">绿星链通</span><span class="brand-version">2.0</span></div>
+            <div class="brand-divider"></div>
+            <div class="logo-text"><span class="cn">中国铝业集团有限公司</span><span class="en">ALUMINUM CORPORATION OF CHINA</span></div>
+        </div>
+        <div class="header-center">
+            <div class="header-search"><input type="text" placeholder="请输入页面号"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg></div>
+        </div>
+        <div class="header-right"><span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span><div class="user-avatar">潘</div></div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险驾驶舱</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128203;</span><span>风险事件池</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128188;</span><span>我的工作台</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务管理</span></div></div></div>
+            <div class="menu-group"><div class="menu-item active"><div class="menu-left"><span class="menu-icon">&#9989;</span><span>验收审核</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128226;</span><span>超期督办</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>统计分析</span></div></div></div>
+        </aside>
+
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a href="2.任务管理列表.html">任务管理</a><span class="sep">&gt;</span><a href="2.任务管理列表.html">任务列表</a><span class="sep">&gt;</span><span>任务验收审核</span>
+            </div>
+
+            <div class="page-header">
+                <div class="page-title">任务验收审核</div>
+                <div class="top-actions">
+                    <a href="2.任务管理列表.html" class="btn btn-default">返回列表</a>
+                </div>
+            </div>
+
+            <div class="scroll-content">
+                <!-- 整改信息预览 -->
+                <div class="form-card">
+                    <div class="form-card-header">整改信息</div>
+                    <div class="form-card-body">
+                        <div class="info-grid">
+                            <div class="info-item"><span class="info-label">任务编号</span><span class="info-value">RW20241201001</span></div>
+                            <div class="info-item"><span class="info-label">负责人</span><span class="info-value">王建国</span></div>
+                            <div class="info-item"><span class="info-label">提交时间</span><span class="info-value">2024-12-18 16:30</span></div>
+                            <div class="info-item"><span class="info-label">核实结论</span><span class="info-value">问题属实</span></div>
+                            <div class="info-item"><span class="info-label">原因类型</span><span class="info-value">制度漏洞+人为违规</span></div>
+                            <div class="info-item"><span class="info-label">预计挽损</span><span class="info-value" style="color:var(--success);">200万元</span></div>
+                            <div class="info-item" style="grid-column:span 3;"><span class="info-label">原因分析</span><span class="info-value normal">经核查，三家投标人中的两家存在同一实控人，C公司法人系A公司法人亲属，三家公司在同一办公地址注册，投标文件由同一台电脑制作上传，确系围标串标行为。</span></div>
+                            <div class="info-item" style="grid-column:span 3;"><span class="info-label">整改措施</span><span class="info-value normal">1.取消该三家投标人中标资格；2.重新组织招标；3.将该三家供应商列入黑名单，禁止参与集团采购活动3年；4.修订招标文件中的关联关系审查条款。</span></div>
+                            <div class="info-item" style="grid-column:span 3;"><span class="info-label">挽损措施</span><span class="info-value normal">已签订合同尚未执行的，依法解除合同并追究违约责任；已支付预付款的，启动追偿程序，预计可挽回损失约200万元。</span></div>
+                            <div class="info-item" style="grid-column:span 3;"><span class="info-label">问责建议</span><span class="info-value normal">建议对相关经办人进行诫勉谈话，对招标办负责人进行通报批评，对审核把关不严的人员扣减当月绩效。</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 证据列表 -->
+                <div class="form-card">
+                    <div class="form-card-header">已上传证据</div>
+                    <div class="form-card-body">
+                        <div class="file-list">
+                            <div class="file-item"><span class="file-icon">&#128196;</span><span class="file-name">三家投标人关联关系核查报告.pdf</span><span class="file-size">2.3MB</span></div>
+                            <div class="file-item"><span class="file-icon">&#128196;</span><span class="file-name">投标文件IP及MAC地址日志.xlsx</span><span class="file-size">856KB</span></div>
+                            <div class="file-item"><span class="file-icon">&#128196;</span><span class="file-name">工商信息查询截图.zip</span><span class="file-size">5.1MB</span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 审核表单 -->
+                <div class="form-card">
+                    <div class="form-card-header">审核意见</div>
+                    <div class="form-card-body">
+                        <div class="query-form">
+                            <div class="form-row">
+                                <label class="form-label required">验收结论</label>
+                                <div class="radio-group">
+                                    <label class="radio-item"><input type="radio" name="result" value="pass"><span>通过</span></label>
+                                    <label class="radio-item"><input type="radio" name="result" value="reject" checked><span>驳回</span></label>
+                                    <label class="radio-item"><input type="radio" name="result" value="part"><span>部分通过</span></label>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <label class="form-label">现场核查</label>
+                                <select class="form-select"><option>无需现场核查</option><option>已现场核查</option><option selected>待安排现场核查</option></select>
+                            </div>
+                            <div class="form-row form-row-full">
+                                <label class="form-label required">审核意见</label>
+                                <textarea class="form-textarea" rows="3">整改方向正确，但证据链尚不完整。请补充以下材料：1.三家公司银行流水往来记录；2.投标文件作者属性元数据截图；3.同一办公地址的物业租赁合同或房产证明。补充材料后重新提交验收。</textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-actions">
+                <a href="2.任务管理列表.html" class="btn btn-default">取消</a>
+                <button class="btn btn-danger" onclick="if(confirm('确定关闭该风险任务吗？')) alert('已关闭'); window.location.href='2.任务管理列表.html';">关闭风险</button>
+                <button class="btn btn-danger">驳回</button>
+                <button class="btn btn-success">审核通过</button>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>供应商评分卡编辑 - 审计监督</title>
+    <style>
+        :root { --primary: #1565c0; --primary-dark: #0d47a1; --primary-light: #e3f2fd; --success: #43a047; --warning: #fb8c00; --danger: #e53935; --info: #5e35b1; --text-primary: #333; --text-secondary: #666; --text-muted: #999; --border-color: #e0e0e0; --bg-body: #f0f2f5; --bg-card: #fff; --sidebar-width: 220px; --header-height: 56px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif; font-size: 13px; color: var(--text-primary); background: var(--bg-body); overflow: hidden; height: 100%; }
+        .top-header { height: var(--header-height); background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: #fff; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .menu-item .arrow { width: 12px; height: 12px; transition: transform .2s; opacity: .4; }
+        .menu-item.expanded .arrow { transform: rotate(90deg); }
+        .submenu { display: none; background: #fafafa; }
+        .submenu.open { display: block; }
+        .submenu .menu-item { padding-left: 38px; height: 36px; font-size: 12px; }
+        .submenu .submenu { background: #f5f5f5; }
+        .submenu .submenu .menu-item { padding-left: 56px; height: 34px; font-size: 12px; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px; }
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); cursor: pointer; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+        .page-title { font-size: 16px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .page-title .title-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--primary-light); color: var(--primary); font-weight: normal; }
+        .page-title .title-badge.success { background: #e8f5e9; color: var(--success); }
+        .top-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .btn { height: 28px; padding: 0 12px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-ghost { background: transparent; border-color: transparent; color: var(--text-secondary); }
+        .btn-ghost:hover { background: #f5f5f5; }
+        .btn-sm { height: 24px; padding: 0 8px; font-size: 11px; }
+        .scroll-content { flex: 1; overflow-y: auto; min-height: 0; }
+        .scroll-content::-webkit-scrollbar { width: 6px; }
+        .scroll-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+        .form-card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; }
+        .form-card-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .form-card-header::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .form-card-header .header-actions { margin-left: auto; display: flex; gap: 6px; }
+        .form-card-body { padding: 14px 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 16px; }
+        .form-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .form-row .form-label { width: 120px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; white-space: nowrap; }
+        .form-row .form-label.required::before { content: "*"; color: var(--danger); margin-right: 2px; }
+        .form-row .form-input, .form-row .form-select { flex: 1; min-width: 0; height: 28px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; color: var(--text-primary); outline: none; font-family: inherit; }
+        .form-row .form-input:focus, .form-row .form-select:focus { border-color: var(--primary); }
+        .form-row .form-input[readonly] { background: #f5f5f5; color: var(--text-muted); cursor: not-allowed; }
+        .form-row .form-textarea { flex: 1; min-width: 0; min-height: 60px; border: 1px solid var(--border-color); border-radius: 3px; padding: 6px 8px; font-size: 12px; outline: none; resize: vertical; font-family: inherit; }
+        .form-row.full-width { grid-column: span 2; }
+        .form-row.three-col { grid-column: span 3; }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .3s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; }
+        .switch input:checked + .slider { background-color: var(--success); }
+        .switch input:checked + .slider:before { transform: translateX(20px); }
+        .switch-label { font-size: 12px; color: var(--text-secondary); margin-left: 6px; }
+        .dynamic-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .dynamic-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 8px 6px; text-align: center; border-bottom: 1px solid #bbdefb; white-space: nowrap; }
+        .dynamic-table tbody td { padding: 6px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .dynamic-table tbody tr:hover { background: #f5f7fa; }
+        .dynamic-table .dt-input { width: 100%; height: 26px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 4px; font-size: 12px; outline: none; font-family: inherit; }
+        .dynamic-table .dt-select { width: 100%; height: 26px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 4px; font-size: 12px; outline: none; font-family: inherit; }
+        .dynamic-table .dt-btn { font-size: 11px; color: var(--danger); cursor: pointer; padding: 2px 6px; border: none; background: transparent; border-radius: 2px; }
+        .dynamic-table .dt-btn:hover { background: #ffebee; }
+        .dimension-card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 10px; border: 1px solid var(--border-color); }
+        .dimension-header { padding: 10px 16px; background: #fafafa; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 10px; cursor: pointer; }
+        .dimension-header:hover { background: #f5f5f5; }
+        .dimension-header .dim-toggle { width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); font-size: 10px; transition: transform .2s; }
+        .dimension-header.expanded .dim-toggle { transform: rotate(90deg); }
+        .dimension-header .dim-name { font-size: 13px; font-weight: bold; color: var(--text-primary); flex: 1; }
+        .dimension-header .dim-weight { font-size: 12px; color: var(--primary); font-weight: bold; }
+        .dimension-body { display: none; padding: 12px 16px; }
+        .dimension-body.show { display: block; }
+        .dimension-body .dim-actions { display: flex; gap: 8px; margin-bottom: 10px; }
+        .range-inputs { display: flex; align-items: center; gap: 4px; }
+        .range-inputs .dt-input { width: 60px; text-align: center; }
+        .range-sep { color: var(--text-muted); }
+        .score-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; display: none; }
+        .score-section.show { display: block; }
+        .score-section-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; color: var(--success); display: flex; align-items: center; gap: 8px; }
+        .score-section-header::before { content: ""; width: 4px; height: 16px; background: var(--success); border-radius: 2px; }
+        .score-section-body { padding: 14px 16px; }
+        .radar-container { display: flex; gap: 24px; align-items: flex-start; }
+        .radar-chart { width: 280px; height: 280px; position: relative; flex-shrink: 0; }
+        .radar-bg { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; }
+        .radar-polygon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 200px; height: 200px; }
+        .radar-polygon svg { width: 100%; height: 100%; }
+        .radar-labels { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+        .radar-label { position: absolute; font-size: 11px; color: var(--text-secondary); transform: translate(-50%, -50%); white-space: nowrap; }
+        .score-result { flex: 1; }
+        .score-total { text-align: center; padding: 16px; background: var(--primary-light); border-radius: 4px; margin-bottom: 12px; }
+        .score-total .score-num { font-size: 36px; font-weight: bold; color: var(--primary); }
+        .score-total .score-level { font-size: 14px; font-weight: bold; color: var(--success); margin-top: 4px; }
+        .score-dim-list { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .score-dim-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f5f7fa; border-radius: 3px; font-size: 12px; }
+        .score-dim-item .dim-bar { flex: 1; height: 6px; background: #e0e0e0; border-radius: 3px; overflow: hidden; }
+        .score-dim-item .dim-bar-fill { height: 100%; border-radius: 3px; }
+        .score-dim-item .dim-score { font-weight: bold; color: var(--primary); width: 40px; text-align: right; }
+        .bottom-actions { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-top: 12px; flex-shrink: 0; }
+        .tip-box { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 4px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #e65100; }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system"><span class="brand-name">绿星链通</span><span class="brand-version">2.0</span></div>
+            <div class="brand-divider"></div>
+            <div class="logo-text"><span class="cn">中国铝业集团有限公司</span><span class="en">ALUMINUM CORPORATION OF CHINA</span></div>
+        </div>
+        <div class="header-center"><div class="header-search"><input type="text" placeholder="请输入页面号"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg></div></div>
+        <div class="header-right"><span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span><div class="user-badge"><div class="user-avatar">潘</div></div></div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险驾驶舱</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128203;</span><span>风险事件池</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128188;</span><span>我的工作台</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务管理</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#9989;</span><span>验收审核</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128226;</span><span>超期督办</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>统计分析</span></div></div></div>
+            <div class="menu-group">
+                <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#9881;</span><span>模型中心</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="submenu open">
+                    <div class="menu-item expanded" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>规则模型</span></div>
+                    </div>
+                    <div class="submenu">
+                        <div class="menu-item"><div class="menu-left"><span>规则配置管理</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>规则命中日志</span></div></div>
+                    </div>
+                    <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>指标模型</span></div>
+                    </div>
+                    <div class="submenu open">
+                        <div class="menu-item active"><div class="menu-left"><span>供应商评分卡</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>健康度配置</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>知识库管理</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>评估结果查询</span></div></div>
+                    </div>
+                    <div class="menu-item" style="opacity:0.5;cursor:not-allowed;" title="阶段三开放">
+                        <div class="menu-left"><span>算法模型</span></div>
+                        <span style="font-size:10px;color:var(--text-muted);margin-left:auto;background:#f5f5f5;padding:1px 4px;border-radius:2px;">后续</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a onclick="goBack()">模型中心</a><span class="sep">&gt;</span>
+                <a onclick="goBack()">指标模型</a><span class="sep">&gt;</span>
+                <a onclick="goBack()">供应商评分卡</a><span class="sep">&gt;</span>
+                <span id="bcAction">新增评分卡</span>
+            </div>
+
+            <div class="page-header">
+                <div class="page-title">
+                    <span id="pageTitle">供应商评分卡编辑</span>
+                    <span class="title-badge" id="titleBadge">新增</span>
+                </div>
+                <div class="top-actions">
+                    <button class="btn btn-success" onclick="toggleScoreSection()">&#128300; 测试评分</button>
+                    <button class="btn btn-default" onclick="copyCard()">&#128203; 复制评分卡</button>
+                </div>
+            </div>
+
+            <div class="scroll-content">
+                <div class="tip-box">
+                    <span>&#128161;</span>
+                    <span>维度权重之和必须等于100%，因子权重在各维度内独立计算。得分区间支持数值型（区间映射）和枚举型（选项映射）两种模式。</span>
+                </div>
+
+                <!-- 基本信息 -->
+                <div class="form-card">
+                    <div class="form-card-header">基本信息</div>
+                    <div class="form-card-body">
+                        <div class="form-row"><label class="form-label required">评分卡编码</label><input type="text" class="form-input" id="cardId" value="S001"></div>
+                        <div class="form-row"><label class="form-label required">评分卡名称</label><input type="text" class="form-input" id="cardName" value="供应商画像评分卡"></div>
+                        <div class="form-row">
+                            <label class="form-label required">适用对象</label>
+                            <select class="form-select" id="targetType">
+                                <option value="">请选择</option><option value="供应商" selected>供应商</option>
+                                <option value="采购部门">采购部门</option><option value="采购项目">采购项目</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">状态</label>
+                            <div style="display:flex;align-items:center;">
+                                <label class="switch"><input type="checkbox" id="cardStatus" checked><span class="slider"></span></label>
+                                <span class="switch-label" id="statusLabel">已发布</span>
+                            </div>
+                        </div>
+                        <div class="form-row"><label class="form-label">版本号</label><input type="text" class="form-input" id="version" value="V2.0" readonly></div>
+                        <div class="form-row three-col">
+                            <label class="form-label">评分说明</label>
+                            <textarea class="form-textarea" id="cardDesc" rows="2">从金额影响度、频次异常度、供应商关联度、时间异常度、流程合规度五个维度对供应商进行综合风险画像评估。</textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 维度配置 -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        维度配置
+                        <div class="header-actions">
+                            <button class="btn btn-success btn-sm" onclick="addDimension()">+ 添加维度</button>
+                        </div>
+                    </div>
+                    <div style="padding: 12px 16px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #f0f0f0; margin-bottom: 10px; font-size: 12px; color: var(--text-secondary);">
+                            <span>维度权重总计：<strong id="totalWeight" style="color: var(--primary);">100%</strong></span>
+                            <span id="weightWarning" style="color: var(--danger); display: none;">⚠ 权重之和必须等于100%</span>
+                        </div>
+                        <div id="dimensionList">
+                            <!-- 维度由JS动态生成 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 得分区间配置 -->
+                <div class="form-card">
+                    <div class="form-card-header">得分区间与等级映射</div>
+                    <div style="padding: 12px 16px;">
+                        <table class="dynamic-table">
+                            <thead>
+                                <tr><th style="width:50px;">序号</th><th>区间下限</th><th>区间上限</th><th>风险等级</th><th>颜色标识</th><th>触发动作</th><th style="width:60px;">操作</th></tr>
+                            </thead>
+                            <tbody id="rangeBody"><!-- JS填充 --></tbody>
+                        </table>
+                        <div style="margin-top: 10px; text-align: center;">
+                            <button class="btn btn-success btn-sm" onclick="addRange()">+ 添加区间</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 测试评分 -->
+                <div class="score-section" id="scoreSection">
+                    <div class="score-section-header">&#128300; 测试评分</div>
+                    <div class="score-section-body">
+                        <div style="display: flex; gap: 12px; align-items: center; margin-bottom: 16px;">
+                            <label style="width:100px;text-align:right;color:var(--text-secondary);font-size:12px;">供应商编码</label>
+                            <input type="text" class="form-input" id="testSupplierId" value="SUP202400123" style="flex:1;height:28px;">
+                            <button class="btn btn-success" onclick="runTest()">&#9654; 执行评分</button>
+                        </div>
+                        <div id="scoreResult" style="display:none;">
+                            <div class="radar-container">
+                                <div class="radar-chart">
+                                    <svg viewBox="0 0 280 280" style="width:100%;height:100%;">
+                                        <g transform="translate(140,140)">
+                                            <!-- 背景五边形 -->
+                                            <polygon points="0,-100 95,-31 59,81 -59,81 -95,-31" fill="none" stroke="#e0e0e0" stroke-width="1"/>
+                                            <polygon points="0,-75 71,-23 44,61 -44,61 -71,-23" fill="none" stroke="#e0e0e0" stroke-width="1"/>
+                                            <polygon points="0,-50 48,-16 29,40 -29,40 -48,-16" fill="none" stroke="#e0e0e0" stroke-width="1"/>
+                                            <polygon points="0,-25 24,-8 15,20 -15,20 -24,-8" fill="none" stroke="#e0e0e0" stroke-width="1"/>
+                                            <polygon points="0,-80 76,-25 47,64 -47,64 -76,-25" fill="rgba(21,101,192,0.15)" stroke="var(--primary)" stroke-width="2"/>
+                                            <circle cx="0" cy="-80" r="3" fill="var(--primary)"/>
+                                            <circle cx="76" cy="-25" r="3" fill="var(--primary)"/>
+                                            <circle cx="47" cy="64" r="3" fill="var(--primary)"/>
+                                            <circle cx="-47" cy="64" r="3" fill="var(--primary)"/>
+                                            <circle cx="-76" cy="-25" r="3" fill="var(--primary)"/>
+                                        </g>
+                                        <text x="140" y="28" text-anchor="middle" font-size="11" fill="#666">金额影响度</text>
+                                        <text x="252" y="100" text-anchor="start" font-size="11" fill="#666">频次异常度</text>
+                                        <text x="210" y="240" text-anchor="start" font-size="11" fill="#666">供应商关联度</text>
+                                        <text x="70" y="240" text-anchor="end" font-size="11" fill="#666">时间异常度</text>
+                                        <text x="28" y="100" text-anchor="end" font-size="11" fill="#666">流程合规度</text>
+                                    </svg>
+                                </div>
+                                <div class="score-result">
+                                    <div class="score-total">
+                                        <div class="score-num">85</div>
+                                        <div class="score-level">低风险（黄色）</div>
+                                    </div>
+                                    <div class="score-dim-list">
+                                        <div class="score-dim-item"><span style="width:90px;">金额影响度</span><div class="dim-bar"><div class="dim-bar-fill" style="width:90%;background:var(--success);"></div></div><span class="dim-score">90</span></div>
+                                        <div class="score-dim-item"><span style="width:90px;">频次异常度</span><div class="dim-bar"><div class="dim-bar-fill" style="width:80%;background:var(--primary);"></div></div><span class="dim-score">80</span></div>
+                                        <div class="score-dim-item"><span style="width:90px;">供应商关联度</span><div class="dim-bar"><div class="dim-bar-fill" style="width:75%;background:var(--warning);"></div></div><span class="dim-score">75</span></div>
+                                        <div class="score-dim-item"><span style="width:90px;">时间异常度</span><div class="dim-bar"><div class="dim-bar-fill" style="width:95%;background:var(--success);"></div></div><span class="dim-score">95</span></div>
+                                        <div class="score-dim-item"><span style="width:90px;">流程合规度</span><div class="dim-bar"><div class="dim-bar-fill" style="width:85%;background:var(--success);"></div></div><span class="dim-score">85</span></div>
+                                    </div>
+                                    <div style="margin-top:12px;padding:8px 10px;background:#e8f5e9;border-radius:3px;font-size:12px;color:var(--success);">
+                                        <strong>评估结论：</strong>该供应商综合风险较低，建议纳入优质供应商库，可适当放宽订单限额。
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-actions">
+                <button class="btn btn-success" onclick="saveCard()">&#10004; 保存</button>
+                <button class="btn btn-primary" onclick="toggleScoreSection()">&#128300; 测试评分</button>
+                <button class="btn btn-default" onclick="goBack()">返回列表</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // 菜单展开收起
+        function toggleMenu(el) {
+            const submenu = el.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                el.classList.toggle('expanded');
+                submenu.classList.toggle('open');
+            }
+        }
+        document.getElementById('cardStatus').addEventListener('change', function() {
+            document.getElementById('statusLabel').textContent = this.checked ? '已发布' : '草稿';
+        });
+
+        // ========== 模拟维度数据 ==========
+        let dimensions = [
+            {
+                id: 'd1', name: '金额影响度', weight: 30,
+                factors: [
+                    { name: '合同金额波动率', source: '合同台账', type: '数值型', mapping: '[0,10%]→100分;[10%,30%)→60分;[30%,100%]→0分', weight: 40 },
+                    { name: '异常大额交易占比', source: '采购订单', type: '数值型', mapping: '[0,5%]→100分;[5%,15%)→60分;[15%,100%]→0分', weight: 35 },
+                    { name: '预算执行偏差率', source: '预算系统', type: '数值型', mapping: '[0,5%]→100分;[5%,20%)→60分;[20%,100%]→0分', weight: 25 }
+                ]
+            },
+            {
+                id: 'd2', name: '频次异常度', weight: 20,
+                factors: [
+                    { name: '单一来源采购占比', source: '采购系统', type: '数值型', mapping: '[0,10%]→100分;[10%,30%)→60分;[30%,100%]→0分', weight: 40 },
+                    { name: '紧急采购频次', source: '采购系统', type: '数值型', mapping: '[0,2次/季]→100分;[3,5次/季]→60分;[>5次/季]→0分', weight: 35 },
+                    { name: '月度采购频次标准差', source: '采购订单', type: '数值型', mapping: '[0,3]→100分;[3,8)→60分;[8,∞)→0分', weight: 25 }
+                ]
+            },
+            {
+                id: 'd3', name: '供应商关联度', weight: 15,
+                factors: [
+                    { name: '关联交易占比', source: '供应商图谱', type: '数值型', mapping: '[0,5%]→100分;[5%,15%)→60分;[15%,100%]→0分', weight: 40 },
+                    { name: '董监高交叉任职', source: '工商信息', type: '布尔型', mapping: '无→100分;有→0分', weight: 35 },
+                    { name: '历史中标重合率', source: '招标系统', type: '数值型', mapping: '[0,20%]→100分;[20%,50%)→60分;[50%,100%]→0分', weight: 25 }
+                ]
+            },
+            {
+                id: 'd4', name: '时间异常度', weight: 10,
+                factors: [
+                    { name: '准入即签约天数', source: '供应商档案', type: '数值型', mapping: '[30天,∞)→100分;[7天,30天)→60分;[0,7天)→0分', weight: 40 },
+                    { name: '合同签订滞后天数', source: '合同台账', type: '数值型', mapping: '[0,3天]→100分;[3,15天)→60分;[≥15天]→0分', weight: 35 },
+                    { name: '结算周期超期率', source: '结算系统', type: '数值型', mapping: '[0,5%]→100分;[5%,20%)→60分;[20%,100%]→0分', weight: 25 }
+                ]
+            },
+            {
+                id: 'd5', name: '流程合规度', weight: 25,
+                factors: [
+                    { name: '招标程序合规率', source: '招标系统', type: '数值型', mapping: '[95%,100%]→100分;[80%,95%)→60分;[0,80%)→0分', weight: 35 },
+                    { name: '审批流程完整性', source: 'OA系统', type: '布尔型', mapping: '完整→100分;缺失→0分', weight: 30 },
+                    { name: '合同条款合规率', source: '合同管理', type: '数值型', mapping: '[90%,100%]→100分;[70%,90%)→60分;[0,70%)→0分', weight: 35 }
+                ]
+            }
+        ];
+
+        // ========== 渲染维度列表 ==========
+        function renderDimensions() {
+            const container = document.getElementById('dimensionList');
+            container.innerHTML = '';
+            let totalW = 0;
+            dimensions.forEach((dim, idx) => {
+                totalW += dim.weight;
+                const card = document.createElement('div');
+                card.className = 'dimension-card';
+                card.id = 'dim-' + dim.id;
+                card.innerHTML = `
+                    <div class="dimension-header expanded" onclick="toggleDimension('${dim.id}')">
+                        <span class="dim-toggle">▶</span>
+                        <span class="dim-name">${idx+1}. ${dim.name}</span>
+                        <span class="dim-weight">权重 ${dim.weight}%</span>
+                        <span style="margin-left:auto;"><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeDimension('${dim.id}')">删除</button></span>
+                    </div>
+                    <div class="dimension-body show" id="body-${dim.id}">
+                        <div class="dim-actions">
+                            <button class="btn btn-success btn-sm" onclick="addFactor('${dim.id}')">+ 添加因子</button>
+                        </div>
+                        <table class="dynamic-table">
+                            <thead><tr><th style="width:40px;">序号</th><th>因子名称</th><th style="width:120px;">数据来源</th><th style="width:90px;">数据类型</th><th>得分映射</th><th style="width:60px;">权重</th><th style="width:50px;">操作</th></tr></thead>
+                            <tbody>${dim.factors.map((f, i) => `
+                                <tr><td>${i+1}</td><td>${f.name}</td><td>${f.source}</td><td>${f.type}</td><td style="text-align:left;font-size:11px;">${f.mapping}</td><td>${f.weight}%</td><td><button class="dt-btn" onclick="removeFactor('${dim.id}',${i})">删除</button></td></tr>
+                            `).join('')}</tbody>
+                        </table>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+            document.getElementById('totalWeight').textContent = totalW + '%';
+            document.getElementById('weightWarning').style.display = totalW === 100 ? 'none' : 'inline';
+        }
+
+        function toggleDimension(id) {
+            const body = document.getElementById('body-' + id);
+            const header = body.previousElementSibling;
+            body.classList.toggle('show');
+            header.classList.toggle('expanded');
+        }
+
+        function addDimension() {
+            const id = 'd' + (dimensions.length + 1);
+            dimensions.push({ id, name: '新维度', weight: 0, factors: [] });
+            renderDimensions();
+        }
+        function removeDimension(id) {
+            if (confirm('确定删除该维度及其所有因子吗？')) {
+                dimensions = dimensions.filter(d => d.id !== id);
+                renderDimensions();
+            }
+        }
+        function addFactor(dimId) {
+            const dim = dimensions.find(d => d.id === dimId);
+            if (dim) {
+                dim.factors.push({ name: '新因子', source: '请选择', type: '数值型', mapping: '请配置', weight: 0 });
+                renderDimensions();
+            }
+        }
+        function removeFactor(dimId, idx) {
+            const dim = dimensions.find(d => d.id === dimId);
+            if (dim) { dim.factors.splice(idx, 1); renderDimensions(); }
+        }
+
+        // ========== 得分区间 ==========
+        let ranges = [
+            { lower: 90, upper: 100, level: '健康', color: '绿色', action: '纳入优质供应商库' },
+            { lower: 80, upper: 90, level: '低风险', color: '黄色', action: '加强日常监控' },
+            { lower: 60, upper: 80, level: '中风险', color: '橙色', action: '限制新订单，限期整改' },
+            { lower: 0, upper: 60, level: '高风险', color: '红色', action: '冻结合作资格，推送审计部' }
+        ];
+        function renderRanges() {
+            const tbody = document.getElementById('rangeBody');
+            tbody.innerHTML = ranges.map((r, i) => `
+                <tr><td>${i+1}</td><td><input type="number" class="dt-input" value="${r.lower}" style="width:60px;"></td><td><input type="number" class="dt-input" value="${r.upper}" style="width:60px;"></td><td><input type="text" class="dt-input" value="${r.level}"></td><td><input type="text" class="dt-input" value="${r.color}"></td><td><input type="text" class="dt-input" value="${r.action}"></td><td><button class="dt-btn" onclick="removeRange(${i})">删除</button></td></tr>
+            `).join('');
+        }
+        function addRange() { ranges.push({ lower: 0, upper: 100, level: '', color: '', action: '' }); renderRanges(); }
+        function removeRange(i) { ranges.splice(i, 1); renderRanges(); }
+
+        // ========== 测试评分 ==========
+        function toggleScoreSection() {
+            document.getElementById('scoreSection').classList.toggle('show');
+        }
+        function runTest() {
+            document.getElementById('scoreResult').style.display = 'block';
+        }
+
+        // ========== 操作 ==========
+        function saveCard() { alert('评分卡保存成功！'); goBack(); }
+        function copyCard() { alert('已复制评分卡配置'); }
+        function goBack() { window.location.href = '供应商评分卡.html'; }
+
+        // 初始化
+        renderDimensions();
+        renderRanges();
+    </script>
+</body>
+</html>

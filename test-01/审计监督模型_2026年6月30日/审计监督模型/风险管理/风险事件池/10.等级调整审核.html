@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>等级调整审核 - 绿星链通</title>
+    <style>
+        :root {
+            --primary: #1565c0;
+            --primary-dark: #0d47a1;
+            --primary-light: #e3f2fd;
+            --success: #43a047;
+            --warning: #fb8c00;
+            --danger: #e53935;
+            --info: #5e35b1;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-muted: #999;
+            --border-color: #e0e0e0;
+            --bg-body: #f0f2f5;
+            --bg-card: #fff;
+            --sidebar-width: 220px;
+            --header-height: 56px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-body);
+            overflow: hidden;
+            height: 100%;
+        }
+        .top-header {
+            height: var(--header-height);
+            background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            color: #fff;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; letter-spacing: 1px; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .menu-item .arrow { width: 12px; height: 12px; transition: transform .2s; opacity: .4; }
+        .menu-item.expanded .arrow { transform: rotate(90deg); }
+        .submenu { display: none; background: #fafafa; }
+        .submenu.open { display: block; }
+        .submenu .menu-item { padding-left: 38px; height: 36px; font-size: 12px; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px 0; }
+        .page-tabs { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 0 4px; flex-shrink: 0; }
+        .tab-list { display: flex; align-items: center; gap: 4px; }
+        .tab-item { padding: 10px 18px; cursor: pointer; color: var(--text-secondary); font-size: 13px; border-bottom: 2px solid transparent; transition: all .2s; position: relative; user-select: none; }
+        .tab-item:hover { color: var(--primary); }
+        .tab-item.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: bold; }
+        .tab-item .tab-close { margin-left: 6px; font-size: 14px; opacity: .4; display: inline-block; width: 14px; text-align: center; }
+        .tab-item .tab-close:hover { opacity: 1; color: var(--danger); }
+        .tab-extra { padding: 0 12px; }
+
+        .btn { height: 28px; padding: 0 14px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+
+        .form-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        .section-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: bold; color: var(--primary); }
+        .section-header .header-left-part { display: flex; align-items: center; gap: 8px; }
+        .section-header .section-icon { width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .section-actions { display: flex; align-items: center; gap: 8px; }
+
+        .form-scroll { flex: 1; overflow-y: auto; padding: 20px 24px; }
+        .form-scroll::-webkit-scrollbar { width: 6px; }
+        .form-scroll::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+
+        /* 信息卡片 */
+        .info-card {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e3f2fd 100%);
+            border: 1px solid #bbdefb;
+            border-radius: 6px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+        }
+        .info-card-title {
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--primary-dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px 24px;
+        }
+        .info-item {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+        }
+        .info-item-label {
+            color: var(--text-secondary);
+            font-size: 12px;
+            width: 80px;
+            flex-shrink: 0;
+        }
+        .info-item-value {
+            color: var(--text-primary);
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .level-red { color: #c62828; }
+        .level-orange { color: #e65100; }
+        .level-yellow { color: #f57f17; }
+        .level-blue { color: #1565c0; }
+
+        .form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 24px; max-width: 800px; }
+        .form-row { display: flex; align-items: center; gap: 8px; }
+        .form-row .form-label { width: 110px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+        .form-row .form-label.required::before { content: "*"; color: var(--danger); margin-right: 2px; }
+        .form-row .form-input, .form-row .form-select, .form-row .form-textarea {
+            flex: 1; height: 32px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 10px;
+            font-size: 12px; color: var(--text-primary); outline: none; transition: border-color .2s; min-width: 0;
+            font-family: inherit;
+        }
+        .form-row .form-input:focus, .form-row .form-select:focus, .form-row .form-textarea:focus { border-color: var(--primary); }
+        .form-row .form-textarea { height: 80px; padding: 8px 10px; resize: vertical; }
+        .form-row-full { grid-column: span 2; }
+
+        .form-group-title {
+            grid-column: span 2;
+            font-size: 13px;
+            font-weight: bold;
+            color: var(--primary-dark);
+            padding: 8px 0 4px;
+            border-bottom: 1px solid var(--primary-light);
+            margin-bottom: 4px;
+        }
+
+        .footer-bar {
+            padding: 12px 24px;
+            border-top: 1px solid var(--border-color);
+            background: #fff;
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            flex-shrink: 0;
+        }
+        .footer-bar .btn { height: 32px; padding: 0 24px; font-size: 13px; }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system">
+                <span class="brand-name">绿星链通</span>
+                <span class="brand-version">2.0</span>
+            </div>
+            <div class="brand-divider"></div>
+            <div class="logo-text">
+                <span class="cn">中国铝业集团有限公司</span>
+                <span class="en">ALUMINUM CORPORATION OF CHINA</span>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="header-search">
+                <input type="text" placeholder="请输入页面号">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="M21 21l-4.35-4.35"></path>
+                </svg>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span>
+            <div class="user-badge">
+                <div class="user-avatar">潘</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group">
+                <div class="menu-item" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-item expanded" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险驾驶舱</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="submenu open">
+                    <div class="menu-item"><div class="menu-left"><span>风险总览</span></div></div>
+                    <div class="menu-item"><div class="menu-left"><span>部门排名</span></div></div>
+                    <div class="menu-item"><div class="menu-left"><span>趋势分析</span></div></div>
+                    <div class="menu-item"><div class="menu-left"><span>超期预警</span></div></div>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-item" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#128203;</span><span>风险事件池</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-item active">
+                    <div class="menu-left"><span class="menu-icon">&#128188;</span><span>我的工作台</span></div>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-item" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#9989;</span><span>验收审核</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-item" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#128226;</span><span>超期督办</span></div>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-item" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-item" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#128202;</span><span>统计分析</span></div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-tabs">
+                <div class="tab-list">
+                    <div class="tab-item" onclick="switchTab(this)"><span>&#127968; 首页</span></div>
+                    <div class="tab-item" onclick="switchTab(this)">
+                        <span>风险管理清单</span>
+                        <span class="tab-close" onclick="closeTab(event, this)">&#10005;</span>
+                    </div>
+                    <div class="tab-item active" onclick="switchTab(this)">
+                        <span>等级调整审核</span>
+                        <span class="tab-close" onclick="closeTab(event, this)">&#10005;</span>
+                    </div>
+                </div>
+                <div class="tab-extra"><a href="工作台-风险管理清单.html" class="btn btn-default">&#8592; 返回列表</a></div>
+            </div>
+
+            <div class="form-section">
+                <div class="section-header">
+                    <div class="header-left-part">
+                        <span class="section-icon"></span>
+                        <span>等级调整审核</span>
+                    </div>
+                    <div class="section-actions">
+                        <span style="color:var(--text-muted);font-size:12px;">带 <span style="color:var(--danger);">*</span> 为必填项</span>
+                    </div>
+                </div>
+                <div class="form-scroll">
+                    <!-- 当前风险信息 -->
+                    <div class="info-card">
+                        <div class="info-card-title">&#128196; 当前风险信息</div>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-item-label">风险编号</span>
+                                <span class="info-item-value">FX20241201001</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-item-label">风险分类</span>
+                                <span class="info-item-value">招投标风险 / 围标串标</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-item-label">风险标题</span>
+                                <span class="info-item-value">某招标项目三家投标人MAC地址重合涉嫌围标</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-item-label">涉及金额</span>
+                                <span class="info-item-value">386.50 万元</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-item-label">当前等级</span>
+                                <span class="info-item-value level-red">红色-重大</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-item-label">责任部门/人</span>
+                                <span class="info-item-value">招标办 / 王建国</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-grid">
+                        <div class="form-group-title">等级调整</div>
+
+                        <div class="form-row">
+                            <label class="form-label required">调整后等级</label>
+                            <select class="form-select">
+                                <option>请选择</option>
+                                <option>红色-重大</option>
+                                <option selected>橙色-较大</option>
+                                <option>黄色-一般</option>
+                                <option>蓝色-关注</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label required">影响程度</label>
+                            <select class="form-select">
+                                <option>请选择</option>
+                                <option>重大(4)</option>
+                                <option selected>较大(3)</option>
+                                <option>一般(2)</option>
+                                <option>轻微(1)</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label required">发生概率</label>
+                            <select class="form-select">
+                                <option>请选择</option>
+                                <option>高(4)</option>
+                                <option selected>较高(3)</option>
+                                <option>中(2)</option>
+                                <option>低(1)</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">调整后分值</label>
+                            <input type="text" class="form-input" value="9" readonly style="background:#f5f5f5;">
+                        </div>
+
+                        <div class="form-group-title">审核意见</div>
+
+                        <div class="form-row form-row-full">
+                            <label class="form-label required">调整原因</label>
+                            <textarea class="form-textarea" placeholder="请说明等级调整的依据和理由">经核实，三家投标人虽MAC地址重合，但经调查确认为同一办公楼内不同公司共用网络所致，不构成围标串标事实。建议等级由红色调整为橙色。</textarea>
+                        </div>
+                        <div class="form-row form-row-full">
+                            <label class="form-label required">审批意见</label>
+                            <textarea class="form-textarea" placeholder="请输入审批意见"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="footer-bar">
+                    <a href="工作台-风险管理清单.html" class="btn btn-default">取消</a>
+                    <button class="btn btn-danger">驳回</button>
+                    <button class="btn btn-success">审核通过</button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleMenu(el) {
+            const submenu = el.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                el.classList.toggle('expanded');
+                submenu.classList.toggle('open');
+            }
+        }
+        function switchTab(el) {
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+        function closeTab(e, closeBtn) {
+            e.stopPropagation();
+            const tab = closeBtn.closest('.tab-item');
+            if (tab.classList.contains('active')) {
+                const prev = tab.previousElementSibling;
+                if (prev) prev.classList.add('active');
+            }
+            tab.remove();
+        }
+    </script>
+</body>
+</html>

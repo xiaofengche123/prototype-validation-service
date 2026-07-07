@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prototype To Vue (Vue3)"
+  short_description: "Convert static prototype pages into Vue3 (Ant Design Vue 4) demo framework pages."
+  default_prompt: "Use this skill to convert one page or a whole static prototype site into Vue 3 / Ant Design Vue 4 files, mock APIs, and menu rows."

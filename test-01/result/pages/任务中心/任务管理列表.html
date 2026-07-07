@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../assets/app.css">
+<link rel="stylesheet" href="../../assets/theme.css">
+<title>任务管理列表</title>
+</head>
+<body class="page-body">
+<!--
+  编码：RWGL02    名称：任务管理列表    类型：复杂清单页
+  查询字段：任务编号、任务标题、任务类型、当前状态、负责人、责任部门、创建时间、截止时间
+  状态标签：全部/待核实/待派发/待签收/处理中/待验收/已完成/已退回
+  表格列：序号、任务编号、任务标题、任务类型、关联风险、负责人、责任部门、创建时间、计划截止、当前状态、派单依据、操作
+  行操作：查看、派发、一键确认、验收、跟踪、重新派发、关闭、删除、归档
+  跳转：任务编号→任务详情（RWGL03）；派发/重新派发→任务创建（RWGL01）；验收→任务验收审核（RWZG02）
+-->
+<div id="page-content" data-page="RWGL02" class="prototype-page">
+
+  <!-- 页头 -->
+  <div class="page-header">
+    <div class="page-title">任务管理列表</div>
+    <div class="actions">
+      <button class="btn btn-primary" data-nav="RWGL01">+ 创建任务</button>
+    </div>
+  </div>
+
+
+  <!-- 查询卡 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title"><span class="bar"></span>查询信息</div>
+      <div class="actions">
+        <button class="btn btn-default" data-action="reset">↺ 重置</button>
+        <button class="btn btn-primary" data-action="search">🔍 查询</button>
+      </div>
+    </div>
+    <div class="query-grid prototype-query-grid">
+      <div class="form-item prototype-field">
+        <label>任务编号</label>
+        <input id="qTaskNo" placeholder="请输入任务编号">
+      </div>
+      <div class="form-item prototype-field">
+        <label>任务标题</label>
+        <input id="qTitle" placeholder="请输入任务标题">
+      </div>
+      <div class="form-item prototype-field">
+        <label>任务类型</label>
+        <select id="qType">
+          <option value="">请选择</option>
+          <option>风险处置</option>
+          <option>专项审计</option>
+          <option>日常巡检</option>
+          <option>督办整改</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>当前状态</label>
+        <select id="qStatus">
+          <option value="">全部状态</option>
+          <option value="verify">待核实</option>
+          <option value="draft">待派发</option>
+          <option value="pending">待签收</option>
+          <option value="process">处理中</option>
+          <option value="check">待验收</option>
+          <option value="done">已完成</option>
+          <option value="reject">已退回</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>负责人</label>
+        <input id="qOwner" placeholder="请输入负责人">
+      </div>
+      <div class="form-item prototype-field">
+        <label>责任部门</label>
+        <select id="qDept">
+          <option value="">请选择</option>
+          <option>采购部</option>
+          <option>财务部</option>
+          <option>质量管理部</option>
+          <option>法务部</option>
+          <option>审计部</option>
+          <option>仓储部</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>创建时间</label>
+        <div class="date-range">
+          <input type="date" id="qCreateFrom" value="2024-10-01">
+          <span class="sep">至</span>
+          <input type="date" id="qCreateTo" value="2024-12-31">
+        </div>
+      </div>
+      <div class="form-item prototype-field">
+        <label>截止时间</label>
+        <div class="date-range">
+          <input type="date" id="qDeadlineFrom">
+          <span class="sep">至</span>
+          <input type="date" id="qDeadlineTo">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 列表卡 -->
+  <div class="card list-card prototype-card" id="listCard">
+    <div class="list-toolbar prototype-list-toolbar">
+      <div class="title">☰ 任务管理列表 <span class="title-badge" id="totalCount">0</span></div>
+      <div class="actions">
+        <button class="btn btn-default" data-action="batch-export">⬇ 批量导出</button>
+        <button class="btn btn-success" data-action="batch-dispatch">📢 批量派发</button>
+      </div>
+    </div>
+    <div class="batch-bar prototype-batch-bar" id="batchBar">
+      <span>已选择 <b id="selCount">0</b> 项</span>
+      <button class="btn btn-sm btn-primary" data-action="batch-dispatch-sel">批量派发</button>
+      <button class="btn btn-sm btn-danger" data-action="batch-delete-sel">批量删除</button>
+    </div>
+
+    <!-- 状态标签 -->
+    <div class="status-tabs prototype-status-tabs" id="statusTabs"></div>
+
+    <div class="table-wrap prototype-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px"><input type="checkbox" id="ckAll"></th>
+            <th style="width:50px">序号</th>
+            <th style="width:130px">任务编号</th>
+            <th>任务标题</th>
+            <th style="width:100px">任务类型</th>
+            <th style="width:80px">关联风险</th>
+            <th style="width:120px">负责人</th>
+            <th style="width:100px">责任部门</th>
+            <th style="width:100px">创建时间</th>
+            <th style="width:100px">计划截止</th>
+            <th style="width:90px">当前状态</th>
+            <th style="width:80px">派单依据</th>
+            <th style="min-width:180px">操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span class="total">共 <b id="total">0</b> 条</span>
+      <select class="pg-size"><option>20 条/页</option><option>50 条/页</option></select>
+      <span class="pg">«</span><span class="pg">‹</span>
+      <span class="pg active">1</span>
+      <span class="pg">2</span>
+      <span class="pg">3</span>
+      <span class="pg">4</span>
+      <span class="pg">5</span>
+      <span class="pg">›</span><span class="pg">»</span>
+      <span class="goto">前往 <input value="1"> 页</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- 派单依据弹窗 -->
+<div class="modal-mask" data-modal="dispatchHint" id="dispatchHintMask">
+  <div class="modal modal-sm">
+    <div class="modal-title">规则引擎推荐依据</div>
+    <div class="modal-body modal-body-block" id="dispatchHintBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-action="close-modal" data-modal-target="dispatchHint">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+/* ===== 数据 ===== */
+const STATUS_LIST = [
+  { key: 'all', label: '全部', count: 186 },
+  { key: 'verify', label: '待核实', count: 8 },
+  { key: 'draft', label: '待派发', count: 23 },
+  { key: 'pending', label: '待签收', count: 15 },
+  { key: 'process', label: '处理中', count: 89 },
+  { key: 'check', label: '待验收', count: 42 },
+  { key: 'done', label: '已完成', count: 14 },
+  { key: 'reject', label: '已退回', count: 3 }
+];
+
+const STATUS_MAP = {
+  verify:  { cls: 'draft',   text: '待核实' },
+  draft:   { cls: 'draft',   text: '待派发' },
+  pending: { cls: 'pending', text: '待签收' },
+  process: { cls: 'review',  text: '处理中' },
+  check:   { cls: 'check',   text: '待验收' },
+  done:    { cls: 'pass',    text: '已完成' },
+  reject:  { cls: 'reject',  text: '已退回' }
+};
+
+const TASK_DATA = [
+  { id: 'RW20241205003', title: '某供应商资质造假疑似黑名单换壳重入', type: '风险处置', riskCount: 1, owner: '采购部-李晓明', dept: '采购部', create: '2024-12-05', deadline: '2024-12-15', status: 'verify', hasHint: true, hintRules: ['R001 部门对口-供应商', 'R302 超期人员降级（-30分）'], score: '70分 | 优先级权重：100' },
+  { id: 'RW20241205001', title: '广西区域三家关联供应商围标串标专项核查', type: '风险处置', riskCount: 3, owner: '--', dept: '招标办', create: '2024-12-05', deadline: '2024-12-15', status: 'draft', hasHint: false },
+  { id: 'RW20241201001', title: '某招标项目三家投标人MAC地址重合涉嫌围标', type: '风险处置', riskCount: 1, owner: '王建国', dept: '招标办', create: '2024-12-01', deadline: '2024-12-20', status: 'pending', hasHint: false },
+  { id: 'RW20241128002', title: '某单一来源采购定价显著高于市场价专项调查', type: '风险处置', riskCount: 2, owner: '张丽娟', dept: '财务部', create: '2024-11-28', deadline: '2024-12-25', status: 'process', hasHint: false },
+  { id: 'RW20241125003', title: '合同变更未履行审批程序合规检查', type: '专项审计', riskCount: 1, owner: '赵志强', dept: '法务部', create: '2024-11-25', deadline: '2024-12-08', status: 'process', hasHint: false },
+  { id: 'RW20241120005', title: '质检数据造假，不合格耐火材料流入生产环节', type: '风险处置', riskCount: 1, owner: '刘婷婷', dept: '质量管理部', create: '2024-11-20', deadline: '2024-12-05', status: 'check', hasHint: false },
+  { id: 'RW20241118006', title: '某物资库存周转异常，呆滞积压风险排查', type: '日常巡检', riskCount: 2, owner: '陈大伟', dept: '仓储部', create: '2024-11-18', deadline: '2024-12-10', status: 'check', hasHint: false },
+  { id: 'RW20241110007', title: '围标串标专项调查：三家关联企业轮流中标', type: '风险处置', riskCount: 3, owner: '孙丽华', dept: '审计部', create: '2024-11-10', deadline: '2024-11-30', status: 'done', hasHint: false },
+  { id: 'RW20241105008', title: '紧急采购占比异常升高，拆分规避招标核查', type: '风险处置', riskCount: 1, owner: '周建国', dept: '采购部', create: '2024-11-05', deadline: '2024-11-20', status: 'reject', hasHint: false },
+  { id: 'RW20241028010', title: '单一供应商年度采购额占比超60%集中度整改', type: '督办整改', riskCount: 1, owner: '--', dept: '采购部', create: '2024-10-28', deadline: '2024-12-31', status: 'draft', hasHint: false }
+];
+
+let currentFilter = 'all';
+let selectedIds = new Set();
+
+/* ===== 渲染 ===== */
+function renderStatusTabs() {
+  document.getElementById('statusTabs').innerHTML = STATUS_LIST.map(s => `
+    <button class="status-tab prototype-status-tab ${s.key === currentFilter ? 'active' : ''}" data-action="filter-status" data-status="${s.key}">
+      ${s.label} <span class="st-count">${s.count}</span>
+    </button>
+  `).join('');
+}
+
+function renderTable() {
+  const filtered = currentFilter === 'all' ? TASK_DATA : TASK_DATA.filter(t => t.status === currentFilter);
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = filtered.map((t, idx) => {
+    const st = STATUS_MAP[t.status];
+    const ops = buildOps(t);
+    const deadlineClass = isUrgent(t.deadline, t.status) ? 'text-danger' : '';
+    const hintCell = t.hasHint
+      ? `<button class="btn btn-sm btn-default" data-action="view-hint" data-task="${t.id}">ⓘ 依据</button>`
+      : '-';
+    return `<tr data-id="${t.id}">
+      <td><input type="checkbox" class="row-ck" value="${t.id}" ${selectedIds.has(t.id) ? 'checked' : ''}></td>
+      <td>${idx + 1}</td>
+      <td><span class="link" data-nav="RWGL03">${t.id}</span></td>
+      <td class="text-left" title="${t.title}">${t.title}</td>
+      <td>${t.type}</td>
+      <td>${t.riskCount}</td>
+      <td>${t.owner}</td>
+      <td>${t.dept}</td>
+      <td>${t.create}</td>
+      <td class="${deadlineClass}">${t.deadline}</td>
+      <td><span class="tag ${st.cls}"><span class="td"></span>${st.text}</span></td>
+      <td>${hintCell}</td>
+      <td><div class="op-btns">${ops}</div></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('totalCount').textContent = filtered.length;
+  document.getElementById('total').textContent = filtered.length;
+  updateBatchBar();
+  updateCkAll();
+}
+
+function buildOps(t) {
+  const ops = [];
+  ops.push(`<button class="op blue" data-action="view-task" data-task="${t.id}">查看</button>`);
+  if (t.status === 'verify') {
+    ops.push(`<button class="op green" data-action="confirm-dispatch" data-task="${t.id}">一键确认</button>`);
+    ops.push(`<button class="op red" data-action="close-task" data-task="${t.id}">关闭</button>`);
+  } else if (t.status === 'draft') {
+    ops.push(`<button class="op green" data-nav="RWGL01">派发</button>`);
+    ops.push(`<button class="op red" data-action="delete-task" data-task="${t.id}">删除</button>`);
+  } else if (t.status === 'pending') {
+    ops.push(`<button class="op warning" data-action="urge-task" data-task="${t.id}">催办</button>`);
+  } else if (t.status === 'process') {
+    ops.push(`<button class="op blue" data-action="track-task" data-task="${t.id}">跟踪</button>`);
+  } else if (t.status === 'check') {
+    ops.push(`<button class="op green" data-nav="RWZG02">验收</button>`);
+  } else if (t.status === 'done') {
+    ops.push(`<button class="op blue" data-action="archive-task" data-task="${t.id}">归档</button>`);
+  } else if (t.status === 'reject') {
+    ops.push(`<button class="op warning" data-nav="RWGL01">重新派发</button>`);
+  }
+  return ops.join('');
+}
+
+function isUrgent(deadline, status) {
+  if (['done', 'reject'].includes(status)) return false;
+  const d = new Date(deadline);
+  const now = new Date('2024-12-10'); // 原型基准日期
+  return d < now;
+}
+
+function updateCkAll() {
+  const all = document.querySelectorAll('.row-ck');
+  const checked = document.querySelectorAll('.row-ck:checked');
+  document.getElementById('ckAll').checked = all.length > 0 && all.length === checked.length;
+}
+
+function updateBatchBar() {
+  const count = selectedIds.size;
+  document.getElementById('selCount').textContent = count;
+  document.getElementById('listCard').classList.toggle('has-sel', count > 0);
+}
+
+/* ===== 动作注册 ===== */
+PR.on('search', () => {
+  PR.toast('查询条件已应用');
+  renderTable();
+});
+
+PR.on('reset', () => {
+  document.getElementById('qTaskNo').value = '';
+  document.getElementById('qTitle').value = '';
+  document.getElementById('qType').value = '';
+  document.getElementById('qStatus').value = '';
+  document.getElementById('qOwner').value = '';
+  document.getElementById('qDept').value = '';
+  document.getElementById('qCreateFrom').value = '2024-10-01';
+  document.getElementById('qCreateTo').value = '2024-12-31';
+  document.getElementById('qDeadlineFrom').value = '';
+  document.getElementById('qDeadlineTo').value = '';
+  currentFilter = 'all';
+  renderStatusTabs();
+  renderTable();
+  PR.toast('查询条件已重置');
+});
+
+PR.on('filter-status', (e) => {
+  currentFilter = e.target.closest('[data-status]').dataset.status;
+  renderStatusTabs();
+  renderTable();
+});
+
+PR.on('batch-export', () => {
+  PR.toast('批量导出任务清单');
+});
+
+PR.on('batch-dispatch', () => {
+  PR.toast('请选择任务后进行批量派发');
+});
+
+PR.on('batch-dispatch-sel', () => {
+  if (selectedIds.size === 0) { PR.toast('请先选择任务'); return; }
+  PR.toast('已批量派发 ' + selectedIds.size + ' 个任务');
+});
+
+PR.on('batch-delete-sel', () => {
+  if (selectedIds.size === 0) { PR.toast('请先选择任务'); return; }
+  if (window.confirm('确认删除选中的 ' + selectedIds.size + ' 个任务吗？')) {
+    PR.toast('已删除 ' + selectedIds.size + ' 个任务');
+    selectedIds.clear();
+    renderTable();
+  }
+});
+
+PR.on('view-task', (e) => {
+  const id = e.target.closest('[data-task]').dataset.task;
+  PR.nav('RWGL03');
+});
+
+PR.on('confirm-dispatch', (e) => {
+  const id = e.target.closest('[data-task]').dataset.task;
+  if (window.confirm('确认采纳规则引擎推荐并派发任务 ' + id + ' 吗？')) {
+    PR.toast('任务 ' + id + ' 已确认派发');
+  }
+});
+
+PR.on('close-task', (e) => {
+  const id = e.target.closest('[data-task]').dataset.task;
+  if (window.confirm('确认关闭任务 ' + id + ' 吗？')) {
+    PR.toast('任务 ' + id + ' 已关闭');
+  }
+});
+
+PR.on('delete-task', (e) => {
+  const id = e.target.closest('[data-task]').dataset.task;
+  if (window.confirm('确认删除任务 ' + id + ' 吗？')) {
+    PR.toast('任务 ' + id + ' 已删除');
+  }
+});
+
+PR.on('urge-task', (e) => {
+  const id = e.target.closest('[data-task]').dataset.task;
+  PR.toast('已向任务 ' + id + ' 发送催办通知');
+});
+
+PR.on('track-task', (e) => {
+  const id = e.target.closest('[data-task]').dataset.task;
+  PR.toast('跟踪任务 ' + id);
+});
+
+PR.on('archive-task', (e) => {
+  const id = e.target.closest('[data-task]').dataset.task;
+  if (window.confirm('确认归档任务 ' + id + ' 吗？归档后任务进入只读状态。')) {
+    PR.toast('任务 ' + id + ' 已归档入库');
+  }
+});
+
+PR.on('view-hint', (e) => {
+  const id = e.target.closest('[data-task]').dataset.task;
+  const task = TASK_DATA.find(t => t.id === id);
+  if (!task) return;
+  document.getElementById('dispatchHintBody').innerHTML = `
+    <div class="gray-tip border-top-none mt-0">
+      <div class="gray-tip-title">任务编号：${task.id}</div>
+      <div class="mb-sm">命中规则：</div>
+      ${task.hintRules.map(r => `<div class="py-xs">✓ ${r}</div>`).join('')}
+      <div class="score-line">
+        推荐得分：${task.score}
+      </div>
+    </div>
+    <div class="gray-tip mt-sm">
+      <div class="gray-tip-title">派单规则说明</div>
+      <div>系统根据风险金额、风险等级、业务归属、人员负荷等因素计算推荐得分，得分最高者为主负责人；涉及多部门时自动推荐协办人。</div>
+    </div>
+  `;
+  PR.openModal('dispatchHint');
+});
+
+/* ===== DOM 事件 ===== */
+document.addEventListener('DOMContentLoaded', () => {
+  renderStatusTabs();
+  renderTable();
+
+  document.getElementById('ckAll').addEventListener('change', (e) => {
+    document.querySelectorAll('.row-ck').forEach(cb => {
+      cb.checked = e.target.checked;
+      if (e.target.checked) selectedIds.add(cb.value);
+      else selectedIds.delete(cb.value);
+    });
+    updateBatchBar();
+  });
+
+  document.getElementById('tbody').addEventListener('change', (e) => {
+    if (e.target.classList.contains('row-ck')) {
+      if (e.target.checked) selectedIds.add(e.target.value);
+      else selectedIds.delete(e.target.value);
+      updateBatchBar();
+      updateCkAll();
+    }
+  });
+});
+</script>
+</body>
+</html>

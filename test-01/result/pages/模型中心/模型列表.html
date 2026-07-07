@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../assets/app.css">
+<link rel="stylesheet" href="../../assets/theme.css">
+<title>模型列表</title>
+</head>
+<body class="page-body">
+<!--
+  编码：MXLIST    名称：模型列表    类型：列表查询页
+  查询字段：模型编号/名称、生命周期环节、模型类型、执行频率、状态
+  表格列：序号、风险模型编号、风险模型名称、所属业务模型、业务环节、模型类型、版本、执行频率、最近执行时间、负责人、状态、操作
+  行操作：查看、编辑、手工执行、上线/下线
+  顶部操作：批量导出
+  跳转：风险模型编号→规则配置管理/指标管理/综合模型预留
+-->
+<div id="page-content" data-page="MXLIST" class="prototype-page">
+
+  <!-- 页头 -->
+  <div class="page-header">
+    <div class="page-title">模型列表</div>
+    <div class="actions">
+      <button class="btn btn-default" data-action="batch-export">⬇ 批量导出</button>
+    </div>
+  </div>
+
+  <!-- 查询卡 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title"><span class="bar"></span>查询信息</div>
+      <div class="actions">
+        <button class="btn btn-default" data-action="reset">↺ 重置</button>
+        <button class="btn btn-primary" data-action="search">🔍 查询</button>
+      </div>
+    </div>
+    <div class="query-grid prototype-query-grid">
+      <div class="form-item prototype-field">
+        <label>模型编号/名称</label>
+        <input id="qKeyword" placeholder="关键词搜索">
+      </div>
+      <div class="form-item prototype-field">
+        <label>生命周期环节</label>
+        <select id="qStage">
+          <option value="">全部</option>
+          <option>准入</option>
+          <option>寻源</option>
+          <option>履约结算</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>模型类型</label>
+        <select id="qType">
+          <option value="">全部</option>
+          <option>规则模型</option>
+          <option>指标模型</option>
+          <option>综合模型</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>执行频率</label>
+        <select id="qFreq">
+          <option value="">全部</option>
+          <option>实时</option>
+          <option>每日</option>
+          <option>每周</option>
+          <option>每月</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>状态</label>
+        <select id="qStatus">
+          <option value="">全部</option>
+          <option>上线</option>
+          <option>下线</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 列表卡 -->
+  <div class="card list-card prototype-card" id="listCard">
+    <div class="list-toolbar">
+      <div class="title">☰ 风险模型清单 <span class="title-badge" id="totalCount">0</span></div>
+    </div>
+    <div class="batch-bar">
+      <span>已选择 <b id="selCount">0</b> 项</span>
+      <button class="btn btn-sm btn-success" data-action="batch-enable">✔ 批量上线</button>
+      <button class="btn btn-sm btn-warning" data-action="batch-disable">✘ 批量下线</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:36px"><input type="checkbox" id="ckAll"></th>
+            <th style="width:44px">序号</th>
+            <th style="width:80px">风险模型编号</th>
+            <th>风险模型名称</th>
+            <th style="width:150px">所属业务模型</th>
+            <th style="width:66px">业务环节</th>
+            <th style="width:78px">模型类型</th>
+            <th style="width:46px">版本</th>
+            <th style="width:66px">状态</th>
+            <th style="width:66px">执行频率</th>
+            <th style="width:92px">最近执行时间</th>
+            <th style="width:64px">负责人</th>
+            <th style="width:186px">操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span class="total">共 <b id="total">0</b> 条</span>
+      <select class="pg-size"><option>20 条/页</option><option>50 条/页</option></select>
+      <span class="pg">«</span><span class="pg">‹</span>
+      <span class="pg active">1</span><span class="pg">2</span>
+      <span class="pg">›</span><span class="pg">»</span>
+      <span class="goto">前往 <input value="1"> 页</span>
+    </div>
+  </div>
+
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+/* ===== 数据与状态 ===== */
+const STATUS = {
+  enabled: { cls: 'pass', t: '上线' },
+  disabled: { cls: 'draft', t: '下线' }
+};
+const TYPE_CLS = {
+  '规则模型': 'type-rule',
+  '指标模型': 'type-indicator',
+  '综合模型': 'type-comprehensive'
+};
+const FREQ_CLS = {
+  '实时': 'type-realtime',
+  '每日': 'type-daily',
+  '每周': 'type-weekly',
+  '每月': 'type-monthly'
+};
+const TYPE_VIEW = {
+  '规则模型': 'MXGZ01',
+  '指标模型': 'MXCK01',
+  '综合模型': ''
+};
+const TYPE_EDIT = {
+  '规则模型': 'MXGZ02',
+  '指标模型': 'MXCK02',
+  '综合模型': ''
+};
+
+const DATA = [
+  { fm: 'F-001', name: '万能供应商分析', mm: 'M-01', mname: '万能供应商识别', stage: '准入', type: '规则模型', ver: 'v1', freq: '实时', lastRun: '2026-06-29 08:15', owner: '张明', status: 'enabled' },
+  { fm: 'F-002', name: '准入即签约', mm: 'M-02', mname: '供应商准入风险分析', stage: '准入', type: '规则模型', ver: 'v1', freq: '每日', lastRun: '2026-06-29 06:00', owner: '张明', status: 'enabled' },
+  { fm: 'F-003', name: '供应商带病准入', mm: 'M-02', mname: '供应商准入风险分析', stage: '准入', type: '规则模型', ver: 'v1', freq: '每日', lastRun: '2026-06-29 06:00', owner: '李华', status: 'enabled' },
+  { fm: 'F-004', name: '直接采购计划最多的品类', mm: 'M-03', mname: '直接采购合理性分析', stage: '寻源', type: '指标模型', ver: 'v2', freq: '每周', lastRun: '2026-06-28 23:55', owner: '李华', status: 'enabled' },
+  { fm: 'F-005', name: '直接采购专业户分析', mm: 'M-03', mname: '直接采购合理性分析', stage: '寻源', type: '指标模型', ver: 'v1', freq: '每周', lastRun: '2026-06-28 23:55', owner: '李华', status: 'enabled' },
+  { fm: 'F-006', name: '违规采取直接采购线索识别', mm: 'M-03', mname: '直接采购合理性分析', stage: '寻源', type: '综合模型', ver: 'v1', freq: '每月', lastRun: '2026-06-01 03:00', owner: '陈思', status: 'disabled' },
+  { fm: 'F-007', name: '紧急计划提报总览', mm: 'M-04', mname: '紧急采购合理性分析', stage: '寻源', type: '指标模型', ver: 'v1', freq: '每日', lastRun: '2026-06-29 06:00', owner: '李华', status: 'enabled' },
+  { fm: 'F-008', name: '紧急采购专业户分析', mm: 'M-04', mname: '紧急采购合理性分析', stage: '寻源', type: '指标模型', ver: 'v1', freq: '每日', lastRun: '2026-06-29 06:00', owner: '李华', status: 'enabled' },
+  { fm: 'F-009', name: '滥用紧急采购权', mm: 'M-04', mname: '紧急采购合理性分析', stage: '寻源', type: '指标模型', ver: 'v1', freq: '每日', lastRun: '2026-06-29 06:00', owner: '王磊', status: 'enabled' },
+  { fm: 'F-010', name: '紧急计划的审批时长过长', mm: 'M-04', mname: '紧急采购合理性分析', stage: '寻源', type: '规则模型', ver: 'v2', freq: '实时', lastRun: '2026-06-29 08:22', owner: '王磊', status: 'enabled' },
+  { fm: 'F-011', name: '紧急计划要货期间隔长', mm: 'M-04', mname: '紧急采购合理性分析', stage: '寻源', type: '规则模型', ver: 'v2', freq: '实时', lastRun: '2026-06-29 08:22', owner: '王磊', status: 'enabled' },
+  { fm: 'F-012', name: '采购方式选择错误', mm: 'M-05', mname: '采购协同性检查', stage: '寻源', type: '规则模型', ver: 'v1', freq: '实时', lastRun: '2026-06-29 08:20', owner: '张明', status: 'enabled' },
+  { fm: 'F-013', name: '采购协同不足检查', mm: 'M-05', mname: '采购协同性检查', stage: '寻源', type: '规则模型', ver: 'v1', freq: '实时', lastRun: '2026-06-29 08:20', owner: '张明', status: 'enabled' },
+  { fm: 'F-014', name: '流废标占比较高', mm: 'M-06', mname: '流废标情况分析', stage: '寻源', type: '指标模型', ver: 'v1', freq: '每周', lastRun: '2026-06-28 23:50', owner: '陈思', status: 'enabled' },
+  { fm: 'F-015', name: '流废标原因分析', mm: 'M-06', mname: '流废标情况分析', stage: '寻源', type: '指标模型', ver: 'v2', freq: '每周', lastRun: '2026-06-28 23:50', owner: '陈思', status: 'enabled' },
+  { fm: 'F-016', name: '应招未招', mm: 'M-07', mname: '应招未招线索核查', stage: '寻源', type: '规则模型', ver: 'v1', freq: '实时', lastRun: '2026-06-29 08:18', owner: '李华', status: 'enabled' },
+  { fm: 'F-017', name: '分拆规避招标', mm: 'M-07', mname: '应招未招线索核查', stage: '寻源', type: '规则模型', ver: 'v1', freq: '实时', lastRun: '2026-06-29 08:18', owner: '李华', status: 'enabled' },
+  { fm: 'F-018', name: '供应商IP地址相同', mm: 'M-08', mname: '涉嫌串通报价', stage: '寻源', type: '规则模型', ver: 'v1', freq: '实时', lastRun: '2026-06-29 08:21', owner: '王磊', status: 'enabled' },
+  { fm: 'F-019', name: '报价人注册地址、联系方式相同或存在股权关系', mm: 'M-08', mname: '涉嫌串通报价', stage: '寻源', type: '综合模型', ver: 'v1', freq: '每日', lastRun: '2026-06-29 06:00', owner: '王磊', status: 'enabled' },
+  { fm: 'F-020', name: '报价文件作者、修改者相同', mm: 'M-08', mname: '涉嫌串通报价', stage: '寻源', type: '规则模型', ver: 'v1', freq: '实时', lastRun: '2026-06-29 08:21', owner: '王磊', status: 'enabled' },
+  { fm: 'F-021', name: '逢投必中&只陪不中', mm: 'M-08', mname: '涉嫌串通报价', stage: '寻源', type: '规则模型', ver: 'v1', freq: '每日', lastRun: '2026-06-29 06:00', owner: '陈思', status: 'enabled' },
+  { fm: 'F-022', name: '企业应结算未结算分析', mm: 'M-09', mname: '结算异常分析', stage: '履约结算', type: '规则模型', ver: 'v1', freq: '每日', lastRun: '2026-06-29 06:00', owner: '赵丽', status: 'enabled' },
+  { fm: 'F-023', name: '商品质量不合格仍全额结算', mm: 'M-09', mname: '结算异常分析', stage: '履约结算', type: '规则模型', ver: 'v1', freq: '每日', lastRun: '2026-06-28 06:00', owner: '赵丽', status: 'disabled' },
+  { fm: 'F-024', name: '企业应付款未付款分析', mm: 'M-09', mname: '结算异常分析', stage: '履约结算', type: '规则模型', ver: 'v1', freq: '每日', lastRun: '2026-06-29 06:00', owner: '赵丽', status: 'enabled' },
+  { fm: 'F-025', name: '供应商预付账款长期未核销', mm: 'M-10', mname: '供应商授信检查', stage: '履约结算', type: '规则模型', ver: 'v1', freq: '每周', lastRun: '2026-06-27 23:50', owner: '赵丽', status: 'enabled' },
+  { fm: 'F-026', name: '合同标准模板使用率较低企业识别', mm: 'M-11', mname: '合同标准模板使用分析', stage: '履约结算', type: '指标模型', ver: 'v1', freq: '每月', lastRun: '2026-06-01 03:00', owner: '陈思', status: 'enabled' },
+  { fm: 'F-027', name: '超合同数量执行', mm: 'M-12', mname: '合同执行率分析', stage: '履约结算', type: '规则模型', ver: 'v1', freq: '实时', lastRun: '2026-06-29 08:19', owner: '张明', status: 'enabled' },
+  { fm: 'F-028', name: '合同超过交货截止日期仍未执行', mm: 'M-13', mname: '合同超期执行检查', stage: '履约结算', type: '规则模型', ver: 'v1', freq: '每日', lastRun: '2026-06-29 06:00', owner: '赵丽', status: 'enabled' },
+  { fm: 'F-029', name: '供应商合同到期/超期未执行', mm: 'M-13', mname: '合同超期执行检查', stage: '履约结算', type: '规则模型', ver: 'v2', freq: '每日', lastRun: '2026-06-29 06:00', owner: '赵丽', status: 'enabled' }
+];
+
+/* ===== 渲染 ===== */
+function render() {
+  const kw = document.getElementById('qKeyword').value.trim().toLowerCase();
+  const stage = document.getElementById('qStage').value;
+  const type = document.getElementById('qType').value;
+  const freq = document.getElementById('qFreq').value;
+  const status = document.getElementById('qStatus').value;
+
+  const list = DATA.filter(d => {
+    if (kw && !d.fm.toLowerCase().includes(kw) && !d.name.includes(kw) && !d.mname.includes(kw) && !d.owner.includes(kw)) return false;
+    if (stage && d.stage !== stage) return false;
+    if (type && d.type !== type) return false;
+    if (freq && d.freq !== freq) return false;
+    if (status === '上线' && d.status !== 'enabled') return false;
+    if (status === '下线' && d.status !== 'disabled') return false;
+    return true;
+  });
+
+  document.getElementById('totalCount').textContent = list.length;
+  document.getElementById('total').textContent = list.length;
+
+  document.getElementById('tbody').innerHTML = list.map((d, i) => {
+    const st = STATUS[d.status];
+    const typeCls = TYPE_CLS[d.type] || 'type-rule';
+    const freqCls = FREQ_CLS[d.freq] || 'type-realtime';
+    const viewCode = TYPE_VIEW[d.type];
+    const editCode = TYPE_EDIT[d.type];
+    const viewAttr = viewCode ? 'data-nav="' + viewCode + '"' : 'data-action="open-view"';
+    const editAttr = editCode ? 'data-nav="' + editCode + '"' : 'data-action="open-edit"';
+    return `<tr>
+      <td><input type="checkbox" class="rk"></td>
+      <td>${i + 1}</td>
+      <td><span class="link" ${viewAttr}>${d.fm}</span></td>
+      <td class="can-wrap" style="text-align:left;">${d.name}</td>
+      <td class="can-wrap" style="text-align:left;font-size:11px;color:var(--text3);">${d.mm} ${d.mname}</td>
+      <td>${d.stage}</td>
+      <td><span class="type-tag ${typeCls}">${d.type}</span></td>
+      <td>${d.ver}</td>
+      <td><span class="tag ${st.cls}"><span class="td"></span>${st.t}</span></td>
+      <td><span class="type-tag ${freqCls}">${d.freq}</span></td>
+      <td class="can-wrap" style="font-size:11px;color:var(--text3);">${d.lastRun}</td>
+      <td>${d.owner}</td>
+      <td>
+        <div class="op-btns">
+          <button class="op blue" ${viewAttr}>查看</button>
+          <button class="op blue" ${editAttr}>编辑</button>
+          <button class="op green" data-action="manual-exec">手工执行</button>
+          <button class="op ${d.status === 'enabled' ? 'red' : 'green'}" data-action="toggle-status">${d.status === 'enabled' ? '下线' : '上线'}</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  PR.bindActions();
+}
+
+/* ===== 选择 ===== */
+function toggleAll(cb) { document.querySelectorAll('.rk').forEach(c => c.checked = cb.checked); onCk(); }
+function onCk() {
+  const n = document.querySelectorAll('.rk:checked').length;
+  document.getElementById('selCount').textContent = n;
+  document.getElementById('listCard').classList.toggle('has-sel', n > 0);
+}
+
+document.getElementById('ckAll').addEventListener('change', function () { toggleAll(this); });
+document.getElementById('tbody').addEventListener('change', function (e) { if (e.target.classList.contains('rk')) onCk(); });
+
+/* ===== 动作注册 ===== */
+PR.on('search', render);
+PR.on('reset', () => {
+  document.getElementById('qKeyword').value = '';
+  document.getElementById('qStage').value = '';
+  document.getElementById('qType').value = '';
+  document.getElementById('qFreq').value = '';
+  document.getElementById('qStatus').value = '';
+  render();
+});
+PR.on('batch-export', () => PR.toast('批量导出待实现'));
+PR.on('batch-enable', () => PR.toast('批量上线待实现'));
+PR.on('batch-disable', () => PR.toast('批量下线待实现'));
+PR.on('manual-exec', () => PR.toast('手工执行待实现'));
+PR.on('toggle-status', () => PR.toast('状态切换待实现'));
+PR.on('open-edit', () => PR.toast('编辑待实现'));
+PR.on('open-view', () => PR.toast('查看待实现'));
+
+render();
+</script>
+</body>
+</html>

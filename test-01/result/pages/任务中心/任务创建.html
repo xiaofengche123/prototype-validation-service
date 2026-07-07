@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../assets/app.css">
+<link rel="stylesheet" href="../../assets/theme.css">
+<title>任务创建</title>
+</head>
+<body class="page-body">
+<!--
+  编码：RWGL01    名称：任务创建    类型：流程表单页（三步向导）
+  步骤：选择风险 → 填写任务信息 → 确认派发
+  返回 → 任务管理列表（RWGL02）
+  风险编号 → 风险事件详情（FXSC03）
+-->
+<div id="page-content" data-page="RWGL01" class="prototype-page has-fixed-actions">
+
+  <!-- 页头 -->
+  <div class="page-header">
+    <div class="page-title">任务创建</div>
+    <div class="actions">
+      <button class="btn btn-default" data-nav="RWGL02">返回列表</button>
+    </div>
+  </div>
+
+  <!-- 步骤条 -->
+  <div class="prototype-steps">
+    <div class="prototype-step active" data-step="1">
+      <div class="step-num">1</div><span>选择风险</span>
+    </div>
+    <div class="prototype-step-line" data-step-line="1"></div>
+    <div class="prototype-step" data-step="2">
+      <div class="step-num">2</div><span>填写任务信息</span>
+    </div>
+    <div class="prototype-step-line" data-step-line="2"></div>
+    <div class="prototype-step" data-step="3">
+      <div class="step-num">3</div><span>确认派发</span>
+    </div>
+  </div>
+
+  <!-- ===== 步骤1：选择风险 ===== -->
+  <div class="step-panel active" data-step-panel="1">
+    <div class="tip-box">
+      <span>💡</span>
+      <span>系统检测到 <strong>3 个风险</strong> 涉及同一供应商【广西铝业设备制造有限公司】，<span class="tip-action" data-action="auto-merge">一键聚合</span></span>
+    </div>
+
+    <div class="card prototype-card">
+      <div class="card-head prototype-card-head">
+        <div class="title"><span class="bar"></span>风险清单（请选择要关联的风险）</div>
+      </div>
+      <div class="query-grid prototype-query-grid">
+        <div class="form-item prototype-field">
+          <label>风险编号</label>
+          <input id="qRiskNo" placeholder="请输入">
+        </div>
+        <div class="form-item prototype-field">
+          <label>风险标题</label>
+          <input id="qRiskTitle" placeholder="请输入">
+        </div>
+        <div class="form-item prototype-field">
+          <label>风险分类</label>
+          <select id="qRiskCat">
+            <option value="">全部</option>
+            <option>招投标风险</option>
+            <option>供应商管理风险</option>
+            <option>价格与结算风险</option>
+          </select>
+        </div>
+        <div class="form-item prototype-field">
+          <label>风险等级</label>
+          <select id="qRiskLevel">
+            <option value="">全部</option>
+            <option>红色-重大</option>
+            <option>橙色-较大</option>
+            <option>黄色-一般</option>
+            <option>蓝色-关注</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap prototype-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:40px"><input type="checkbox" id="ckAllRisk"></th>
+              <th style="width:50px">序号</th>
+              <th style="width:130px">风险编号</th>
+              <th>风险标题</th>
+              <th style="width:120px">风险分类</th>
+              <th style="width:100px">风险等级</th>
+              <th style="width:100px">涉及金额</th>
+              <th style="width:100px">责任部门</th>
+            </tr>
+          </thead>
+          <tbody id="riskBody"></tbody>
+        </table>
+      </div>
+      <div class="pager">
+        <span class="total">共 <b id="riskTotal">0</b> 条</span>
+        <span class="pg active">1</span>
+        <span class="pg">›</span>
+      </div>
+    </div>
+
+    <!-- 系统推荐 -->
+    <div class="card prototype-card recommend-card">
+      <div class="card-head prototype-card-head">
+        <div class="title"><span class="bar"></span>🔍 系统推荐（基于规则引擎）</div>
+      </div>
+      <div class="recommend-item">
+        <div class="recommend-num">1</div>
+        <div class="recommend-body">
+          <div class="recommend-title">主负责人：<span class="recommend-name">集团审计委员会</span></div>
+          <div class="recommend-rules">
+            <span class="rule-tag">R102 金额≥500万</span>
+            <span class="rule-tag">R101 红色风险直报</span>
+          </div>
+          <div class="recommend-actions">
+            <button class="btn btn-success btn-sm" data-action="adopt-recommend" data-rec="1">✔ 采纳</button>
+            <button class="btn btn-default btn-sm" data-action="change-person">换其他人</button>
+          </div>
+        </div>
+      </div>
+      <div class="recommend-item">
+        <div class="recommend-num">2</div>
+        <div class="recommend-body">
+          <div class="recommend-title">协办人：<span class="recommend-name">审计部-张丽、招标办-王建国</span></div>
+          <div class="recommend-rules">
+            <span class="rule-tag">R001 部门对口-招投标</span>
+          </div>
+          <div class="recommend-actions">
+            <button class="btn btn-success btn-sm" data-action="adopt-recommend" data-rec="2">✔ 采纳</button>
+            <button class="btn btn-default btn-sm" data-action="remove-recommend">移除</button>
+          </div>
+        </div>
+      </div>
+      <div class="recommend-detail hidden" id="recommendDetail">
+        <div class="recommend-detail-title">规则命中得分明细</div>
+        <div class="score-detail">
+          <div class="score-item"><div class="score-label">R102 金额阈值</div><div class="score-value">200 × 1000 = 200,000</div></div>
+          <div class="score-item"><div class="score-label">R101 红色直报</div><div class="score-value">150 × 333 = 49,950</div></div>
+          <div class="score-item"><div class="score-label">R001 部门对口</div><div class="score-value">100 × 100 = 10,000</div></div>
+          <div class="score-item"><div class="score-label">R301 负荷超载</div><div class="score-value">排除候选人</div></div>
+        </div>
+      </div>
+      <div class="center-box">
+        <button class="btn btn-default btn-sm" data-action="toggle-recommend-detail">📜 查看规则命中详情</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 步骤2：填写任务信息 ===== -->
+  <div class="step-panel" data-step-panel="2">
+    <div class="card prototype-card">
+      <div class="card-head prototype-card-head">
+        <div class="title"><span class="bar"></span>已选风险（<span id="selRiskCount">0</span> 个）</div>
+        <div class="actions">
+          <button class="btn btn-default btn-sm" data-action="go-step" data-target-step="1">重新选择</button>
+        </div>
+      </div>
+      <div class="table-wrap prototype-table-wrap" class="panel-padding">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:130px">风险编号</th>
+              <th>风险标题</th>
+              <th style="width:120px">风险分类</th>
+              <th style="width:100px">风险等级</th>
+            </tr>
+          </thead>
+          <tbody id="selRiskBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card prototype-card">
+      <div class="card-head prototype-card-head">
+        <div class="title"><span class="bar"></span>任务信息</div>
+      </div>
+      <div class="query-grid prototype-query-grid">
+        <div class="form-item prototype-field">
+          <label>任务编号</label>
+          <input value="RW20241205001" readonly>
+        </div>
+        <div class="form-item prototype-field">
+          <label>任务标题<span class="req">*</span></label>
+          <input id="tTitle" value="某招标项目围标串标专项核查">
+        </div>
+        <div class="form-item prototype-field">
+          <label>任务类型<span class="req">*</span></label>
+          <select id="tType">
+            <option>风险处置</option>
+            <option>专项审计</option>
+            <option>日常巡检</option>
+            <option>督办整改</option>
+          </select>
+        </div>
+        <div class="form-item prototype-field">
+          <label>负责人<span class="req">*</span></label>
+          <select id="tOwner">
+            <option value="">请选择</option>
+            <option selected>王建国</option>
+            <option>李晓明</option>
+            <option>张丽娟</option>
+          </select>
+        </div>
+        <div class="form-item prototype-field">
+          <label>责任部门<span class="req">*</span></label>
+          <select id="tDept">
+            <option value="">请选择</option>
+            <option selected>招标办</option>
+            <option>采购部</option>
+            <option>财务部</option>
+          </select>
+        </div>
+        <div class="form-item prototype-field">
+          <label>计划截止<span class="req">*</span></label>
+          <input type="date" id="tDeadline" value="2024-12-20">
+        </div>
+        <div class="form-item prototype-field">
+          <label>优先级<span class="req">*</span></label>
+          <select id="tPriority">
+            <option>紧急</option>
+            <option selected>高</option>
+            <option>中</option>
+            <option>低</option>
+          </select>
+        </div>
+        <div class="form-item prototype-field">
+          <label>协办人</label>
+          <input id="tCoWorker" placeholder="可选，支持多人">
+        </div>
+        <div class="form-item prototype-field span-2 field-block">
+          <label>任务描述<span class="req">*</span></label>
+          <textarea id="tDesc" rows="4">请对某招标项目三家投标人的关联关系、投标文件制作痕迹进行全面核查，形成专项调查报告。</textarea>
+        </div>
+        <div class="form-item prototype-field span-2 field-block">
+          <label>验收标准<span class="req">*</span></label>
+          <textarea id="tAccept" rows="4">1.出具三家投标人关联关系核查报告；2.如确认围标串标，提供完整证据链；3.提出处理建议。</textarea>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== 步骤3：确认派发 ===== -->
+  <div class="step-panel" data-step-panel="3">
+    <div class="card prototype-card">
+      <div class="card-head prototype-card-head">
+        <div class="title"><span class="bar"></span>任务信息确认</div>
+      </div>
+      <div class="query-grid prototype-query-grid info-grid pb-16">
+        <div class="info-item"><span class="info-label">任务编号</span><span class="info-value">RW20241205001</span></div>
+        <div class="info-item"><span class="info-label">任务类型</span><span class="info-value">风险处置</span></div>
+        <div class="info-item"><span class="info-label">优先级</span><span class="info-value warning">高</span></div>
+        <div class="info-item"><span class="info-label">负责人</span><span class="info-value">王建国</span></div>
+        <div class="info-item"><span class="info-label">责任部门</span><span class="info-value">招标办</span></div>
+        <div class="info-item"><span class="info-label">计划截止</span><span class="info-value">2024-12-20</span></div>
+        <div class="info-item span-3"><span class="info-label">任务标题</span><span class="info-value">某招标项目围标串标专项核查</span></div>
+        <div class="info-item span-3"><span class="info-label">任务描述</span><span class="info-value normal">请对某招标项目三家投标人的关联关系、投标文件制作痕迹进行全面核查，形成专项调查报告。</span></div>
+      </div>
+    </div>
+
+    <div class="card prototype-card">
+      <div class="card-head prototype-card-head">
+        <div class="title"><span class="bar"></span>关联风险（<span id="confirmRiskCount">0</span> 个）</div>
+      </div>
+      <div class="table-wrap prototype-table-wrap" class="panel-padding">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:130px">风险编号</th>
+              <th>风险标题</th>
+              <th style="width:120px">风险分类</th>
+              <th style="width:100px">风险等级</th>
+              <th style="width:110px">涉及金额(万元)</th>
+            </tr>
+          </thead>
+          <tbody id="confirmRiskBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 固定底部操作栏 -->
+<div class="fixed-bottom-bar" id="bottomBar">
+  <button class="btn btn-default" id="btnPrev" data-action="prev-step">← 上一步</button>
+  <button class="btn btn-primary" id="btnNext" data-action="next-step">下一步 →</button>
+  <button class="btn btn-success" id="btnSubmit" data-action="submit-task">✔ 确认派发</button>
+  <button class="btn btn-danger" id="btnCloseRisk" data-action="close-risk">关闭风险</button>
+  <button class="btn btn-ghost" data-action="cancel-task">取消</button>
+</div>
+
+<!-- 人员选择弹窗 -->
+<div class="modal-mask" data-modal="userSelect" id="userSelectMask">
+  <div class="modal">
+    <div class="modal-title">选择负责人</div>
+    <div class="modal-body modal-body-block">
+      <div class="query-grid prototype-query-grid no-h-padding" style="padding-bottom:14px;">
+        <div class="form-item prototype-field">
+          <label>所属部门</label>
+          <select id="mDept">
+            <option value="">全部</option>
+            <option>招标办</option>
+            <option>审计部</option>
+            <option>采购部</option>
+            <option>财务部</option>
+          </select>
+        </div>
+        <div class="form-item prototype-field">
+          <label>姓名</label>
+          <input id="mUserName" placeholder="请输入姓名">
+        </div>
+      </div>
+      <div class="table-wrap prototype-table-wrap">
+        <table class="table-fit">
+          <thead>
+            <tr><th style="width:50px">选择</th><th>姓名</th><th>部门</th><th>当前负荷</th></tr>
+          </thead>
+          <tbody id="userBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-action="close-modal" data-modal-target="userSelect">取消</button>
+      <button class="btn btn-primary" data-action="confirm-user" data-modal-target="userSelect">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 规则命中详情弹窗 -->
+<div class="modal-mask" data-modal="ruleDetail" id="ruleDetailMask">
+  <div class="modal modal-wide">
+    <div class="modal-title">规则命中得分明细</div>
+    <div class="modal-body modal-body-block">
+      <div class="recommend-detail border-top-none">
+        <div class="score-detail">
+          <div class="score-item"><div class="score-label">R102 金额阈值</div><div class="score-value">200 × 1000 = 200,000</div></div>
+          <div class="score-item"><div class="score-label">R101 红色直报</div><div class="score-value">150 × 333 = 49,950</div></div>
+          <div class="score-item"><div class="score-label">R001 部门对口</div><div class="score-value">100 × 100 = 10,000</div></div>
+          <div class="score-item"><div class="score-label">R301 负荷超载</div><div class="score-value">排除候选人</div></div>
+        </div>
+      </div>
+      <div class="gray-tip">
+        <div class="gray-tip-title">派单规则说明</div>
+        <div>系统根据风险金额、风险等级、业务归属、人员负荷等因素计算推荐得分，得分最高者为主负责人；涉及多部门时自动推荐协办人。</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-action="close-modal" data-modal-target="ruleDetail">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+/* ===== 数据 ===== */
+const RISK_DATA = [
+  { id: 'FX20241201001', title: '三家投标人MAC地址重合', cat: '招投标风险', level: 'high', levelText: '红色-重大', amount: '386.50', dept: '招标办' },
+  { id: 'FX20241201002', title: '投标人报价呈等差数列', cat: '招投标风险', level: 'medium', levelText: '橙色-较大', amount: '386.50', dept: '招标办' },
+  { id: 'FX20241201003', title: '投标文件技术标高度雷同', cat: '招投标风险', level: 'medium', levelText: '橙色-较大', amount: '386.50', dept: '招标办' },
+  { id: 'FX20241201004', title: '供应商隐性关联未披露', cat: '供应商管理风险', level: 'medium', levelText: '橙色-较大', amount: '125.00', dept: '采购部' },
+  { id: 'FX20241128003', title: '单一来源定价高于市场价', cat: '价格与结算风险', level: 'high', levelText: '红色-重大', amount: '520.80', dept: '财务部' }
+];
+
+const LEVEL_MAP = {
+  high:   { cls: 'reject', text: '红色-重大' },
+  medium: { cls: 'check', text: '橙色-较大' },
+  low:    { cls: 'pending', text: '黄色-一般' },
+  watch:  { cls: 'draft', text: '蓝色-关注' }
+};
+
+const USER_DATA = [
+  { name: '王建国', dept: '招标办', load: '3/5' },
+  { name: '李晓明', dept: '审计部', load: '4/6' },
+  { name: '张丽娟', dept: '采购部', load: '2/5' },
+  { name: '刘志强', dept: '财务部', load: '5/5' }
+];
+
+/* ===== 状态 ===== */
+let currentStep = 1;
+const selectedRiskIds = new Set(['FX20241201001', 'FX20241201002', 'FX20241201003']);
+let selectedUser = '王建国';
+
+/* ===== 渲染 ===== */
+function renderRiskTable() {
+  const tbody = document.getElementById('riskBody');
+  tbody.innerHTML = RISK_DATA.map((r, idx) => {
+    const lv = LEVEL_MAP[r.level] || LEVEL_MAP.medium;
+    const checked = selectedRiskIds.has(r.id) ? 'checked' : '';
+    return `<tr>
+      <td><input type="checkbox" class="risk-cb" value="${r.id}" ${checked}></td>
+      <td>${idx + 1}</td>
+      <td><span class="link" data-nav="FXSC03">${r.id}</span></td>
+      <td class="text-left">${r.title}</td>
+      <td>${r.cat}</td>
+      <td><span class="tag ${lv.cls}"><span class="td"></span>${lv.text}</span></td>
+      <td>${r.amount}</td>
+      <td>${r.dept}</td>
+    </tr>`;
+  }).join('');
+  document.getElementById('riskTotal').textContent = RISK_DATA.length;
+  updateCkAllRisk();
+}
+
+function renderSelectedRisks() {
+  const list = RISK_DATA.filter(r => selectedRiskIds.has(r.id));
+  const html = list.map(r => {
+    const lv = LEVEL_MAP[r.level] || LEVEL_MAP.medium;
+    return `<tr>
+      <td><span class="link" data-nav="FXSC03">${r.id}</span></td>
+      <td class="text-left">${r.title}</td>
+      <td>${r.cat}</td>
+      <td><span class="tag ${lv.cls}"><span class="td"></span>${lv.text}</span></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('selRiskCount').textContent = list.length;
+  document.getElementById('confirmRiskCount').textContent = list.length;
+  document.getElementById('selRiskBody').innerHTML = html;
+  document.getElementById('confirmRiskBody').innerHTML = list.map(r => {
+    const lv = LEVEL_MAP[r.level] || LEVEL_MAP.medium;
+    return `<tr>
+      <td><span class="link" data-nav="FXSC03">${r.id}</span></td>
+      <td class="text-left">${r.title}</td>
+      <td>${r.cat}</td>
+      <td><span class="tag ${lv.cls}"><span class="td"></span>${lv.text}</span></td>
+      <td>${r.amount}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderUserTable() {
+  document.getElementById('userBody').innerHTML = USER_DATA.map((u, idx) => {
+    const checked = u.name === selectedUser ? 'checked' : '';
+    return `<tr>
+      <td><input type="radio" name="selUser" value="${u.name}" ${checked}></td>
+      <td>${u.name}</td>
+      <td>${u.dept}</td>
+      <td>${u.load}</td>
+    </tr>`;
+  }).join('');
+}
+
+function updateCkAllRisk() {
+  const all = document.querySelectorAll('.risk-cb');
+  const checked = document.querySelectorAll('.risk-cb:checked');
+  document.getElementById('ckAllRisk').checked = all.length > 0 && all.length === checked.length;
+}
+
+/* ===== 步骤控制 ===== */
+function goStep(step) {
+  if (step === 2 && selectedRiskIds.size === 0) {
+    PR.toast('请至少选择一个风险');
+    return;
+  }
+  currentStep = step;
+  document.querySelectorAll('.prototype-step').forEach((el, idx) => {
+    el.classList.remove('active', 'completed');
+    if (idx + 1 < step) el.classList.add('completed');
+    if (idx + 1 === step) el.classList.add('active');
+  });
+  document.querySelectorAll('.prototype-step-line').forEach((el, idx) => {
+    el.classList.toggle('completed', idx + 1 < step);
+  });
+  document.querySelectorAll('.step-panel').forEach((el, idx) => {
+    el.classList.toggle('active', idx + 1 === step);
+  });
+  updateBottomActions();
+  if (step === 2 || step === 3) renderSelectedRisks();
+}
+
+function updateBottomActions() {
+  const prev = document.getElementById('btnPrev');
+  const next = document.getElementById('btnNext');
+  const submit = document.getElementById('btnSubmit');
+  const closeRisk = document.getElementById('btnCloseRisk');
+  if (!prev || !next || !submit || !closeRisk) return;
+  prev.style.display = currentStep === 1 ? 'none' : 'inline-flex';
+  next.style.display = currentStep === 3 ? 'none' : 'inline-flex';
+  submit.style.display = currentStep === 3 ? 'inline-flex' : 'none';
+  closeRisk.style.display = currentStep === 1 ? 'inline-flex' : 'none';
+}
+
+/* ===== 事件注册 ===== */
+PR.on('search', () => {
+  PR.toast('查询条件已应用');
+  renderRiskTable();
+});
+
+PR.on('reset', () => {
+  document.getElementById('qRiskNo').value = '';
+  document.getElementById('qRiskTitle').value = '';
+  document.getElementById('qRiskCat').value = '';
+  document.getElementById('qRiskLevel').value = '';
+  PR.toast('查询条件已重置');
+  renderRiskTable();
+});
+
+PR.on('auto-merge', () => {
+  RISK_DATA.filter(r => r.dept === '招标办').forEach(r => selectedRiskIds.add(r.id));
+  renderRiskTable();
+  PR.toast('已自动聚合同一供应商相关风险');
+});
+
+PR.on('adopt-recommend', (e) => {
+  const rec = e.target.closest('[data-rec]')?.dataset.rec;
+  PR.toast(rec === '1' ? '已采纳主负责人推荐' : '已采纳协办人推荐');
+  e.target.textContent = '已采纳';
+  e.target.disabled = true;
+  e.target.closest('.recommend-actions')?.querySelectorAll('.btn').forEach(b => {
+    if (b !== e.target) b.style.display = 'none';
+  });
+});
+
+PR.on('change-person', () => {
+  renderUserTable();
+  PR.openModal('userSelect');
+});
+
+PR.on('remove-recommend', (e) => {
+  e.target.closest('.recommend-item').remove();
+});
+
+PR.on('toggle-recommend-detail', () => {
+  const detail = document.getElementById('recommendDetail');
+  detail.classList.toggle('hidden');
+});
+
+PR.on('go-step', (e) => {
+  const step = parseInt(e.target.dataset.targetStep, 10);
+  goStep(step);
+});
+
+PR.on('next-step', () => {
+  if (currentStep < 3) goStep(currentStep + 1);
+});
+
+PR.on('prev-step', () => {
+  if (currentStep > 1) goStep(currentStep - 1);
+});
+
+PR.on('close-risk', () => {
+  if (window.confirm('确定要关闭选中的风险吗？关闭后该风险将不再进入任务管理。')) {
+    PR.toast('风险已关闭');
+    PR.nav('RWGL02');
+  }
+});
+
+PR.on('submit-task', () => {
+  PR.toast('任务派发成功');
+  setTimeout(() => PR.nav('RWGL02'), 800);
+});
+
+PR.on('confirm-user', () => {
+  const checked = document.querySelector('input[name="selUser"]:checked');
+  if (checked) {
+    selectedUser = checked.value;
+    document.getElementById('tOwner').value = selectedUser;
+    PR.toast('已选择负责人：' + selectedUser);
+  }
+  PR.closeModal('userSelect');
+});
+
+PR.on('cancel-task', () => {
+  PR.nav('RWGL02');
+});
+
+/* ===== DOM 事件 ===== */
+document.addEventListener('DOMContentLoaded', () => {
+  renderRiskTable();
+  renderSelectedRisks();
+  updateBottomActions();
+
+  // 风险全选
+  document.getElementById('ckAllRisk').addEventListener('change', (e) => {
+    document.querySelectorAll('.risk-cb').forEach(cb => {
+      cb.checked = e.target.checked;
+      if (e.target.checked) selectedRiskIds.add(cb.value);
+      else selectedRiskIds.delete(cb.value);
+    });
+  });
+
+  // 风险单选
+  document.getElementById('riskBody').addEventListener('change', (e) => {
+    if (e.target.classList.contains('risk-cb')) {
+      if (e.target.checked) selectedRiskIds.add(e.target.value);
+      else selectedRiskIds.delete(e.target.value);
+      updateCkAllRisk();
+    }
+  });
+
+  // 步骤条点击
+  document.querySelectorAll('.prototype-step').forEach((el, idx) => {
+    el.addEventListener('click', () => {
+      const target = idx + 1;
+      if (target < currentStep) goStep(target);
+    });
+  });
+});
+</script>
+</body>
+</html>

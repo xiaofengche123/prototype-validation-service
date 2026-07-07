@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>采购业务健康度详情 - 审计监督</title>
+    <style>
+        :root { --primary: #1565c0; --primary-dark: #0d47a1; --primary-light: #e3f2fd; --success: #43a047; --warning: #fb8c00; --danger: #e53935; --info: #5e35b1; --text-primary: #333; --text-secondary: #666; --text-muted: #999; --border-color: #e0e0e0; --bg-body: #f0f2f5; --bg-card: #fff; --sidebar-width: 220px; --header-height: 56px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif; font-size: 13px; color: var(--text-primary); background: var(--bg-body); overflow: hidden; height: 100%; }
+        .top-header { height: var(--header-height); background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: #fff; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .menu-item .arrow { width: 12px; height: 12px; transition: transform .2s; opacity: .4; }
+        .menu-item.expanded .arrow { transform: rotate(90deg); }
+        .submenu { display: none; background: #fafafa; }
+        .submenu.open { display: block; }
+        .submenu .menu-item { padding-left: 38px; height: 36px; font-size: 12px; }
+        .submenu .submenu { background: #f5f5f5; }
+        .submenu .submenu .menu-item { padding-left: 56px; height: 34px; font-size: 12px; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px; }
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); cursor: pointer; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+        .page-title { font-size: 16px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .top-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .btn { height: 28px; padding: 0 12px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-sm { height: 24px; padding: 0 8px; font-size: 11px; }
+        .scroll-content { flex: 1; overflow-y: auto; min-height: 0; }
+        .scroll-content::-webkit-scrollbar { width: 6px; }
+        .scroll-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+        .form-card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; }
+        .form-card-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .form-card-header::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .form-card-header .header-actions { margin-left: auto; display: flex; gap: 6px; }
+        .form-card-body { padding: 14px 16px; }
+        .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 16px; }
+        .info-item { display: flex; align-items: center; gap: 8px; }
+        .info-item .info-label { width: 100px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+        .info-item .info-value { flex: 1; font-size: 12px; color: var(--text-primary); font-weight: bold; }
+        .score-big { font-size: 36px; font-weight: bold; color: var(--primary); }
+        .score-level-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 3px; font-size: 13px; font-weight: bold; }
+        .level-healthy { background: #e8f5e9; color: #2e7d32; }
+        .level-low { background: #fff8e1; color: #f57f17; }
+        .level-mid { background: #fff3e0; color: #e65100; }
+        .level-high { background: #ffebee; color: #c62828; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .detail-panel { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 14px 16px; }
+        .detail-panel-title { font-size: 13px; font-weight: bold; color: var(--text-primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .detail-panel-title::before { content: ""; width: 3px; height: 14px; background: var(--primary); border-radius: 2px; }
+        .trend-chart { width: 100%; height: 220px; position: relative; background: #fafafa; border-radius: 4px; border: 1px solid var(--border-color); }
+        .trend-chart svg { width: 100%; height: 100%; }
+        .dim-score-list { display: flex; flex-direction: column; gap: 8px; }
+        .dim-score-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f5f7fa; border-radius: 3px; font-size: 12px; }
+        .dim-score-item .dim-name { width: 100px; flex-shrink: 0; }
+        .dim-score-item .dim-bar { flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
+        .dim-score-item .dim-bar-fill { height: 100%; border-radius: 4px; }
+        .dim-score-item .dim-score { font-weight: bold; color: var(--primary); width: 40px; text-align: right; }
+        .dim-score-item .dim-weight { font-size: 11px; color: var(--text-muted); width: 50px; text-align: right; }
+        .conclusion-box { background: #f5f7fa; border-radius: 4px; padding: 12px 16px; font-size: 12px; line-height: 1.8; color: var(--text-secondary); }
+        .conclusion-box strong { color: var(--text-primary); }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .history-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 8px 6px; text-align: center; border-bottom: 1px solid #bbdefb; }
+        .history-table tbody td { padding: 8px 6px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .history-table tbody tr:hover { background: #f5f7fa; }
+        .indicator-detail { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .indicator-card { background: #f8f9fa; border-radius: 4px; padding: 10px 12px; }
+        .indicator-card .ind-name { font-size: 12px; color: var(--text-secondary); margin-bottom: 4px; }
+        .indicator-card .ind-value { font-size: 18px; font-weight: bold; color: var(--primary); }
+        .indicator-card .ind-trend { font-size: 11px; margin-top: 2px; }
+        .trend-up { color: var(--success); }
+        .trend-down { color: var(--danger); }
+        .bottom-actions { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-top: 12px; flex-shrink: 0; }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system"><span class="brand-name">绿星链通</span><span class="brand-version">2.0</span></div>
+            <div class="brand-divider"></div>
+            <div class="logo-text"><span class="cn">中国铝业集团有限公司</span><span class="en">ALUMINUM CORPORATION OF CHINA</span></div>
+        </div>
+        <div class="header-center"><div class="header-search"><input type="text" placeholder="请输入页面号"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg></div></div>
+        <div class="header-right"><span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span><div class="user-badge"><div class="user-avatar">潘</div></div></div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险驾驶舱</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128203;</span><span>风险事件池</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128188;</span><span>我的工作台</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务管理</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#9989;</span><span>验收审核</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128226;</span><span>超期督办</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>统计分析</span></div></div></div>
+            <div class="menu-group">
+                <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#9881;</span><span>模型中心</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="submenu open">
+                    <div class="menu-item expanded" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>规则模型</span></div>
+                    </div>
+                    <div class="submenu">
+                        <div class="menu-item"><div class="menu-left"><span>规则配置管理</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>规则命中日志</span></div></div>
+                    </div>
+                    <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>指标模型</span></div>
+                    </div>
+                    <div class="submenu open">
+                        <div class="menu-item"><div class="menu-left"><span>供应商评分卡</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>采购业务健康度</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>知识库管理</span></div></div>
+                        <div class="menu-item active"><div class="menu-left"><span>评估结果查询</span></div></div>
+                    </div>
+                    <div class="menu-item" style="opacity:0.5;cursor:not-allowed;" title="阶段三开放">
+                        <div class="menu-left"><span>算法模型</span></div>
+                        <span style="font-size:10px;color:var(--text-muted);margin-left:auto;background:#f5f5f5;padding:1px 4px;border-radius:2px;">后续</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a onclick="goBack()">模型中心</a><span class="sep">&gt;</span><a onclick="goBack()">指标模型</a><span class="sep">&gt;</span><a onclick="goBack()">评估结果查询</a><span class="sep">&gt;</span><span>采购业务健康度详情</span>
+            </div>
+
+            <div class="page-header">
+                <div class="page-title"><span>采购业务健康度详情</span></div>
+                <div class="top-actions">
+                    <button class="btn btn-default">&#128229; 导出报告</button>
+                    <button class="btn btn-default" onclick="goBack()">&#10094; 返回</button>
+                </div>
+            </div>
+
+            <div class="scroll-content">
+                <!-- 基本信息 -->
+                <div class="form-card">
+                    <div class="form-card-header"><span>基本信息</span></div>
+                    <div class="form-card-body">
+                        <div class="info-grid">
+                            <div class="info-item"><span class="info-label">评估对象编码</span><span class="info-value">BM001</span></div>
+                            <div class="info-item"><span class="info-label">评估对象名称</span><span class="info-value">采购一部（原材料）</span></div>
+                            <div class="info-item"><span class="info-label">评估类型</span><span class="info-value">采购业务健康度</span></div>
+                            <div class="info-item"><span class="info-label">评估日期</span><span class="info-value">2024-11-30</span></div>
+                            <div class="info-item"><span class="info-label">评估周期</span><span class="info-value">2024Q4</span></div>
+                            <div class="info-item"><span class="info-label">指标版本</span><span class="info-value">V2.0</span></div>
+                            <div class="info-item"><span class="info-label">健康度指数</span><span class="info-value score-big">91.2</span></div>
+                            <div class="info-item"><span class="info-label">健康等级</span><span class="info-value"><span class="score-level-tag level-healthy">健康</span></span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 指标明细与趋势 -->
+                <div class="detail-grid">
+                    <div class="detail-panel">
+                        <div class="detail-panel-title">近12个月健康度趋势</div>
+                        <div class="trend-chart">
+                            <svg viewBox="0 0 400 220">
+                                <g stroke="#e0e0e0" stroke-width="1">
+                                    <line x1="40" y1="20" x2="40" y2="180"/>
+                                    <line x1="40" y1="180" x2="380" y2="180"/>
+                                    <line x1="40" y1="140" x2="380" y2="140" stroke-dasharray="3,3"/>
+                                    <line x1="40" y1="100" x2="380" y2="100" stroke-dasharray="3,3"/>
+                                    <line x1="40" y1="60" x2="380" y2="60" stroke-dasharray="3,3"/>
+                                </g>
+                                <g fill="#666" font-size="10">
+                                    <text x="10" y="25">100</text>
+                                    <text x="15" y="105">60</text>
+                                    <text x="20" y="145">40</text>
+                                    <text x="25" y="185">0</text>
+                                </g>
+                                <!-- 健康线 -->
+                                <line x1="40" y1="44" x2="380" y2="44" stroke="#e8f5e9" stroke-width="2" stroke-dasharray="5,3"/>
+                                <text x="385" y="48" font-size="9" fill="#2e7d32">健康线90</text>
+                                <!-- 警戒线 -->
+                                <line x1="40" y1="116" x2="380" y2="116" stroke="#ffebee" stroke-width="2" stroke-dasharray="5,3"/>
+                                <text x="385" y="120" font-size="9" fill="#c62828">警戒线60</text>
+                                <!-- 折线 -->
+                                <polyline fill="none" stroke="#1565c0" stroke-width="2.5" points="40,165 68,152 96,140 124,128 152,118 180,108 208,98 236,88 264,78 292,68 320,58 348,48"/>
+                                <!-- 数据点 -->
+                                <g fill="#1565c0">
+                                    <circle cx="40" cy="165" r="3.5"/>
+                                    <circle cx="68" cy="152" r="3.5"/>
+                                    <circle cx="96" cy="140" r="3.5"/>
+                                    <circle cx="124" cy="128" r="3.5"/>
+                                    <circle cx="152" cy="118" r="3.5"/>
+                                    <circle cx="180" cy="108" r="3.5"/>
+                                    <circle cx="208" cy="98" r="3.5"/>
+                                    <circle cx="236" cy="88" r="3.5"/>
+                                    <circle cx="264" cy="78" r="3.5"/>
+                                    <circle cx="292" cy="68" r="3.5"/>
+                                    <circle cx="320" cy="58" r="3.5"/>
+                                    <circle cx="348" cy="48" r="3.5"/>
+                                </g>
+                                <!-- 当前值高亮 -->
+                                <circle cx="348" cy="48" r="6" fill="none" stroke="#1565c0" stroke-width="2"/>
+                                <text x="348" y="38" text-anchor="middle" font-size="10" fill="#1565c0" font-weight="bold">91.2</text>
+                                <g fill="#999" font-size="9" text-anchor="middle">
+                                    <text x="40" y="198">1月</text>
+                                    <text x="96" y="198">3月</text>
+                                    <text x="180" y="198">6月</text>
+                                    <text x="264" y="198">9月</text>
+                                    <text x="348" y="198">12月</text>
+                                </g>
+                            </svg>
+                        </div>
+                        <div style="margin-top:8px;font-size:11px;color:var(--text-muted);text-align:center;">
+                            健康度指数从年初 72.5 提升至 91.2，持续向好
+                        </div>
+                    </div>
+                    <div class="detail-panel">
+                        <div class="detail-panel-title">五大指标得分</div>
+                        <div class="dim-score-list">
+                            <div class="dim-score-item">
+                                <span class="dim-name">采购计划准确率</span>
+                                <div class="dim-bar"><div class="dim-bar-fill" style="width:93%;background:#43a047;"></div></div>
+                                <span class="dim-score">93.0</span>
+                                <span class="dim-weight">权重20%</span>
+                            </div>
+                            <div class="dim-score-item">
+                                <span class="dim-name">招标采购率</span>
+                                <div class="dim-bar"><div class="dim-bar-fill" style="width:88%;background:#43a047;"></div></div>
+                                <span class="dim-score">88.0</span>
+                                <span class="dim-weight">权重20%</span>
+                            </div>
+                            <div class="dim-score-item">
+                                <span class="dim-name">及时到货率</span>
+                                <div class="dim-bar"><div class="dim-bar-fill" style="width:91%;background:#43a047;"></div></div>
+                                <span class="dim-score">91.0</span>
+                                <span class="dim-weight">权重20%</span>
+                            </div>
+                            <div class="dim-score-item">
+                                <span class="dim-name">结算准确率</span>
+                                <div class="dim-bar"><div class="dim-bar-fill" style="width:95%;background:#43a047;"></div></div>
+                                <span class="dim-score">95.0</span>
+                                <span class="dim-weight">权重20%</span>
+                            </div>
+                            <div class="dim-score-item">
+                                <span class="dim-name">合规率</span>
+                                <div class="dim-bar"><div class="dim-bar-fill" style="width:89%;background:#43a047;"></div></div>
+                                <span class="dim-score">89.0</span>
+                                <span class="dim-weight">权重20%</span>
+                            </div>
+                        </div>
+                        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border-color);">
+                            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">计算过程</div>
+                            <div style="font-size:12px;color:var(--text-secondary);line-height:1.8;">
+                                (93.0×20% + 88.0×20% + 91.0×20% + 95.0×20% + 89.0×20%) = <strong style="color:var(--primary);">91.2</strong>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 指标明细卡片 -->
+                <div class="form-card">
+                    <div class="form-card-header"><span>指标明细数据</span></div>
+                    <div class="form-card-body">
+                        <div class="indicator-detail">
+                            <div class="indicator-card">
+                                <div class="ind-name">采购计划准确率</div>
+                                <div class="ind-value">93.0%</div>
+                                <div class="ind-trend trend-up">↑ 较上季 +2.3%</div>
+                            </div>
+                            <div class="indicator-card">
+                                <div class="ind-name">计划金额</div>
+                                <div class="ind-value">2,580 万</div>
+                                <div class="ind-trend">实际采购 2,400 万</div>
+                            </div>
+                            <div class="indicator-card">
+                                <div class="ind-name">招标采购率</div>
+                                <div class="ind-value">88.0%</div>
+                                <div class="ind-trend trend-up">↑ 较上季 +1.5%</div>
+                            </div>
+                            <div class="indicator-card">
+                                <div class="ind-name">招标项目/总项目</div>
+                                <div class="ind-value">44 / 50</div>
+                                <div class="ind-trend">应招标 48，漏招 4</div>
+                            </div>
+                            <div class="indicator-card">
+                                <div class="ind-name">及时到货率</div>
+                                <div class="ind-value">91.0%</div>
+                                <div class="ind-trend trend-up">↑ 较上季 +3.1%</div>
+                            </div>
+                            <div class="indicator-card">
+                                <div class="ind-name">按期到货/总到货</div>
+                                <div class="ind-value">182 / 200</div>
+                                <div class="ind-trend">延期 18 批次</div>
+                            </div>
+                            <div class="indicator-card">
+                                <div class="ind-name">结算准确率</div>
+                                <div class="ind-value">95.0%</div>
+                                <div class="ind-trend trend-up">↑ 较上季 +0.8%</div>
+                            </div>
+                            <div class="indicator-card">
+                                <div class="ind-name">结算偏差金额</div>
+                                <div class="ind-value">120 万</div>
+                                <div class="ind-trend">偏差率 5.0%</div>
+                            </div>
+                            <div class="indicator-card">
+                                <div class="ind-name">合规率</div>
+                                <div class="ind-value">89.0%</div>
+                                <div class="ind-trend trend-down">↓ 较上季 -1.2%</div>
+                            </div>
+                            <div class="indicator-card">
+                                <div class="ind-name">不合规项目数</div>
+                                <div class="ind-value">6 个</div>
+                                <div class="ind-trend">主要问题：单一来源占比偏高</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 评估结论 -->
+                <div class="form-card">
+                    <div class="form-card-header"><span>评估结论与建议</span></div>
+                    <div class="form-card-body">
+                        <div class="conclusion-box">
+                            <strong>综合评估结论：</strong>采购一部（原材料）2024Q4 健康度指数 91.2 分，属于<span style="color:#2e7d32;font-weight:bold;">健康</span>等级。五大核心指标均表现良好，其中结算准确率（95.0%）表现最优，采购计划准确率（93.0%）和及时到货率（91.0%）均有明显提升。<br><br>
+                            <strong>主要亮点：</strong><br>
+                            1. 结算准确率保持高位（95%），合同执行规范性较好；<br>
+                            2. 及时到货率季度环比提升 3.1%，供应商履约能力改善明显；<br>
+                            3. 招标采购率提升至 88%，公开招标比例持续扩大。<br><br>
+                            <strong>待改进项：</strong><br>
+                            1. <span style="color:#e65100;font-weight:bold;">合规率</span>环比下降 1.2%（89.0%），主要因 6 个项目采用单一来源采购且理由不充分，建议加强采购方式合规性审查；<br>
+                            2. 仍有 4 个项目应招未招，建议完善采购计划与招标计划的联动机制；<br>
+                            3. 18 批次延期到货中，12 批次为进口原材料，建议适当提前进口物资采购周期。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 历史评估记录 -->
+                <div class="form-card">
+                    <div class="form-card-header"><span>历史评估记录</span></div>
+                    <div class="form-card-body" style="padding:0;">
+                        <table class="history-table">
+                            <thead>
+                                <tr><th>评估周期</th><th>健康度指数</th><th>健康等级</th><th>计划准确率</th><th>招标率</th><th>及时到货率</th><th>结算准确率</th><th>合规率</th><th>评估人</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>2024Q4</td><td style="font-weight:bold;color:var(--success);">91.2</td><td><span class="score-level-tag level-healthy">健康</span></td><td>93.0</td><td>88.0</td><td>91.0</td><td>95.0</td><td>89.0</td><td>系统评估</td></tr>
+                                <tr><td>2024Q3</td><td style="font-weight:bold;color:var(--success);">87.5</td><td><span class="score-level-tag level-low">低风险</span></td><td>90.7</td><td>86.5</td><td>87.9</td><td>94.2</td><td>90.2</td><td>系统评估</td></tr>
+                                <tr><td>2024Q2</td><td style="font-weight:bold;color:var(--warning);">82.3</td><td><span class="score-level-tag level-mid">中风险</span></td><td>85.0</td><td>82.0</td><td>84.5</td><td>92.0</td><td>88.0</td><td>系统评估</td></tr>
+                                <tr><td>2024Q1</td><td style="font-weight:bold;color:var(--warning);">78.6</td><td><span class="score-level-tag level-mid">中风险</span></td><td>80.0</td><td>78.0</td><td>82.0</td><td>90.0</td><td>83.0</td><td>系统评估</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-actions">
+                <button class="btn btn-default" onclick="goBack()">&#10094; 返回列表</button>
+                <button class="btn btn-primary">&#128229; 导出评估报告</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleMenu(el) {
+            const submenu = el.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                el.classList.toggle('expanded');
+                submenu.classList.toggle('open');
+            }
+        }
+        function goBack() { window.location.href = '评估结果查询.html'; }
+    </script>
+</body>
+</html>

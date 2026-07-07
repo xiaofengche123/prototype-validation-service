@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<!--
+  编码：BMSP02-RENEW    名称：证照续期申请    类型：表单录入页
+  用途：采购部或供应商提交证照续期申请
+  内容：供应商/证照信息 + 续期信息 + 底部固定操作栏
+  底部操作：保存草稿、提交审核、返回列表
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../assets/app.css">
+<title>证照续期申请</title>
+</head>
+<body class="page-body">
+
+<div id="page-content" data-page="BMSP02-RENEW" class="prototype-page has-fixed-actions">
+
+  <!-- 基本信息 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title prototype-title"><span class="bar"></span>证照信息</div>
+    </div>
+    <div class="query-grid prototype-query-grid">
+      <div class="form-item prototype-field">
+        <label>供应商名称<span class="req">*</span></label>
+        <select id="renew-supplier">
+          <option value="">请选择</option>
+          <option value="1" selected>广西铝业科技有限公司</option>
+          <option value="2">柳州鑫源物流有限公司</option>
+          <option value="3">桂林绿能环保科技有限公司</option>
+          <option value="4">北海宏泰化工原料有限公司</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>证照类型<span class="req">*</span></label>
+        <select id="renew-cert-type">
+          <option value="">请选择</option>
+          <option value="营业执照">营业执照</option>
+          <option value="危废经营许可证" selected>危废经营许可证</option>
+          <option value="道路运输许可证">道路运输许可证</option>
+          <option value="安全生产许可证">安全生产许可证</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>原证号</label>
+        <input type="text" id="renew-old-no" value="GXWF2024-0012" readonly>
+      </div>
+      <div class="form-item prototype-field">
+        <label>原有效期至</label>
+        <input type="text" id="renew-old-expire" value="2026-08-10" readonly>
+      </div>
+    </div>
+  </div>
+
+  <!-- 续期信息 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title prototype-title"><span class="bar"></span>续期信息</div>
+    </div>
+    <div class="query-grid prototype-query-grid">
+      <div class="form-item prototype-field">
+        <label>新有效期至<span class="req">*</span></label>
+        <input type="date" id="renew-new-expire">
+      </div>
+      <div class="form-item prototype-field">
+        <label>新扫描件<span class="req">*</span></label>
+        <input type="file" id="renew-new-file">
+      </div>
+      <div class="form-item prototype-field">
+        <label>备注</label>
+        <textarea id="renew-remark" rows="3" placeholder="请填写续期说明"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 审批记录（占位） -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title prototype-title"><span class="bar"></span>审批记录</div>
+    </div>
+    <div class="table-wrap prototype-table-wrap">
+      <table class="prototype-table">
+        <thead>
+          <tr><th style="width:50px">序号</th><th style="width:160px">日期</th><th style="width:120px">操作人</th><th style="width:100px">动作</th><th>意见</th></tr>
+        </thead>
+        <tbody>
+          <tr><td colspan="5" style="text-align:center;color:#999">提交后生成审批记录</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- 底部固定操作栏 -->
+<div class="fixed-bottom-bar between">
+  <button class="btn" data-action="go-back" data-nav="BMSP02">← 返回列表</button>
+  <div style="display:flex;gap:10px">
+    <button class="btn" data-action="save-draft">保存草稿</button>
+    <button class="btn btn-primary" data-action="submit-renew">提交审核</button>
+  </div>
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+PR.on('save-draft', () => {
+  PR.toast('草稿已保存');
+});
+
+PR.on('submit-renew', () => {
+  const supplier = document.getElementById('renew-supplier').value;
+  const certType = document.getElementById('renew-cert-type').value;
+  const newExpire = document.getElementById('renew-new-expire').value;
+  const newFile = document.getElementById('renew-new-file').value;
+  if (!supplier || !certType || !newExpire || !newFile) {
+    PR.toast('请填写必填项');
+    return;
+  }
+  PR.toast('续期申请已提交审核');
+});
+
+PR.on('go-back', () => {
+  PR.nav('BMSP02');
+});
+
+PR.bindActions();
+</script>
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>指标新增 - 新建风险指标</title>
+    <style>
+        :root {
+            --primary: #1565c0; --primary-dark: #0d47a1; --primary-light: #e3f2fd;
+            --success: #43a047; --warning: #fb8c00; --danger: #e53935; --info: #5e35b1;
+            --text-primary: #333; --text-secondary: #666; --text-muted: #999;
+            --border-color: #e0e0e0; --bg-body: #f0f2f5; --bg-card: #fff;
+            --sidebar-width: 220px; --header-height: 56px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px; color: var(--text-primary); background: var(--bg-body);
+            overflow: hidden; height: 100%;
+        }
+
+        .top-header {
+            height: var(--header-height);
+            background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; color: #fff; position: fixed;
+            top: 0; left: 0; right: 0; z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .submenu .menu-item { padding-left: 32px; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px 0; position: relative; }
+        .main-content::-webkit-scrollbar { width: 10px; }
+        .main-content::-webkit-scrollbar-track { background: #f0f2f5; border-radius: 5px; }
+        .main-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 5px; border: 2px solid #f0f2f5; }
+        .main-content::-webkit-scrollbar-thumb:hover { background: #999; }
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); cursor: pointer; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; }
+        .page-title { font-size: 16px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .top-actions { display: flex; align-items: center; gap: 6px; }
+
+        .btn { height: 28px; padding: 0 14px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-sm { height: 24px; padding: 0 10px; font-size: 11px; }
+
+        .scroll-content { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+        .scroll-content::-webkit-scrollbar { width: 10px; }
+        .scroll-content::-webkit-scrollbar-track { background: #f0f2f5; border-radius: 5px; }
+        .scroll-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 5px; border: 2px solid #f0f2f5; }
+        .scroll-content::-webkit-scrollbar-thumb:hover { background: #999; }
+
+        .card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; }
+        .card-header { padding: 12px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .card-header::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .card-body { padding: 16px; }
+
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        .info-table { width: 100%; }
+        .info-row { display: flex; padding: 10px 0; border-bottom: 1px dashed #f0f0f0; align-items: center; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { width: 120px; color: var(--text-secondary); flex-shrink: 0; font-size: 12px; }
+        .info-value { flex: 1; color: var(--text-primary); font-size: 12px; }
+
+        .info-value input[type="text"],
+        .info-value select,
+        .info-value textarea {
+            width: 100%; height: 30px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; color: var(--text-primary); font-family: inherit; outline: none; transition: border-color .2s; background: #fff;
+        }
+        .info-value input[type="text"]:focus,
+        .info-value select:focus,
+        .info-value textarea:focus { border-color: var(--primary); }
+        .info-value textarea { height: 80px; padding: 6px 8px; resize: vertical; line-height: 1.5; }
+        .info-value textarea.code-area { font-family: "Consolas", "Monaco", "Courier New", monospace; height: 120px; }
+        .info-value select { appearance: auto; }
+
+        .radio-group { display: flex; align-items: center; gap: 16px; }
+        .radio-item { display: flex; align-items: center; gap: 4px; cursor: pointer; font-size: 12px; }
+        .radio-item input { margin: 0; }
+
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .data-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 10px 8px; text-align: center; border-bottom: 1px solid #bbdefb; white-space: nowrap; }
+        .data-table tbody td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #f0f0f0; color: var(--text-primary); }
+        .data-table tbody tr:hover { background: #f5f7fa; }
+        .data-table tbody td .form-control { width: 100%; height: 28px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 6px; font-size: 12px; outline: none; }
+        .data-table tbody td .form-control:focus { border-color: var(--primary); }
+
+        .level-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .level-high { background: #ffebee; color: var(--danger); }
+        .level-mid { background: #fff3e0; color: var(--warning); }
+        .level-low { background: #e8f5e9; color: var(--success); }
+
+        .op-btn { font-size: 12px; color: var(--danger); cursor: pointer; padding: 2px 6px; border-radius: 2px; transition: background .2s; border: none; background: transparent; }
+        .op-btn:hover { background: #ffebee; }
+        .op-btn-add { font-size: 12px; color: var(--primary); cursor: pointer; padding: 6px 12px; border-radius: 3px; transition: background .2s; border: 1px dashed var(--primary); background: transparent; margin-top: 12px; display: inline-flex; align-items: center; gap: 4px; }
+        .op-btn-add:hover { background: var(--primary-light); }
+
+        .action-bar { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+        .action-left { display: flex; align-items: center; gap: 8px; }
+        .action-right { display: flex; align-items: center; gap: 8px; }
+
+        .status-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .status-caogao { background: #f5f5f5; color: var(--text-secondary); }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system"><span class="brand-name">绿星链通</span><span class="brand-version">3.0</span></div>
+            <div class="brand-divider"></div>
+            <div class="logo-text"><span class="cn">中国铝业集团有限公司</span><span class="en">ALUMINUM CORPORATION OF CHINA</span></div>
+        </div>
+        <div class="header-center">
+            <div class="header-search"><input type="text" placeholder="请输入页面号"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg></div>
+        </div>
+        <div class="header-right"><span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span><div class="user-badge"><div class="user-avatar">潘</div></div></div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险管理</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务中心</span></div></div></div>
+            <div class="menu-group">
+                <div class="menu-item expanded active">
+                    <div class="menu-left"><span class="menu-icon">&#9881;</span><span>模型中心</span></div>
+                </div>
+                <div class="submenu" style="display:block;background:#fafafa;">
+                    <div class="menu-item"><div class="menu-left"><span>模型驾驶舱</span></div></div>
+                    <div class="menu-item active"><div class="menu-left"><span>指标模型</span></div></div>
+                    <div class="menu-item"><div class="menu-left"><span>规则引擎</span></div></div>
+                </div>
+            </div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>系统管理</span></div></div></div>
+        </aside>
+
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a>模型中心</a><span class="sep">&gt;</span><a>指标模型</a><span class="sep">&gt;</span><a>指标库</a><span class="sep">&gt;</span><span>指标新增</span>
+            </div>
+
+            <div class="page-header">
+                <div class="page-title"><span>指标新增</span><span style="font-size:12px;color:var(--text-muted);font-weight:normal;">新建风险指标</span></div>
+                <div class="top-actions">
+                    <button class="btn btn-default">&#8592; 返回列表</button>
+                    <button class="btn btn-primary">保存</button>
+                    <button class="btn btn-default">取消</button>
+                </div>
+            </div>
+
+            <div class="scroll-content">
+                <!-- 第一行：基础信息 + 数据源配置 -->
+                <div class="two-col">
+                    <!-- 左卡片：基础信息 -->
+                    <div class="card">
+                        <div class="card-header">基础信息</div>
+                        <div class="card-body">
+                            <div class="info-table">
+                                <div class="info-row">
+                                    <div class="info-label">指标编码</div>
+                                    <div class="info-value"><input type="text" value="RISK-001" placeholder="自动生成的编号格式如 RISK-XXX" readonly style="background:#fafafa;"></div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">指标名称</div>
+                                    <div class="info-value"><input type="text" placeholder="请输入指标名称"></div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">所属场景</div>
+                                    <div class="info-value">
+                                        <select>
+                                            <option value="">请选择所属场景</option>
+                                            <option value="xunyuan">采购寻源</option>
+                                            <option value="zhixing">采购执行</option>
+                                            <option value="zhunru">供应商准入</option>
+                                            <option value="jihua">计划管理</option>
+                                            <option value="jiesuan">采购结算</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">数据类型</div>
+                                    <div class="info-value">
+                                        <select>
+                                            <option value="">请选择数据类型</option>
+                                            <option value="number">数值型</option>
+                                            <option value="ratio">比率型</option>
+                                            <option value="boolean">布尔型</option>
+                                            <option value="enum">枚举型</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">指标说明</div>
+                                    <div class="info-value"><textarea placeholder="请输入指标说明"></textarea></div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">状态</div>
+                                    <div class="info-value">
+                                        <div class="radio-group">
+                                            <label class="radio-item"><input type="radio" name="status" value="1" checked> 启用</label>
+                                            <label class="radio-item"><input type="radio" name="status" value="0"> 禁用</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右卡片：数据源配置 -->
+                    <div class="card">
+                        <div class="card-header">数据源配置</div>
+                        <div class="card-body">
+                            <div class="info-table">
+                                <div class="info-row">
+                                    <div class="info-label">数据来源</div>
+                                    <div class="info-value">
+                                        <select>
+                                            <option value="">请选择数据来源</option>
+                                            <option value="erp">ERP系统</option>
+                                            <option value="purchase">采购平台</option>
+                                            <option value="contract">合同系统</option>
+                                            <option value="manual">手工录入</option>
+                                            <option value="external">外部接口</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">数据表/接口</div>
+                                    <div class="info-value"><input type="text" placeholder="请输入数据表名或接口地址"></div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">关键字段</div>
+                                    <div class="info-value"><input type="text" placeholder="如：供应商编码、采购金额"></div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">统计周期</div>
+                                    <div class="info-value">
+                                        <select>
+                                            <option value="">请选择统计周期</option>
+                                            <option value="realtime">实时</option>
+                                            <option value="day">日</option>
+                                            <option value="week">周</option>
+                                            <option value="month">月</option>
+                                            <option value="quarter">季度</option>
+                                            <option value="year">年</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">更新频率</div>
+                                    <div class="info-value">
+                                        <select>
+                                            <option value="">请选择更新频率</option>
+                                            <option value="realtime">实时</option>
+                                            <option value="hour">每小时</option>
+                                            <option value="day">每日</option>
+                                            <option value="week">每周</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第二行：计算逻辑 -->
+                <div class="card">
+                    <div class="card-header">计算逻辑</div>
+                    <div class="card-body">
+                        <div class="info-table">
+                            <div class="info-row">
+                                <div class="info-label">计算方式</div>
+                                <div class="info-value">
+                                    <select>
+                                        <option value="">请选择计算方式</option>
+                                        <option value="sql">SQL查询</option>
+                                        <option value="formula">公式计算</option>
+                                        <option value="script">脚本</option>
+                                        <option value="model">模型调用</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">计算公式/脚本</div>
+                                <div class="info-value">
+                                    <textarea class="code-area" placeholder="请输入计算公式或脚本...">SELECT COUNT(*) / (SELECT COUNT(*) FROM total) AS ratio
+FROM risk_events
+WHERE status = 'active' AND create_time >= DATE_SUB(NOW(), INTERVAL 30 DAY)</textarea>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">结果格式化</div>
+                                <div class="info-value">
+                                    <select>
+                                        <option value="">请选择结果格式化方式</option>
+                                        <option value="decimal2" selected>保留2位小数</option>
+                                        <option value="percent">百分比</option>
+                                        <option value="integer">整数</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第三行：阈值规则 -->
+                <div class="card">
+                    <div class="card-header">阈值规则</div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th style="width:100px;">风险等级</th>
+                                    <th style="width:140px;">阈值条件</th>
+                                    <th style="width:120px;">阈值值</th>
+                                    <th>预警方式</th>
+                                    <th style="width:80px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><span class="level-tag level-high">高风险</span></td>
+                                    <td>
+                                        <select class="form-control">
+                                            <option value="ge" selected>&#8805; (大于等于)</option>
+                                            <option value="gt">&gt; (大于)</option>
+                                            <option value="eq">= (等于)</option>
+                                            <option value="le">&#8804; (小于等于)</option>
+                                            <option value="lt">&lt; (小于)</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="text" class="form-control" value="0.7"></td>
+                                    <td><input type="text" class="form-control" value="红色预警+短信"></td>
+                                    <td><button class="op-btn">删除</button></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="level-tag level-mid">中风险</span></td>
+                                    <td>
+                                        <select class="form-control">
+                                            <option value="ge" selected>&#8805; (大于等于)</option>
+                                            <option value="gt">&gt; (大于)</option>
+                                            <option value="eq">= (等于)</option>
+                                            <option value="le">&#8804; (小于等于)</option>
+                                            <option value="lt">&lt; (小于)</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="text" class="form-control" value="0.4"></td>
+                                    <td><input type="text" class="form-control" value="橙色预警+站内信"></td>
+                                    <td><button class="op-btn">删除</button></td>
+                                </tr>
+                                <tr>
+                                    <td><span class="level-tag level-low">低风险</span></td>
+                                    <td>
+                                        <select class="form-control">
+                                            <option value="ge">&#8805; (大于等于)</option>
+                                            <option value="gt">&gt; (大于)</option>
+                                            <option value="eq">= (等于)</option>
+                                            <option value="le">&#8804; (小于等于)</option>
+                                            <option value="lt" selected>&lt; (小于)</option>
+                                        </select>
+                                    </td>
+                                    <td><input type="text" class="form-control" value="0.4"></td>
+                                    <td><input type="text" class="form-control" value="蓝色提示"></td>
+                                    <td><button class="op-btn">删除</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <button class="op-btn-add">+ 添加阈值规则</button>
+                    </div>
+                </div>
+
+                <!-- 底部操作栏 -->
+                <div class="action-bar">
+                    <div class="action-left">
+                        <span style="font-size:12px;color:var(--text-secondary);">当前状态：<span class="status-tag status-caogao">草稿</span></span>
+                    </div>
+                    <div class="action-right">
+                        <button class="btn btn-primary">保存</button>
+                        <button class="btn btn-default">取消</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

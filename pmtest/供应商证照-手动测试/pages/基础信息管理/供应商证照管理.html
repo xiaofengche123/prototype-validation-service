@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<!--
+  编码：BMSP02    名称：供应商证照管理    类型：数据清单页（能查能筛）
+  查询字段：供应商名称（输入框）、证照类型（下拉）
+  统计卡片：全部 / 有效 / 即将到期（90天内） / 已过期
+  表格列：供应商（可点，data-nav="BMSP02-DETAIL"）、证照类型、证号、发证机关、有效期、状态、操作
+  行操作：查看扫描件、登记续期
+  顶部操作：新增证照登记（弹窗）、导出当前查询结果
+  弹窗 addForm：新增证照登记（供应商名称、证照类型、证号、发证机关、有效期、扫描件）
+  弹窗 renewForm：登记续期（供应商名称、证照类型、新有效期至、新扫描件、备注）
+  样例数据 10 条，覆盖有效 / 即将到期 / 已过期。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../assets/app.css">
+<title>供应商证照管理</title>
+</head>
+<body class="page-body">
+
+<div id="page-content" data-page="BMSP02" class="prototype-page">
+
+  <!-- 统计卡片 -->
+  <div class="stat-row prototype-stat-row" id="statRow">
+    <div class="stat-card prototype-stat-card active" data-status="all">
+      <div class="label">全部</div><div class="num" id="cnt-all">0</div>
+    </div>
+    <div class="stat-card prototype-stat-card" data-status="valid">
+      <div class="label"><span class="dot" style="background:#43a047"></span>有效</div><div class="num" id="cnt-valid">0</div>
+    </div>
+    <div class="stat-card prototype-stat-card" data-status="warning">
+      <div class="label"><span class="dot" style="background:#fb8c00"></span>即将到期</div><div class="num" id="cnt-warning">0</div>
+    </div>
+    <div class="stat-card prototype-stat-card" data-status="expired">
+      <div class="label"><span class="dot" style="background:#e53935"></span>已过期</div><div class="num" id="cnt-expired">0</div>
+    </div>
+  </div>
+
+  <!-- 查询区 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title prototype-title"><span class="bar"></span>查询信息</div>
+      <div class="actions prototype-actions">
+        <button class="btn" data-action="reset">重置</button>
+        <button class="btn btn-primary" data-action="search">查询</button>
+        <button class="btn btn-primary" data-action="open-add" data-modal-target="addForm">＋ 新增证照</button>
+      </div>
+    </div>
+    <div class="query-grid prototype-query-grid">
+      <div class="form-item prototype-field">
+        <label>供应商名称</label>
+        <input type="text" id="q-name" placeholder="请输入供应商名称">
+      </div>
+      <div class="form-item prototype-field">
+        <label>证照类型</label>
+        <select id="q-type">
+          <option value="">全部</option>
+          <option value="营业执照">营业执照</option>
+          <option value="危废经营许可证">危废经营许可证</option>
+          <option value="道路运输许可证">道路运输许可证</option>
+          <option value="安全生产许可证">安全生产许可证</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 列表 -->
+  <div class="card list-card prototype-card prototype-list-card" id="listCard">
+    <div class="list-toolbar prototype-list-toolbar">
+      <div class="title prototype-title">证照清单</div>
+      <div class="actions prototype-actions">
+        <button class="btn btn-sm" data-action="batch-export">导出当前结果</button>
+      </div>
+    </div>
+
+    <div class="status-tabs prototype-status-tabs" id="statusTabs">
+      <div class="status-tab prototype-status-tab active" data-status="all">全部</div>
+      <div class="status-tab prototype-status-tab" data-status="valid">有效</div>
+      <div class="status-tab prototype-status-tab" data-status="warning">即将到期</div>
+      <div class="status-tab prototype-status-tab" data-status="expired">已过期</div>
+    </div>
+
+    <div class="table-wrap prototype-table-wrap">
+      <table class="prototype-table">
+        <thead>
+          <tr>
+            <th style="width:50px">序号</th>
+            <th>供应商</th>
+            <th>证照类型</th>
+            <th>证号</th>
+            <th>发证机关</th>
+            <th style="width:110px">有效期</th>
+            <th style="width:90px">状态</th>
+            <th style="width:130px">操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span class="total">共 <b id="total">0</b> 条</span>
+      <span class="pg active">1</span><span class="pg">›</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- 弹窗：新增证照登记 -->
+<div class="modal-mask" id="addFormMask" data-modal="addForm">
+  <div class="modal">
+    <div class="modal-title">新增证照登记</div>
+    <div class="modal-body prototype-modal-form">
+      <div class="form-item prototype-field"><label>供应商名称<span class="req">*</span></label><input id="add-name"></div>
+      <div class="form-item prototype-field"><label>证照类型<span class="req">*</span></label>
+        <select id="add-type">
+          <option value="">请选择</option>
+          <option value="营业执照">营业执照</option>
+          <option value="危废经营许可证">危废经营许可证</option>
+          <option value="道路运输许可证">道路运输许可证</option>
+          <option value="安全生产许可证">安全生产许可证</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field"><label>证号<span class="req">*</span></label><input id="add-no"></div>
+      <div class="form-item prototype-field"><label>发证机关<span class="req">*</span></label><input id="add-org"></div>
+      <div class="form-item prototype-field"><label>有效期至<span class="req">*</span></label><input type="date" id="add-expire"></div>
+      <div class="form-item prototype-field"><label>扫描件</label><input type="file" id="add-file"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-action="close-modal" data-modal-target="addForm">取消</button>
+      <button class="btn btn-primary" data-action="save" data-modal-target="addForm">保存</button>
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗：登记续期 -->
+<div class="modal-mask" id="renewFormMask" data-modal="renewForm">
+  <div class="modal">
+    <div class="modal-title">登记续期</div>
+    <div class="modal-body prototype-modal-form">
+      <div class="form-item prototype-field"><label>供应商</label><input id="renew-name" readonly></div>
+      <div class="form-item prototype-field"><label>证照类型</label><input id="renew-type" readonly></div>
+      <div class="form-item prototype-field"><label>新有效期至<span class="req">*</span></label><input type="date" id="renew-expire"></div>
+      <div class="form-item prototype-field"><label>新扫描件</label><input type="file" id="renew-file"></div>
+      <div class="form-item prototype-field"><label>备注</label><textarea id="renew-remark" rows="2"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-action="close-modal" data-modal-target="renewForm">取消</button>
+      <button class="btn btn-primary" data-action="save-renew" data-modal-target="renewForm">确认续期</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+/* ================= 数据 ================= */
+const TODAY = '2026-06-26';
+const STATUS_MAP = {
+  valid:    { cls: 'pass',    text: '有效' },
+  warning:  { cls: 'pending', text: '即将到期' },
+  expired:  { cls: 'reject',  text: '已过期' }
+};
+let DATA = [
+  { id:1, supplier:'广西铝业科技有限公司', type:'营业执照',            no:'91450100MA5KAXXXXX',  org:'南宁市行政审批局',      expire:'2028-03-15' },
+  { id:2, supplier:'广西铝业科技有限公司', type:'危废经营许可证',      no:'GXWF2024-0012',       org:'自治区生态环境厅',      expire:'2026-08-10' },
+  { id:3, supplier:'广西铝业科技有限公司', type:'道路运输许可证',      no:'桂交运管许可南字12345号', org:'南宁市交通运输局', expire:'2026-07-05' },
+  { id:4, supplier:'柳州鑫源物流有限公司', type:'道路运输许可证',      no:'桂交运管许可柳字67890号', org:'柳州市交通运输局', expire:'2025-12-20' },
+  { id:5, supplier:'柳州鑫源物流有限公司', type:'安全生产许可证',      no:'（桂）FM安许证字〔2023〕0078', org:'自治区应急管理厅', expire:'2026-09-30' },
+  { id:6, supplier:'桂林绿能环保科技有限公司', type:'危废经营许可证',  no:'GXWF2023-0089',       org:'自治区生态环境厅',      expire:'2026-05-01' },
+  { id:7, supplier:'桂林绿能环保科技有限公司', type:'营业执照',        no:'91450300MA5P2XXXXX',  org:'桂林市市场监管局',      expire:'2027-11-08' },
+  { id:8, supplier:'北海宏泰化工原料有限公司', type:'安全生产许可证',  no:'（桂）FM安许证字〔2024〕0112', org:'自治区应急管理厅', expire:'2026-06-10' },
+  { id:9, supplier:'北海宏泰化工原料有限公司', type:'营业执照',        no:'91450500MA5R3XXXXX',  org:'北海市行政审批局',      expire:'2025-08-18' },
+  { id:10, supplier:'南宁安达运输服务有限公司', type:'道路运输许可证', no:'桂交运管许可南字55678号', org:'南宁市交通运输局', expire:'2027-02-28' }
+].map(d=>{ d.status = computeStatus(d.expire); return d; });
+
+let curStatus = 'all';
+let filterName = '';
+let filterType = '';
+let editingRow = null;
+
+function computeStatus(expire) {
+  const t = new Date(TODAY), e = new Date(expire);
+  const diff = Math.ceil((e - t) / (1000*60*60*24));
+  if (diff < 0) return 'expired';
+  if (diff <= 90) return 'warning';
+  return 'valid';
+}
+function fmtRemain(expire, status) {
+  const t = new Date(TODAY), e = new Date(expire);
+  const diff = Math.ceil((e - t) / (1000*60*60*24));
+  if (status === 'expired') return '已过期 ' + Math.abs(diff) + ' 天';
+  if (status === 'warning') return diff + ' 天后到期';
+  return '';
+}
+
+function filteredList() {
+  return DATA.filter(d => {
+    if (curStatus !== 'all' && d.status !== curStatus) return false;
+    if (filterName && !d.supplier.includes(filterName)) return false;
+    if (filterType && d.type !== filterType) return false;
+    return true;
+  });
+}
+
+function updateCounts() {
+  document.getElementById('cnt-all').textContent = DATA.length;
+  document.getElementById('cnt-valid').textContent = DATA.filter(d => d.status === 'valid').length;
+  document.getElementById('cnt-warning').textContent = DATA.filter(d => d.status === 'warning').length;
+  document.getElementById('cnt-expired').textContent = DATA.filter(d => d.status === 'expired').length;
+}
+
+function render() {
+  const list = filteredList();
+  document.getElementById('total').textContent = list.length;
+  document.getElementById('tbody').innerHTML = list.map((d, i) => {
+    const st = STATUS_MAP[d.status];
+    const remain = fmtRemain(d.expire, d.status);
+    return `<tr>
+      <td>${i + 1}</td>
+      <td><span class="link" data-nav="BMSP02-DETAIL">${d.supplier}</span></td>
+      <td>${d.type}</td>
+      <td>${d.no}</td>
+      <td>${d.org}</td>
+      <td>${d.expire}${remain ? '<br><small class="remain '+d.status+'">'+remain+'</small>' : ''}</td>
+      <td><span class="tag ${st.cls}">${st.text}</span></td>
+      <td>
+        <a class="op blue" data-action="view-scan" data-id="${d.id}">查看扫描件</a>
+        <a class="op green" data-action="open-renew" data-id="${d.id}">登记续期</a>
+      </td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="8" style="text-align:center;color:#999">暂无数据</td></tr>';
+  updateCounts();
+  PR.bindActions();
+}
+
+function setStatus(s) {
+  curStatus = s;
+  document.querySelectorAll('#statRow .stat-card, #statusTabs .status-tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.status === s);
+  });
+  render();
+}
+
+/* ================= 动作注册 ================= */
+PR.on('search', () => {
+  filterName = document.getElementById('q-name').value.trim();
+  filterType = document.getElementById('q-type').value;
+  render();
+});
+
+PR.on('reset', () => {
+  document.getElementById('q-name').value = '';
+  document.getElementById('q-type').value = '';
+  filterName = '';
+  filterType = '';
+  setStatus('all');
+});
+
+PR.on('batch-export', () => {
+  PR.toast('已按当前查询结果导出 Excel，供安全环保部门使用');
+});
+
+PR.on('view-scan', e => {
+  const id = e.dataset.id;
+  const d = DATA.find(x => x.id == id);
+  PR.toast('查看「' + d.supplier + '」的 ' + d.type + ' 扫描件（占位）');
+});
+
+PR.on('open-renew', e => {
+  editingRow = DATA.find(x => x.id == e.dataset.id);
+  if (!editingRow) return;
+  document.getElementById('renew-name').value = editingRow.supplier;
+  document.getElementById('renew-type').value = editingRow.type;
+  document.getElementById('renew-expire').value = editingRow.expire;
+  document.getElementById('renew-remark').value = '';
+  PR.openModal('renewForm');
+});
+
+PR.on('save-renew', () => {
+  if (!editingRow) return;
+  const newExpire = document.getElementById('renew-expire').value;
+  if (!newExpire) { PR.toast('请填写新有效期'); return; }
+  editingRow.expire = newExpire;
+  editingRow.status = computeStatus(newExpire);
+  editingRow = null;
+  PR.closeModal('renewForm');
+  PR.toast('续期登记已保存');
+  render();
+});
+
+/* ================= 事件绑定 ================= */
+document.querySelectorAll('#statRow .stat-card, #statusTabs .status-tab').forEach(el => {
+  el.addEventListener('click', () => setStatus(el.dataset.status));
+});
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,874 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>规则配置管理 - 审计监督</title>
+    <style>
+        :root {
+            --primary: #1565c0;
+            --primary-dark: #0d47a1;
+            --primary-light: #e3f2fd;
+            --success: #43a047;
+            --warning: #fb8c00;
+            --danger: #e53935;
+            --info: #5e35b1;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-muted: #999;
+            --border-color: #e0e0e0;
+            --bg-body: #f0f2f5;
+            --bg-card: #fff;
+            --sidebar-width: 220px;
+            --header-height: 56px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-body);
+            overflow: hidden;
+            height: 100%;
+        }
+
+        /* ========== 顶部 Banner ========== */
+        .top-header {
+            height: var(--header-height);
+            background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            color: #fff;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+            flex-shrink: 0;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; letter-spacing: 1px; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+
+        /* ========== 布局框架 ========== */
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+
+        /* ========== 左侧菜单 ========== */
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .menu-item .arrow { width: 12px; height: 12px; transition: transform .2s; opacity: .4; }
+        .menu-item.expanded .arrow { transform: rotate(90deg); }
+        .submenu { display: none; background: #fafafa; }
+        .submenu.open { display: block; }
+        .submenu .menu-item { padding-left: 38px; height: 36px; font-size: 12px; }
+        .submenu .submenu { background: #f5f5f5; }
+        .submenu .submenu .menu-item { padding-left: 56px; height: 34px; font-size: 12px; }
+
+        /* ========== 主内容区 ========== */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px 0; }
+        .main-content::-webkit-scrollbar { width: 6px; }
+        .main-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+
+        /* 面包屑 */
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); cursor: pointer; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+
+        /* 页面标题 */
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+        .page-title { font-size: 16px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .top-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+        /* ========== 查询区 ========== */
+        .query-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; flex-shrink: 0; }
+        .section-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: bold; color: var(--primary); }
+        .section-header .header-left-part { display: flex; align-items: center; gap: 8px; }
+        .section-header .section-icon { width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .section-actions { display: flex; align-items: center; gap: 8px; }
+        .query-form { padding: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 16px; }
+        .form-item { display: flex; align-items: center; gap: 8px; }
+        .form-item .form-label { width: 100px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+        .form-item .form-input, .form-item .form-select { flex: 1; height: 30px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; color: var(--text-primary); outline: none; transition: border-color .2s; min-width: 0; }
+        .form-item .form-input:focus, .form-item .form-select:focus { border-color: var(--primary); }
+        .form-item .form-input::placeholder { color: #bbb; }
+        .form-item .form-input[readonly] { background: #f5f5f5; color: var(--text-muted); cursor: not-allowed; }
+
+        /* ========== 按钮 ========== */
+        .btn { height: 28px; padding: 0 14px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-ghost { background: transparent; border-color: transparent; color: var(--text-secondary); }
+        .btn-ghost:hover { background: #f5f5f5; }
+        .btn-sm { height: 24px; padding: 0 10px; font-size: 11px; }
+
+        /* ========== 列表区 ========== */
+        .list-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+
+        /* 状态标签 */
+        .status-tabs { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border-color); background: #fafafa; flex-shrink: 0; }
+        .status-tab { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 3px; cursor: pointer; font-size: 12px; color: var(--text-secondary); background: #fff; border: 1px solid var(--border-color); transition: all .2s; user-select: none; }
+        .status-tab:hover { border-color: var(--primary); color: var(--primary); }
+        .status-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: bold; }
+        .status-tab .st-count { font-size: 11px; padding: 1px 6px; border-radius: 10px; font-weight: bold; background: rgba(0,0,0,.08); }
+        .status-tab.active .st-count { background: rgba(255,255,255,.25); color: #fff; }
+        .status-tab .st-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .6; }
+
+        .list-toolbar { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .toolbar-left { display: flex; align-items: center; gap: 10px; }
+        .toolbar-right { display: flex; align-items: center; gap: 8px; }
+        .section-title { font-size: 14px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+        .section-title .title-badge { font-size: 11px; padding: 1px 6px; border-radius: 10px; background: var(--primary); color: #fff; font-weight: normal; }
+
+        /* 批量操作栏 */
+        .batch-bar { padding: 8px 16px; background: #e3f2fd; border-bottom: 1px solid #bbdefb; display: none; align-items: center; gap: 12px; flex-shrink: 0; }
+        .batch-bar.show { display: flex; }
+        .batch-bar .batch-info { color: var(--primary); font-size: 12px; }
+
+        /* ========== 表格 ========== */
+        .data-table-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        .table-scroll-area { flex: 1; overflow: auto; min-height: 0; }
+        .table-scroll-area::-webkit-scrollbar { width: 6px; height: 6px; }
+        .table-scroll-area::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1100px; }
+        .data-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 0; text-align: center; border-bottom: 1px solid #bbdefb; white-space: nowrap; position: sticky; top: 0; z-index: 10; }
+        .data-table thead th .th-content { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 10px 8px; cursor: pointer; user-select: none; }
+        .data-table thead th .th-content:hover { background: #d4e9fd; }
+        .data-table thead th .th-icons { display: flex; align-items: center; gap: 2px; opacity: .5; transition: opacity .2s; }
+        .data-table thead th .th-content:hover .th-icons { opacity: 1; }
+        .data-table thead th .th-icons.active { opacity: 1; color: var(--primary); }
+        .data-table thead th .sort-icon { width: 12px; height: 12px; display: flex; align-items: center; justify-content: center; font-size: 10px; }
+        .data-table thead th .filter-icon { width: 12px; height: 12px; display: flex; align-items: center; justify-content: center; font-size: 10px; cursor: pointer; }
+        .data-table tbody td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #f0f0f0; color: var(--text-primary); }
+        .data-table tbody tr:hover { background: #f5f7fa; }
+        .data-table tbody tr.selected { background: #e3f2fd; }
+        .data-table .checkbox-col { width: 40px; }
+        .data-table .op-col { min-width: 160px; }
+        .data-table th.checkbox-col, .data-table th.op-col { position: sticky; z-index: 15; background: var(--primary-light); }
+        .data-table th.checkbox-col { left: 0; }
+        .data-table th.op-col { right: 0; }
+        .data-table td:first-child { position: sticky; left: 0; background: #fff; z-index: 5; }
+        .data-table td:last-child { position: sticky; right: 0; background: #fff; z-index: 5; }
+        .data-table tbody tr:hover td:first-child { background: #f5f7fa; }
+        .data-table tbody tr:hover td:last-child { background: #f5f7fa; }
+        .data-table tbody tr.selected td:first-child { background: #e3f2fd; }
+        .data-table tbody tr.selected td:last-child { background: #e3f2fd; }
+        .data-table .col-link { color: var(--primary); cursor: pointer; }
+        .data-table .col-link:hover { text-decoration: underline; }
+
+        /* 筛选下拉面板 */
+        .filter-dropdown { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); background: #fff; border: 1px solid var(--border-color); border-radius: 4px; box-shadow: 0 4px 12px rgba(0,0,0,.15); z-index: 200; min-width: 160px; display: none; margin-top: 2px; }
+        .filter-dropdown.show { display: block; }
+        .filter-dropdown-header { padding: 8px 12px; border-bottom: 1px solid #f0f0f0; font-size: 12px; font-weight: bold; color: var(--text-primary); }
+        .filter-dropdown-body { max-height: 200px; overflow-y: auto; padding: 4px 0; }
+        .filter-dropdown-body::-webkit-scrollbar { width: 4px; }
+        .filter-dropdown-body::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+        .sort-option { padding: 6px 12px; cursor: pointer; font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+        .sort-option:hover { background: var(--primary-light); color: var(--primary); }
+        .sort-option.active { color: var(--primary); font-weight: bold; }
+        .filter-divider { height: 1px; background: #f0f0f0; margin: 4px 8px; }
+        .filter-checkbox-item { padding: 5px 12px; cursor: pointer; font-size: 12px; color: var(--text-secondary); display: flex; align-items: center; gap: 6px; }
+        .filter-checkbox-item:hover { background: var(--primary-light); }
+        .filter-checkbox-item input[type="checkbox"] { width: 12px; height: 12px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
+        .filter-dropdown-footer { padding: 8px 12px; border-top: 1px solid #f0f0f0; display: flex; justify-content: space-between; gap: 6px; }
+        .filter-dropdown-footer .btn { height: 24px; padding: 0 10px; font-size: 11px; }
+
+        /* 表格状态标签 */
+        .cell-status-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 3px; font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .cell-status-tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+        .cell-enabled { background: #e8f5e9; color: #2e7d32; }
+        .cell-enabled::before { background: #66bb6a; }
+        .cell-disabled { background: #f5f5f5; color: #757575; }
+        .cell-disabled::before { background: #bdbdbd; }
+
+        /* 规则分类标签 */
+        .cell-category-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .cat-basic { background: #e3f2fd; color: #1565c0; }
+        .cat-level { background: #fff3e0; color: #e65100; }
+        .cat-merge { background: #f3e5f5; color: #6a1b9a; }
+        .cat-load { background: #e0f2f1; color: #00695c; }
+        .cat-time { background: #fff8e1; color: #f57f17; }
+        .cat-avoid { background: #ffebee; color: #c62828; }
+
+        /* 操作按钮 */
+        .op-btns { display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .op-btn { font-size: 12px; color: var(--primary); cursor: pointer; padding: 2px 6px; border-radius: 2px; transition: background .2s; border: none; background: transparent; }
+        .op-btn:hover { background: var(--primary-light); }
+        .op-btn.danger { color: var(--danger); }
+        .op-btn.danger:hover { background: #ffebee; }
+        .op-btn.success { color: var(--success); }
+        .op-btn.success:hover { background: #e8f5e9; }
+        .op-btn.warning { color: var(--warning); }
+        .op-btn.warning:hover { background: #fff3e0; }
+
+        /* 分页 */
+        .pagination-bar { padding: 10px 16px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); background: #fff; flex-shrink: 0; }
+        .pagination-bar .page-info { color: var(--text-secondary); font-size: 12px; }
+        .page-btns { display: flex; align-items: center; gap: 4px; }
+        .page-btn { min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); background: #fff; border-radius: 3px; cursor: pointer; font-size: 12px; color: var(--text-secondary); padding: 0 6px; }
+        .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .page-btn.disabled { opacity: .4; cursor: not-allowed; }
+        .page-size-select { height: 28px; border: 1px solid var(--border-color); border-radius: 3px; font-size: 12px; padding: 0 4px; outline: none; }
+        .page-jump { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-secondary); }
+        .page-jump input { width: 40px; height: 28px; border: 1px solid var(--border-color); border-radius: 3px; text-align: center; font-size: 12px; outline: none; }
+
+        input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--primary); cursor: pointer; }
+        .empty-state { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; color: var(--text-muted); gap: 12px; }
+        .empty-state.show { display: flex; }
+        .empty-state-icon { font-size: 48px; opacity: .3; }
+        .empty-state-text { font-size: 14px; }
+        .empty-state-hint { font-size: 12px; }
+
+        /* 优先级颜色 */
+        .priority-high { color: var(--danger); font-weight: bold; }
+        .priority-medium { color: var(--warning); font-weight: bold; }
+        .priority-low { color: var(--success); }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <!-- 顶部 Banner -->
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system">
+                <span class="brand-name">绿星链通</span>
+                <span class="brand-version">2.0</span>
+            </div>
+            <div class="brand-divider"></div>
+            <div class="logo-text">
+                <span class="cn">中国铝业集团有限公司</span>
+                <span class="en">ALUMINUM CORPORATION OF CHINA</span>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="header-search">
+                <input type="text" placeholder="请输入页面号">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="M21 21l-4.35-4.35"></path>
+                </svg>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span>
+            <div class="user-badge">
+                <div class="user-avatar">潘</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="layout">
+        <!-- 左侧菜单 -->
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险驾驶舱</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128203;</span><span>风险事件池</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128188;</span><span>我的工作台</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务管理</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#9989;</span><span>验收审核</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128226;</span><span>超期督办</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>统计分析</span></div></div></div>
+            <div class="menu-group">
+                <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#9881;</span><span>模型中心</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="submenu open">
+                    <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>规则模型</span></div>
+                    </div>
+                    <div class="submenu open">
+                        <div class="menu-item active"><div class="menu-left"><span>规则配置管理</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>规则命中日志</span></div></div>
+                    </div>
+                    <div class="menu-item" style="opacity:0.5;cursor:not-allowed;" title="阶段二开放">
+                        <div class="menu-left"><span>风险模型</span></div>
+                        <span style="font-size:10px;color:var(--text-muted);margin-left:auto;background:#f5f5f5;padding:1px 4px;border-radius:2px;">后续</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <!-- 面包屑 -->
+            <div class="breadcrumb">
+                <a>模型中心</a><span class="sep">&gt;</span><a>规则模型</a><span class="sep">&gt;</span><span>规则配置管理</span>
+            </div>
+
+            <!-- 页面标题 -->
+            <div class="page-header">
+                <div class="page-title">
+                    <span>规则配置管理</span>
+                </div>
+                <div class="top-actions">
+                    <button class="btn btn-primary" onclick="goToEdit()">+ 新增规则</button>
+                    <button class="btn btn-default">&#128229; 批量导出</button>
+                </div>
+            </div>
+
+            <!-- 查询区 -->
+            <div class="query-section">
+                <div class="section-header">
+                    <div class="header-left-part">
+                        <span class="section-icon"></span>
+                        <span>查询信息</span>
+                    </div>
+                    <div class="section-actions">
+                        <button class="btn btn-default" onclick="resetForm()">&#8634; 重置</button>
+                        <button class="btn btn-primary" onclick="doSearch()">&#128269; 查询</button>
+                    </div>
+                </div>
+                <div class="query-form">
+                    <div class="form-item"><label class="form-label">规则编码</label><input type="text" class="form-input" id="qRuleId" placeholder="如 R001"></div>
+                    <div class="form-item"><label class="form-label">规则名称</label><input type="text" class="form-input" id="qRuleName" placeholder="请输入规则名称"></div>
+                    <div class="form-item">
+                        <label class="form-label">规则分类</label>
+                        <select class="form-select" id="qCategory">
+                            <option value="">全部</option>
+                            <option value="基础规则">基础规则</option>
+                            <option value="等级规则">等级规则</option>
+                            <option value="聚合规则">聚合规则</option>
+                            <option value="负荷规则">负荷规则</option>
+                            <option value="时效规则">时效规则</option>
+                            <option value="回避规则">回避规则</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <label class="form-label">状态</label>
+                        <select class="form-select" id="qStatus">
+                            <option value="">全部状态</option>
+                            <option value="enabled">启用</option>
+                            <option value="disabled">禁用</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 列表区 -->
+            <div class="list-section">
+                <div class="list-toolbar">
+                    <div class="toolbar-left"><span class="section-title">&#9776; 规则配置清单 <span class="title-badge" id="totalCount">20</span></span></div>
+                    <div class="toolbar-right">
+                        <button class="btn btn-success" onclick="batchEnable()">&#10004; 批量启用</button>
+                        <button class="btn btn-warning" onclick="batchDisable()">&#10008; 批量禁用</button>
+                        <button class="btn btn-danger" onclick="batchDelete()">&#128465; 批量删除</button>
+                    </div>
+                </div>
+
+                <!-- 批量操作栏 -->
+                <div class="batch-bar" id="batchBar">
+                    <span class="batch-info">已选择 <strong id="batchCount">0</strong> 项</span>
+                    <button class="btn btn-primary btn-sm">批量启用</button>
+                    <button class="btn btn-warning btn-sm">批量禁用</button>
+                    <button class="btn btn-danger btn-sm">批量删除</button>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <!-- 状态标签 -->
+                    <div class="status-tabs">
+                        <div class="status-tab active" data-status="all" onclick="filterByStatusTab(this)"><span class="st-dot"></span><span>全部</span><span class="st-count" id="tabAll">20</span></div>
+                        <div class="status-tab" data-status="enabled" onclick="filterByStatusTab(this)"><span class="st-dot"></span><span>启用</span><span class="st-count" id="tabEnabled">18</span></div>
+                        <div class="status-tab" data-status="disabled" onclick="filterByStatusTab(this)"><span class="st-dot"></span><span>禁用</span><span class="st-count" id="tabDisabled">2</span></div>
+                    </div>
+                    <div class="table-scroll-area">
+                        <table class="data-table" id="dataTable">
+                            <thead>
+                                <tr>
+                                    <th class="checkbox-col"><input type="checkbox" id="checkAll" onchange="toggleCheckAll()"></th>
+                                    <th><div class="th-content"><span class="th-text">序号</span></div></th>
+                                    <th>
+                                        <div class="th-content" onclick="toggleSort('ruleId', event)">
+                                            <span class="th-text">规则编码</span>
+                                            <span class="th-icons" id="sort-ruleId"><span class="sort-icon">&#8597;</span></span>
+                                        </div>
+                                        <div class="filter-dropdown" id="filter-ruleId">
+                                            <div class="filter-dropdown-header">排序</div>
+                                            <div class="filter-dropdown-body">
+                                                <div class="sort-option" onclick="sortTable('ruleId','asc')">&#8593; 升序</div>
+                                                <div class="sort-option" onclick="sortTable('ruleId','desc')">&#8595; 降序</div>
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th><div class="th-content"><span class="th-text">规则名称</span></div></th>
+                                    <th>
+                                        <div class="th-content" onclick="toggleFilter('category', event)">
+                                            <span class="th-text">规则分类</span>
+                                            <span class="th-icons" id="icon-category"><span class="filter-icon">&#9660;</span></span>
+                                        </div>
+                                        <div class="filter-dropdown" id="filter-category">
+                                            <div class="filter-dropdown-header">筛选</div>
+                                            <div class="filter-dropdown-body">
+                                                <div class="filter-checkbox-item"><input type="checkbox" checked onchange="applyColFilter('category')"><span>基础规则</span></div>
+                                                <div class="filter-checkbox-item"><input type="checkbox" checked onchange="applyColFilter('category')"><span>等级规则</span></div>
+                                                <div class="filter-checkbox-item"><input type="checkbox" checked onchange="applyColFilter('category')"><span>聚合规则</span></div>
+                                                <div class="filter-checkbox-item"><input type="checkbox" checked onchange="applyColFilter('category')"><span>负荷规则</span></div>
+                                                <div class="filter-checkbox-item"><input type="checkbox" checked onchange="applyColFilter('category')"><span>时效规则</span></div>
+                                                <div class="filter-checkbox-item"><input type="checkbox" checked onchange="applyColFilter('category')"><span>回避规则</span></div>
+                                            </div>
+                                            <div class="filter-dropdown-footer">
+                                                <button class="btn btn-default" onclick="clearColFilter('category')">重置</button>
+                                                <button class="btn btn-primary" onclick="applyColFilter('category')">确定</button>
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div class="th-content" onclick="toggleSort('priority', event)">
+                                            <span class="th-text">优先级</span>
+                                            <span class="th-icons" id="sort-priority"><span class="sort-icon">&#8597;</span></span>
+                                        </div>
+                                        <div class="filter-dropdown" id="filter-priority">
+                                            <div class="filter-dropdown-header">排序</div>
+                                            <div class="filter-dropdown-body">
+                                                <div class="sort-option" onclick="sortTable('priority','asc')">&#8593; 升序</div>
+                                                <div class="sort-option" onclick="sortTable('priority','desc')">&#8595; 降序</div>
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th>
+                                        <div class="th-content" onclick="toggleFilter('status', event)">
+                                            <span class="th-text">状态</span>
+                                            <span class="th-icons" id="icon-status"><span class="filter-icon">&#9660;</span></span>
+                                        </div>
+                                        <div class="filter-dropdown" id="filter-status">
+                                            <div class="filter-dropdown-header">筛选</div>
+                                            <div class="filter-dropdown-body">
+                                                <div class="filter-checkbox-item"><input type="checkbox" checked onchange="applyColFilter('status')"><span>启用</span></div>
+                                                <div class="filter-checkbox-item"><input type="checkbox" checked onchange="applyColFilter('status')"><span>禁用</span></div>
+                                            </div>
+                                            <div class="filter-dropdown-footer">
+                                                <button class="btn btn-default" onclick="clearColFilter('status')">重置</button>
+                                                <button class="btn btn-primary" onclick="applyColFilter('status')">确定</button>
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th><div class="th-content"><span class="th-text">版本号</span></div></th>
+                                    <th>
+                                        <div class="th-content" onclick="toggleSort('updateTime', event)">
+                                            <span class="th-text">更新时间</span>
+                                            <span class="th-icons" id="sort-updateTime"><span class="sort-icon">&#8597;</span></span>
+                                        </div>
+                                        <div class="filter-dropdown" id="filter-updateTime">
+                                            <div class="filter-dropdown-header">排序</div>
+                                            <div class="filter-dropdown-body">
+                                                <div class="sort-option" onclick="sortTable('updateTime','asc')">&#8593; 升序</div>
+                                                <div class="sort-option" onclick="sortTable('updateTime','desc')">&#8595; 降序</div>
+                                            </div>
+                                        </div>
+                                    </th>
+                                    <th class="op-col"><div class="th-content"><span class="th-text">操作</span></div></th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <!-- 数据由JS填充 -->
+                            </tbody>
+                        </table>
+                        <div class="empty-state" id="emptyState">
+                            <div class="empty-state-icon">&#128196;</div>
+                            <div class="empty-state-text">暂无数据</div>
+                            <div class="empty-state-hint">请调整筛选条件或稍后重试</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 分页 -->
+                <div class="pagination-bar">
+                    <span class="page-info" id="pageInfo">共 20 条</span>
+                    <select class="page-size-select" id="pageSize" onchange="changePageSize()">
+                        <option>10 条/页</option>
+                        <option selected>20 条/页</option>
+                        <option>50 条/页</option>
+                    </select>
+                    <div class="page-btns" id="pageBtns">
+                        <button class="page-btn disabled">&lt;&lt;</button>
+                        <button class="page-btn disabled">&lt;</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">&gt;</button>
+                        <button class="page-btn">&gt;&gt;</button>
+                    </div>
+                    <div class="page-jump">前往 <input type="text" value="1" id="jumpPage"> 页</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // ========== 模拟数据 ==========
+        const allRules = [
+            { ruleId: 'R001', ruleName: '部门对口-招投标风险', category: '基础规则', priority: 10, status: 'enabled', version: 3, updateTime: '2024-12-05 14:30' },
+            { ruleId: 'R002', ruleName: '部门对口-供应商管理风险', category: '基础规则', priority: 10, status: 'enabled', version: 2, updateTime: '2024-12-05 14:30' },
+            { ruleId: 'R003', ruleName: '部门对口-价格与结算风险', category: '基础规则', priority: 10, status: 'enabled', version: 2, updateTime: '2024-12-03 09:15' },
+            { ruleId: 'R004', ruleName: '部门对口-合同管理风险', category: '基础规则', priority: 10, status: 'enabled', version: 1, updateTime: '2024-11-28 16:20' },
+            { ruleId: 'R005', ruleName: '部门对口-质量与库存风险', category: '基础规则', priority: 10, status: 'enabled', version: 1, updateTime: '2024-11-28 16:20' },
+            { ruleId: 'R006', ruleName: '部门对口-廉洁合规风险', category: '基础规则', priority: 5, status: 'enabled', version: 2, updateTime: '2024-12-01 10:00' },
+            { ruleId: 'R101', ruleName: '红色风险直报', category: '等级规则', priority: 3, status: 'enabled', version: 4, updateTime: '2024-12-05 11:00' },
+            { ruleId: 'R102', ruleName: '红色资金阈值', category: '等级规则', priority: 1, status: 'enabled', version: 2, updateTime: '2024-12-02 15:30' },
+            { ruleId: 'R103', ruleName: '橙色风险部门升级', category: '等级规则', priority: 15, status: 'enabled', version: 1, updateTime: '2024-11-25 09:00' },
+            { ruleId: 'R104', ruleName: '安全生产关联升级', category: '等级规则', priority: 12, status: 'enabled', version: 1, updateTime: '2024-11-20 14:00' },
+            { ruleId: 'R201', ruleName: '同供应商≥3个风险聚合', category: '聚合规则', priority: 20, status: 'enabled', version: 2, updateTime: '2024-12-04 10:30' },
+            { ruleId: 'R202', ruleName: '同类风险季度聚合', category: '聚合规则', priority: 25, status: 'enabled', version: 1, updateTime: '2024-11-15 11:00' },
+            { ruleId: 'R203', ruleName: '同一项目风险聚合', category: '聚合规则', priority: 18, status: 'enabled', version: 1, updateTime: '2024-11-10 09:30' },
+            { ruleId: 'R301', ruleName: '负荷超载转派', category: '负荷规则', priority: 50, status: 'disabled', version: 1, updateTime: '2024-10-20 16:00' },
+            { ruleId: 'R302', ruleName: '超期人员降级', category: '负荷规则', priority: 50, status: 'enabled', version: 2, updateTime: '2024-12-03 13:00' },
+            { ruleId: 'R303', ruleName: '历史效能优先', category: '负荷规则', priority: 50, status: 'enabled', version: 1, updateTime: '2024-11-05 10:00' },
+            { ruleId: 'R401', ruleName: '24h紧急响应', category: '时效规则', priority: 8, status: 'enabled', version: 3, updateTime: '2024-12-05 08:00' },
+            { ruleId: 'R402', ruleName: '节假日顺延', category: '时效规则', priority: 80, status: 'enabled', version: 1, updateTime: '2024-09-01 09:00' },
+            { ruleId: 'R501', ruleName: '利益关系回避', category: '回避规则', priority: 2, status: 'enabled', version: 2, updateTime: '2024-11-30 15:00' },
+            { ruleId: 'R502', ruleName: '自查回避', category: '回避规则', priority: 1, status: 'enabled', version: 1, updateTime: '2024-11-20 10:00' }
+        ];
+
+        const categoryClassMap = {
+            '基础规则': 'cat-basic',
+            '等级规则': 'cat-level',
+            '聚合规则': 'cat-merge',
+            '负荷规则': 'cat-load',
+            '时效规则': 'cat-time',
+            '回避规则': 'cat-avoid'
+        };
+
+        let activeDropdown = null;
+        let sortState = {};
+        let colFilters = {};
+        let currentPage = 1;
+        let pageSize = 20;
+
+        // ========== 菜单展开收起 ==========
+        function toggleMenu(el) {
+            const submenu = el.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                el.classList.toggle('expanded');
+                submenu.classList.toggle('open');
+            }
+        }
+
+        // ========== 渲染表格 ==========
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+
+            if (data.length === 0) {
+                document.getElementById('emptyState').classList.add('show');
+                document.getElementById('totalCount').textContent = '0';
+                document.getElementById('pageInfo').textContent = '共 0 条';
+                return;
+            }
+
+            document.getElementById('emptyState').classList.remove('show');
+            document.getElementById('totalCount').textContent = data.length;
+            document.getElementById('pageInfo').textContent = `共 ${data.length} 条`;
+
+            data.forEach((row, idx) => {
+                const tr = document.createElement('tr');
+                tr.dataset.status = row.status;
+                tr.dataset.category = row.category;
+                const statusClass = row.status === 'enabled' ? 'cell-enabled' : 'cell-disabled';
+                const statusText = row.status === 'enabled' ? '启用' : '禁用';
+                const catClass = categoryClassMap[row.category] || 'cat-basic';
+                const priorityClass = row.priority <= 5 ? 'priority-high' : (row.priority <= 20 ? 'priority-medium' : 'priority-low');
+                const opBtn = row.status === 'enabled'
+                    ? `<button class="op-btn warning" onclick="toggleRuleStatus('${row.ruleId}', false)">禁用</button>`
+                    : `<button class="op-btn success" onclick="toggleRuleStatus('${row.ruleId}', true)">启用</button>`;
+
+                tr.innerHTML = `
+                    <td><input type="checkbox" class="row-check" data-id="${row.ruleId}" onchange="updateBatch()"></td>
+                    <td>${idx + 1}</td>
+                    <td><span class="col-link" onclick="goToEdit('${row.ruleId}')">${row.ruleId}</span></td>
+                    <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${row.ruleName}</td>
+                    <td><span class="cell-category-tag ${catClass}">${row.category}</span></td>
+                    <td><span class="${priorityClass}">${row.priority}</span></td>
+                    <td><span class="cell-status-tag ${statusClass}">${statusText}</span></td>
+                    <td>V${row.version}</td>
+                    <td>${row.updateTime}</td>
+                    <td>
+                        <div class="op-btns">
+                            <button class="op-btn" onclick="goToEdit('${row.ruleId}')">编辑</button>
+                            ${opBtn}
+                            <button class="op-btn danger" onclick="deleteRule('${row.ruleId}')">删除</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            updateStatusTabCounts();
+        }
+
+        function updateStatusTabCounts() {
+            const all = allRules.length;
+            const enabled = allRules.filter(r => r.status === 'enabled').length;
+            const disabled = allRules.filter(r => r.status === 'disabled').length;
+            document.getElementById('tabAll').textContent = all;
+            document.getElementById('tabEnabled').textContent = enabled;
+            document.getElementById('tabDisabled').textContent = disabled;
+        }
+
+        // ========== 筛选与排序 ==========
+        function applyAllFilters() {
+            let result = [...allRules];
+
+            // 状态标签筛选
+            const statusTab = document.querySelector('.status-tab.active');
+            const statusVal = statusTab ? statusTab.dataset.status : 'all';
+            if (statusVal !== 'all') {
+                result = result.filter(r => r.status === statusVal);
+            }
+
+            // 查询条件
+            const qRuleId = document.getElementById('qRuleId').value.trim();
+            const qRuleName = document.getElementById('qRuleName').value.trim();
+            const qCategory = document.getElementById('qCategory').value;
+            const qStatus = document.getElementById('qStatus').value;
+
+            if (qRuleId) result = result.filter(r => r.ruleId.toLowerCase().includes(qRuleId.toLowerCase()));
+            if (qRuleName) result = result.filter(r => r.ruleName.includes(qRuleName));
+            if (qCategory) result = result.filter(r => r.category === qCategory);
+            if (qStatus) result = result.filter(r => r.status === qStatus);
+
+            // 列筛选
+            for (const [colKey, selectedVals] of Object.entries(colFilters)) {
+                if (!selectedVals || selectedVals.length === 0) continue;
+                if (colKey === 'category') result = result.filter(r => selectedVals.includes(r.category));
+                if (colKey === 'status') result = result.filter(r => selectedVals.includes(r.status === 'enabled' ? '启用' : '禁用'));
+            }
+
+            // 排序
+            if (sortState.col && sortState.dir) {
+                result.sort((a, b) => {
+                    let av, bv;
+                    if (sortState.col === 'ruleId') { av = a.ruleId; bv = b.ruleId; }
+                    else if (sortState.col === 'priority') { av = a.priority; bv = b.priority; }
+                    else if (sortState.col === 'updateTime') { av = a.updateTime; bv = b.updateTime; }
+                    if (av < bv) return sortState.dir === 'asc' ? -1 : 1;
+                    if (av > bv) return sortState.dir === 'asc' ? 1 : -1;
+                    return 0;
+                });
+            }
+
+            renderTable(result);
+        }
+
+        // ========== 状态标签筛选 ==========
+        function filterByStatusTab(tabEl) {
+            document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+            tabEl.classList.add('active');
+            applyAllFilters();
+        }
+
+        // ========== 查询 ==========
+        function doSearch() {
+            applyAllFilters();
+        }
+
+        function resetForm() {
+            document.getElementById('qRuleId').value = '';
+            document.getElementById('qRuleName').value = '';
+            document.getElementById('qCategory').value = '';
+            document.getElementById('qStatus').value = '';
+            document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('.status-tab[data-status="all"]').classList.add('active');
+            colFilters = {};
+            sortState = {};
+            document.querySelectorAll('.th-icons').forEach(icon => {
+                icon.classList.remove('active');
+                const si = icon.querySelector('.sort-icon');
+                if (si) si.textContent = '↕';
+            });
+            document.querySelectorAll('.filter-checkbox-item input[type="checkbox"]').forEach(cb => cb.checked = true);
+            applyAllFilters();
+        }
+
+        // ========== 全选 ==========
+        function toggleCheckAll() {
+            const checked = document.getElementById('checkAll').checked;
+            document.querySelectorAll('.row-check').forEach(cb => cb.checked = checked);
+            updateBatch();
+        }
+
+        function updateBatch() {
+            const checked = document.querySelectorAll('.row-check:checked');
+            const batchBar = document.getElementById('batchBar');
+            const batchCount = document.getElementById('batchCount');
+            batchCount.textContent = checked.length;
+            batchBar.classList.toggle('show', checked.length > 0);
+        }
+
+        // ========== 排序面板 ==========
+        function toggleSort(colKey, event) {
+            event.stopPropagation();
+            const dd = document.getElementById('filter-' + colKey);
+            if (activeDropdown && activeDropdown !== dd) activeDropdown.classList.remove('show');
+            dd.classList.toggle('show');
+            activeDropdown = dd.classList.contains('show') ? dd : null;
+        }
+
+        // ========== 筛选面板 ==========
+        function toggleFilter(colKey, event) {
+            event.stopPropagation();
+            const dd = document.getElementById('filter-' + colKey);
+            if (activeDropdown && activeDropdown !== dd) activeDropdown.classList.remove('show');
+            dd.classList.toggle('show');
+            activeDropdown = dd.classList.contains('show') ? dd : null;
+        }
+
+        // ========== 排序 ==========
+        function sortTable(colKey, direction) {
+            sortState = { col: colKey, dir: direction };
+            document.querySelectorAll('.th-icons').forEach(icon => icon.classList.remove('active'));
+            const iconEl = document.getElementById('sort-' + colKey);
+            if (iconEl) {
+                iconEl.classList.add('active');
+                iconEl.querySelector('.sort-icon').textContent = direction === 'asc' ? '↑' : '↓';
+            }
+            document.querySelectorAll('.sort-option').forEach(opt => opt.classList.remove('active'));
+            const activeOpt = document.querySelector('#filter-' + colKey + ' .sort-option[onclick*="' + direction + '"]');
+            if (activeOpt) activeOpt.classList.add('active');
+            if (activeDropdown) { activeDropdown.classList.remove('show'); activeDropdown = null; }
+            applyAllFilters();
+        }
+
+        // ========== 列筛选 ==========
+        function applyColFilter(colKey) {
+            const dd = document.getElementById('filter-' + colKey);
+            const checks = dd.querySelectorAll('.filter-checkbox-item input[type="checkbox"]');
+            const selected = [];
+            checks.forEach(cb => { if (cb.checked) selected.push(cb.nextElementSibling.textContent.trim()); });
+            colFilters[colKey] = selected;
+            const iconEl = document.getElementById('icon-' + colKey);
+            if (iconEl) {
+                const allChecked = Array.from(checks).every(cb => cb.checked);
+                iconEl.classList.toggle('active', !allChecked);
+            }
+            if (activeDropdown) { activeDropdown.classList.remove('show'); activeDropdown = null; }
+            applyAllFilters();
+        }
+
+        function clearColFilter(colKey) {
+            const dd = document.getElementById('filter-' + colKey);
+            dd.querySelectorAll('.filter-checkbox-item input[type="checkbox"]').forEach(cb => cb.checked = true);
+            delete colFilters[colKey];
+            const iconEl = document.getElementById('icon-' + colKey);
+            if (iconEl) iconEl.classList.remove('active');
+            document.querySelectorAll('.sort-option').forEach(opt => opt.classList.remove('active'));
+            if (sortState.col === colKey) sortState = {};
+            const sortIcon = document.getElementById('sort-' + colKey);
+            if (sortIcon) { sortIcon.classList.remove('active'); sortIcon.querySelector('.sort-icon').textContent = '↕'; }
+            if (activeDropdown) { activeDropdown.classList.remove('show'); activeDropdown = null; }
+            applyAllFilters();
+        }
+
+        // ========== 点击外部关闭筛选面板 ==========
+        document.addEventListener('click', function(e) {
+            if (activeDropdown && !e.target.closest('.filter-dropdown') && !e.target.closest('.th-content')) {
+                activeDropdown.classList.remove('show');
+                activeDropdown = null;
+            }
+        });
+
+        // ========== 操作 ==========
+        function goToEdit(ruleId) {
+            if (ruleId) {
+                window.location.href = '规则配置编辑.html?id=' + encodeURIComponent(ruleId);
+            } else {
+                window.location.href = '规则配置编辑.html';
+            }
+        }
+
+        function toggleRuleStatus(ruleId, enable) {
+            const rule = allRules.find(r => r.ruleId === ruleId);
+            if (rule) {
+                rule.status = enable ? 'enabled' : 'disabled';
+                rule.version += 1;
+                rule.updateTime = '2024-12-05 16:00';
+                applyAllFilters();
+            }
+        }
+
+        function deleteRule(ruleId) {
+            if (confirm('确定要删除规则 ' + ruleId + ' 吗？删除后不可恢复。')) {
+                const idx = allRules.findIndex(r => r.ruleId === ruleId);
+                if (idx > -1) {
+                    allRules.splice(idx, 1);
+                    applyAllFilters();
+                }
+            }
+        }
+
+        function batchEnable() {
+            const checked = document.querySelectorAll('.row-check:checked');
+            if (checked.length === 0) { alert('请选择要启用的规则'); return; }
+            checked.forEach(cb => {
+                const ruleId = cb.dataset.id;
+                const rule = allRules.find(r => r.ruleId === ruleId);
+                if (rule) { rule.status = 'enabled'; rule.version += 1; }
+            });
+            applyAllFilters();
+            updateBatch();
+            document.getElementById('checkAll').checked = false;
+        }
+
+        function batchDisable() {
+            const checked = document.querySelectorAll('.row-check:checked');
+            if (checked.length === 0) { alert('请选择要禁用的规则'); return; }
+            checked.forEach(cb => {
+                const ruleId = cb.dataset.id;
+                const rule = allRules.find(r => r.ruleId === ruleId);
+                if (rule) { rule.status = 'disabled'; rule.version += 1; }
+            });
+            applyAllFilters();
+            updateBatch();
+            document.getElementById('checkAll').checked = false;
+        }
+
+        function batchDelete() {
+            const checked = document.querySelectorAll('.row-check:checked');
+            if (checked.length === 0) { alert('请选择要删除的规则'); return; }
+            if (!confirm('确定要删除选中的 ' + checked.length + ' 条规则吗？删除后不可恢复。')) return;
+            checked.forEach(cb => {
+                const ruleId = cb.dataset.id;
+                const idx = allRules.findIndex(r => r.ruleId === ruleId);
+                if (idx > -1) allRules.splice(idx, 1);
+            });
+            applyAllFilters();
+            updateBatch();
+            document.getElementById('checkAll').checked = false;
+        }
+
+        function changePageSize() {
+            pageSize = parseInt(document.getElementById('pageSize').value);
+            currentPage = 1;
+            applyAllFilters();
+        }
+
+        // ========== 初始化 ==========
+        renderTable(allRules);
+    </script>
+</body>
+</html>

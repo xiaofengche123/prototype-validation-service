@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../../assets/app.css">
+<link rel="stylesheet" href="../../../assets/theme.css">
+<title>指标新增</title>
+</head>
+<body class="page-body">
+<!--
+  编码：MXCK02    名称：指标新增    类型：填表录入页
+  返回 → MXCK01
+-->
+<div id="page-content" data-page="MXCK02" class="prototype-page has-fixed-actions">
+
+  <!-- 页头 -->
+  <div class="page-header">
+    <div class="page-title">指标新增 <span class="page-sub">新建风险指标</span></div>
+  </div>
+
+  <!-- 基础信息 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title"><span class="bar"></span>基础信息</div>
+    </div>
+    <div class="query-grid prototype-query-grid">
+      <div class="form-item prototype-field">
+        <label>指标编码</label>
+        <input value="RISK-025" readonly>
+      </div>
+      <div class="form-item prototype-field">
+        <label>指标名称<span class="req">*</span></label>
+        <input id="iName" placeholder="请输入指标名称">
+      </div>
+      <div class="form-item prototype-field">
+        <label>所属场景<span class="req">*</span></label>
+        <select id="iScene">
+          <option value="">请选择</option>
+          <option>采购寻源</option>
+          <option>采购执行</option>
+          <option>供应商准入</option>
+          <option>计划管理</option>
+          <option>采购结算</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>数据类型<span class="req">*</span></label>
+        <select id="iType">
+          <option value="">请选择</option>
+          <option>数值型</option>
+          <option>比率型</option>
+          <option>布尔型</option>
+          <option>枚举型</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>统计周期</label>
+        <select id="iPeriod">
+          <option value="">请选择</option>
+          <option>实时</option>
+          <option>日</option>
+          <option>周</option>
+          <option>月</option>
+          <option>季度</option>
+          <option>年</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>更新频率</label>
+        <select id="iFreq">
+          <option value="">请选择</option>
+          <option>实时</option>
+          <option>每小时</option>
+          <option>每日</option>
+          <option>每周</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field span-2 field-block">
+        <label>指标说明</label>
+        <textarea id="iDesc" rows="4" placeholder="请输入指标的业务含义、计算口径等说明"></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 数据源配置 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title"><span class="bar"></span>数据源配置</div>
+    </div>
+    <div class="query-grid prototype-query-grid">
+      <div class="form-item prototype-field">
+        <label>数据来源</label>
+        <select id="iSource">
+          <option value="">请选择</option>
+          <option>ERP系统</option>
+          <option>采购平台</option>
+          <option>合同系统</option>
+          <option>手工录入</option>
+          <option>外部接口</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>数据表/接口</label>
+        <input id="iTable" placeholder="请输入数据表名或接口地址">
+      </div>
+      <div class="form-item prototype-field">
+        <label>关键字段</label>
+        <input id="iFields" placeholder="如：供应商编码、采购金额">
+      </div>
+      <div class="form-item prototype-field">
+        <label>状态</label>
+        <select id="iStatus">
+          <option value="enabled" selected>启用</option>
+          <option value="disabled">禁用</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 计算逻辑 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title"><span class="bar"></span>计算逻辑</div>
+    </div>
+    <div class="query-grid prototype-query-grid">
+      <div class="form-item prototype-field">
+        <label>计算方式</label>
+        <select id="iCalcType">
+          <option value="">请选择</option>
+          <option>SQL查询</option>
+          <option>公式计算</option>
+          <option>脚本</option>
+          <option>模型调用</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>结果格式化</label>
+        <select id="iFormat">
+          <option>保留2位小数</option>
+          <option>百分比</option>
+          <option>整数</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field span-2 field-block">
+        <label>计算公式/脚本</label>
+        <textarea id="iFormula" rows="6" placeholder="请输入计算公式或脚本..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 阈值规则 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title"><span class="bar"></span>阈值规则</div>
+      <div class="actions">
+        <button class="btn btn-success btn-sm" data-action="add-threshold">+ 添加阈值</button>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table id="thresholdTable">
+        <thead>
+          <tr>
+            <th style="width:100px">风险等级</th>
+            <th style="width:140px">阈值条件</th>
+            <th style="width:120px">阈值值</th>
+            <th>预警方式</th>
+            <th style="width:80px">操作</th>
+          </tr>
+        </thead>
+        <tbody id="thresholdBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 底部操作栏 -->
+  <div class="fixed-bottom-bar">
+    <span class="status-text">当前状态：<span class="tag draft"><span class="td"></span>草稿</span></span>
+    <span class="spacer"></span>
+    <button class="btn btn-default" data-nav="MXCK01">← 返回列表</button>
+    <button class="btn btn-default" data-action="cancel">取消</button>
+    <button class="btn btn-primary" data-action="save">保存</button>
+  </div>
+
+</div>
+
+<script src="../../../assets/page-runtime.js"></script>
+<script>
+let THRESHOLDS = [
+  { level: '高风险', cls: 'level-high', cond: '≥ (大于等于)', val: '0.7', warn: '红色预警+短信' },
+  { level: '中风险', cls: 'level-mid', cond: '≥ (大于等于)', val: '0.4', warn: '橙色预警+站内信' },
+  { level: '低风险', cls: 'level-low', cond: '< (小于)', val: '0.4', warn: '蓝色提示' }
+];
+
+function renderThresholds() {
+  document.getElementById('thresholdBody').innerHTML = THRESHOLDS.map((t, i) => `
+    <tr>
+      <td><span class="level-tag ${t.cls}">${t.level}</span></td>
+      <td>
+        <select class="dt-select">
+          <option ${t.cond.includes('≥') ? 'selected' : ''}>≥ (大于等于)</option>
+          <option ${t.cond.includes('>') && !t.cond.includes('≥') ? 'selected' : ''}>> (大于)</option>
+          <option ${t.cond.includes('=') && !t.cond.includes('≥') && !t.cond.includes('≤') ? 'selected' : ''}>= (等于)</option>
+          <option ${t.cond.includes('≤') ? 'selected' : ''}>≤ (小于等于)</option>
+          <option ${t.cond.includes('<') && !t.cond.includes('≤') ? 'selected' : ''}>< (小于)</option>
+        </select>
+      </td>
+      <td><input type="text" class="dt-input" value="${t.val}"></td>
+      <td><input type="text" class="dt-input" value="${t.warn}"></td>
+      <td><button class="op red" data-action="del-threshold" data-idx="${i}">删除</button></td>
+    </tr>
+  `).join('');
+  PR.bindActions();
+}
+
+PR.on('add-threshold', () => {
+  THRESHOLDS.push({ level: '新规则', cls: 'level-mid', cond: '≥ (大于等于)', val: '', warn: '' });
+  renderThresholds();
+});
+PR.on('del-threshold', function (el) {
+  const idx = parseInt(el.dataset.idx, 10);
+  THRESHOLDS.splice(idx, 1);
+  renderThresholds();
+});
+PR.on('save', () => { PR.toast('保存成功'); PR.nav('MXCK01'); });
+PR.on('cancel', () => PR.nav('MXCK01'));
+
+renderThresholds();
+</script>
+</body>
+</html>

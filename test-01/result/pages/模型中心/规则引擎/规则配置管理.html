@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../../assets/app.css">
+<link rel="stylesheet" href="../../../assets/theme.css">
+<title>规则配置管理</title>
+</head>
+<body class="page-body">
+<!--
+  编码：MXGZ01    名称：规则配置管理    类型：复杂清单页
+  查询字段：规则编码、规则名称、规则分类、状态
+  表格列：序号、规则编码、规则名称、规则分类、优先级、状态、版本号、更新时间、操作
+  行操作：编辑（→MXGZ02）、启用/禁用、删除
+  顶部操作：新增（open-add）、批量导出
+  批量操作：批量启用、批量禁用、批量删除
+-->
+<div id="page-content" data-page="MXGZ01" class="prototype-page">
+
+  <!-- 页头 -->
+  <div class="page-header">
+    <div class="page-title">规则配置管理</div>
+    <div class="actions">
+      <button class="btn btn-primary" data-action="open-add">+ 新增规则</button>
+      <button class="btn btn-default" data-action="batch-export">⬇ 批量导出</button>
+    </div>
+  </div>
+
+  <!-- 查询卡 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title"><span class="bar"></span>查询信息</div>
+      <div class="actions">
+        <button class="btn btn-default" data-action="reset">↺ 重置</button>
+        <button class="btn btn-primary" data-action="search">🔍 查询</button>
+      </div>
+    </div>
+    <div class="query-grid prototype-query-grid">
+      <div class="form-item prototype-field">
+        <label>规则编码</label>
+        <input id="qRuleId" placeholder="如 R001">
+      </div>
+      <div class="form-item prototype-field">
+        <label>规则名称</label>
+        <input id="qRuleName" placeholder="请输入规则名称">
+      </div>
+      <div class="form-item prototype-field">
+        <label>规则分类</label>
+        <select id="qCategory">
+          <option value="">全部</option>
+          <option>基础规则</option>
+          <option>等级规则</option>
+          <option>聚合规则</option>
+          <option>负荷规则</option>
+          <option>时效规则</option>
+          <option>回避规则</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>状态</label>
+        <select id="qStatus">
+          <option value="">全部状态</option>
+          <option value="enabled">启用</option>
+          <option value="disabled">禁用</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 列表卡 -->
+  <div class="card list-card prototype-card" id="listCard">
+    <div class="list-toolbar prototype-list-toolbar">
+      <div class="title">☰ 规则配置清单 <span class="title-badge" id="totalCount">0</span></div>
+      <div class="actions">
+        <button class="btn btn-sm btn-success" data-action="batch-enable">✔ 批量启用</button>
+        <button class="btn btn-sm btn-warning" data-action="batch-disable">✘ 批量禁用</button>
+        <button class="btn btn-sm btn-danger" data-action="batch-delete">🗑 批量删除</button>
+      </div>
+    </div>
+    <div class="batch-bar prototype-batch-bar" id="batchBar">
+      <span>已选择 <b id="selCount">0</b> 项</span>
+      <button class="btn btn-sm btn-success" data-action="batch-enable">✔ 批量启用</button>
+      <button class="btn btn-sm btn-warning" data-action="batch-disable">✘ 批量禁用</button>
+      <button class="btn btn-sm btn-danger" data-action="batch-delete">🗑 批量删除</button>
+    </div>
+
+    <!-- 状态标签 -->
+    <div class="status-tabs prototype-status-tabs">
+      <span class="status-tab prototype-status-tab active" data-action="filter-status" data-status="all">● 全部 <span class="st-count" id="tabAll">0</span></span>
+      <span class="status-tab prototype-status-tab" data-action="filter-status" data-status="enabled">● 启用 <span class="st-count" id="tabEnabled">0</span></span>
+      <span class="status-tab prototype-status-tab" data-action="filter-status" data-status="disabled">● 禁用 <span class="st-count" id="tabDisabled">0</span></span>
+    </div>
+
+    <div class="table-wrap prototype-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px"><input type="checkbox" id="ckAll"></th>
+            <th style="width:50px">序号</th>
+            <th style="width:90px">
+              <span class="link" data-action="sort-col" data-col="ruleId">规则编码 ↕</span>
+            </th>
+            <th style="width:220px">规则名称</th>
+            <th style="width:110px">
+              <span class="link" data-action="open-filter-category">规则分类 ▼</span>
+            </th>
+            <th style="width:80px">
+              <span class="link" data-action="sort-col" data-col="priority">优先级 ↕</span>
+            </th>
+            <th style="width:90px">
+              <span class="link" data-action="open-filter-status">状态 ▼</span>
+            </th>
+            <th style="width:70px">版本号</th>
+            <th style="width:140px">
+              <span class="link" data-action="sort-col" data-col="updateTime">更新时间 ↕</span>
+            </th>
+            <th style="min-width:200px">操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span class="total">共 <b id="total">0</b> 条</span>
+      <select class="pg-size"><option>20 条/页</option><option>50 条/页</option></select>
+      <span class="pg">«</span><span class="pg">‹</span>
+      <span class="pg active">1</span>
+      <span class="pg">›</span><span class="pg">»</span>
+      <span class="goto">前往 <input value="1"> 页</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- 分类筛选弹窗 -->
+<div class="modal-mask" id="filterCategoryMask" data-modal="filterCategory">
+  <div class="modal">
+    <div class="modal-title">筛选规则分类</div>
+    <div class="modal-body modal-body-block filter-list">
+      <label><input type="checkbox" class="cat-cb" value="基础规则" checked> 基础规则</label>
+      <label><input type="checkbox" class="cat-cb" value="等级规则" checked> 等级规则</label>
+      <label><input type="checkbox" class="cat-cb" value="聚合规则" checked> 聚合规则</label>
+      <label><input type="checkbox" class="cat-cb" value="负荷规则" checked> 负荷规则</label>
+      <label><input type="checkbox" class="cat-cb" value="时效规则" checked> 时效规则</label>
+      <label><input type="checkbox" class="cat-cb" value="回避规则" checked> 回避规则</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-action="close-modal" data-modal-target="filterCategory">取消</button>
+      <button class="btn btn-primary" data-action="apply-filter-category" data-modal-target="filterCategory">确定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 状态筛选弹窗 -->
+<div class="modal-mask" id="filterStatusMask" data-modal="filterStatus">
+  <div class="modal">
+    <div class="modal-title">筛选状态</div>
+    <div class="modal-body modal-body-block filter-list">
+      <label><input type="checkbox" class="status-cb" value="enabled" checked> 启用</label>
+      <label><input type="checkbox" class="status-cb" value="disabled" checked> 禁用</label>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-action="close-modal" data-modal-target="filterStatus">取消</button>
+      <button class="btn btn-primary" data-action="apply-filter-status" data-modal-target="filterStatus">确定</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../../assets/page-runtime.js"></script>
+<script>
+/* ===== 常量 ===== */
+const STATUS = {
+  enabled: { cls: 'pass', t: '启用' },
+  disabled: { cls: 'draft', t: '禁用' }
+};
+const CAT_CLS = {
+  '基础规则': 'type-rule',
+  '等级规则': 'type-indicator',
+  '聚合规则': 'type-comprehensive',
+  '负荷规则': 'type-daily',
+  '时效规则': 'type-weekly',
+  '回避规则': 'type-monthly'
+};
+
+/* ===== 数据（不少于8条） ===== */
+let DATA = [
+  { ruleId: 'R001', ruleName: '部门对口-招投标风险', category: '基础规则', priority: 10, status: 'enabled', version: 3, updateTime: '2024-12-05 14:30' },
+  { ruleId: 'R002', ruleName: '部门对口-供应商管理风险', category: '基础规则', priority: 10, status: 'enabled', version: 2, updateTime: '2024-12-05 14:30' },
+  { ruleId: 'R003', ruleName: '部门对口-价格与结算风险', category: '基础规则', priority: 10, status: 'enabled', version: 2, updateTime: '2024-12-03 09:15' },
+  { ruleId: 'R004', ruleName: '部门对口-合同管理风险', category: '基础规则', priority: 10, status: 'enabled', version: 1, updateTime: '2024-11-28 16:20' },
+  { ruleId: 'R005', ruleName: '部门对口-质量与库存风险', category: '基础规则', priority: 10, status: 'enabled', version: 1, updateTime: '2024-11-28 16:20' },
+  { ruleId: 'R006', ruleName: '部门对口-廉洁合规风险', category: '基础规则', priority: 5, status: 'enabled', version: 2, updateTime: '2024-12-01 10:00' },
+  { ruleId: 'R101', ruleName: '红色风险直报', category: '等级规则', priority: 3, status: 'enabled', version: 4, updateTime: '2024-12-05 11:00' },
+  { ruleId: 'R102', ruleName: '红色资金阈值', category: '等级规则', priority: 1, status: 'enabled', version: 2, updateTime: '2024-12-02 15:30' },
+  { ruleId: 'R103', ruleName: '橙色风险部门升级', category: '等级规则', priority: 15, status: 'enabled', version: 1, updateTime: '2024-11-25 09:00' },
+  { ruleId: 'R104', ruleName: '安全生产关联升级', category: '等级规则', priority: 12, status: 'enabled', version: 1, updateTime: '2024-11-20 14:00' },
+  { ruleId: 'R201', ruleName: '同供应商≥3个风险聚合', category: '聚合规则', priority: 20, status: 'enabled', version: 2, updateTime: '2024-12-04 10:30' },
+  { ruleId: 'R202', ruleName: '同类风险季度聚合', category: '聚合规则', priority: 25, status: 'enabled', version: 1, updateTime: '2024-11-15 11:00' },
+  { ruleId: 'R203', ruleName: '同一项目风险聚合', category: '聚合规则', priority: 18, status: 'enabled', version: 1, updateTime: '2024-11-10 09:30' },
+  { ruleId: 'R301', ruleName: '负荷超载转派', category: '负荷规则', priority: 50, status: 'disabled', version: 1, updateTime: '2024-10-20 16:00' },
+  { ruleId: 'R302', ruleName: '超期人员降级', category: '负荷规则', priority: 50, status: 'enabled', version: 2, updateTime: '2024-12-03 13:00' },
+  { ruleId: 'R303', ruleName: '历史效能优先', category: '负荷规则', priority: 50, status: 'enabled', version: 1, updateTime: '2024-11-05 10:00' },
+  { ruleId: 'R401', ruleName: '24h紧急响应', category: '时效规则', priority: 8, status: 'enabled', version: 3, updateTime: '2024-12-05 08:00' },
+  { ruleId: 'R402', ruleName: '节假日顺延', category: '时效规则', priority: 80, status: 'enabled', version: 1, updateTime: '2024-09-01 09:00' },
+  { ruleId: 'R501', ruleName: '利益关系回避', category: '回避规则', priority: 2, status: 'enabled', version: 2, updateTime: '2024-11-30 15:00' },
+  { ruleId: 'R502', ruleName: '自查回避', category: '回避规则', priority: 1, status: 'enabled', version: 1, updateTime: '2024-11-20 10:00' }
+];
+
+let statusTab = 'all';
+let sortCol = null;
+let sortDir = 'asc';
+let catFilter = [];
+let statusFilter = [];
+
+/* ===== 渲染 ===== */
+function render() {
+  const qId = document.getElementById('qRuleId').value.trim().toLowerCase();
+  const qName = document.getElementById('qRuleName').value.trim();
+  const qCat = document.getElementById('qCategory').value;
+  const qStatus = document.getElementById('qStatus').value;
+
+  let list = DATA.filter(d => {
+    if (qId && !d.ruleId.toLowerCase().includes(qId)) return false;
+    if (qName && !d.ruleName.includes(qName)) return false;
+    if (qCat && d.category !== qCat) return false;
+    if (qStatus && d.status !== qStatus) return false;
+    if (statusTab !== 'all' && d.status !== statusTab) return false;
+    if (catFilter.length && !catFilter.includes(d.category)) return false;
+    if (statusFilter.length && !statusFilter.includes(d.status)) return false;
+    return true;
+  });
+
+  if (sortCol) {
+    list.sort((a, b) => {
+      let av = a[sortCol], bv = b[sortCol];
+      if (sortCol === 'ruleId') { av = av; bv = bv; }
+      if (typeof av === 'string') {
+        return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+      }
+      return sortDir === 'asc' ? av - bv : bv - av;
+    });
+  }
+
+  document.getElementById('totalCount').textContent = list.length;
+  document.getElementById('total').textContent = list.length;
+
+  document.getElementById('tbody').innerHTML = list.map((d, i) => {
+    const st = STATUS[d.status];
+    const catCls = CAT_CLS[d.category] || 'type-rule';
+    return `<tr>
+      <td><input type="checkbox" class="rk" data-id="${d.ruleId}"></td>
+      <td>${i + 1}</td>
+      <td><span class="link" data-action="go-edit" data-nav="MXGZ02">${d.ruleId}</span></td>
+      <td style="text-align:left;">${d.ruleName}</td>
+      <td><span class="type-tag ${catCls}">${d.category}</span></td>
+      <td class="${d.priority <= 5 ? 'text-danger' : d.priority <= 15 ? 'text-warning' : ''}">${d.priority}</td>
+      <td><span class="tag ${st.cls}"><span class="td"></span>${st.t}</span></td>
+      <td>V${d.version}</td>
+      <td style="font-size:11px;color:var(--text3);">${d.updateTime}</td>
+      <td>
+        <div class="op-btns">
+          <button class="op blue" data-action="go-edit" data-nav="MXGZ02">编辑</button>
+          <button class="op ${d.status === 'enabled' ? 'red' : 'green'}" data-action="toggle-status" data-id="${d.ruleId}">${d.status === 'enabled' ? '禁用' : '启用'}</button>
+          <button class="op red" data-action="delete-row" data-id="${d.ruleId}">删除</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  updateTabCounts();
+  onCk();
+  PR.bindActions();
+}
+
+function updateTabCounts() {
+  document.getElementById('tabAll').textContent = DATA.length;
+  document.getElementById('tabEnabled').textContent = DATA.filter(d => d.status === 'enabled').length;
+  document.getElementById('tabDisabled').textContent = DATA.filter(d => d.status === 'disabled').length;
+}
+
+/* ===== 选择 ===== */
+function toggleAll(cb) { document.querySelectorAll('.rk').forEach(c => c.checked = cb.checked); onCk(); }
+function onCk() {
+  const n = document.querySelectorAll('.rk:checked').length;
+  document.getElementById('selCount').textContent = n;
+  document.getElementById('listCard').classList.toggle('has-sel', n > 0);
+}
+
+document.getElementById('ckAll').addEventListener('change', function () { toggleAll(this); });
+document.getElementById('tbody').addEventListener('change', function (e) { if (e.target.classList.contains('rk')) onCk(); });
+
+/* ===== 动作注册 ===== */
+PR.on('search', render);
+PR.on('reset', () => {
+  document.getElementById('qRuleId').value = '';
+  document.getElementById('qRuleName').value = '';
+  document.getElementById('qCategory').value = '';
+  document.getElementById('qStatus').value = '';
+  statusTab = 'all';
+  sortCol = null; sortDir = 'asc';
+  catFilter = []; statusFilter = [];
+  document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+  document.querySelector('.status-tab[data-status="all"]').classList.add('active');
+  document.querySelectorAll('.cat-cb').forEach(cb => cb.checked = true);
+  document.querySelectorAll('.status-cb').forEach(cb => cb.checked = true);
+  render();
+});
+PR.on('open-add', () => PR.nav('MXGZ02'));
+PR.on('batch-export', () => PR.toast('批量导出待实现'));
+PR.on('batch-enable', () => {
+  const ids = Array.from(document.querySelectorAll('.rk:checked')).map(cb => cb.dataset.id);
+  if (!ids.length) { PR.toast('请选择要启用的规则'); return; }
+  ids.forEach(id => { const d = DATA.find(x => x.ruleId === id); if (d) { d.status = 'enabled'; d.version += 1; d.updateTime = '2024-12-05 16:00'; } });
+  document.getElementById('ckAll').checked = false;
+  PR.toast('已批量启用 ' + ids.length + ' 条规则');
+  render();
+});
+PR.on('batch-disable', () => {
+  const ids = Array.from(document.querySelectorAll('.rk:checked')).map(cb => cb.dataset.id);
+  if (!ids.length) { PR.toast('请选择要禁用的规则'); return; }
+  ids.forEach(id => { const d = DATA.find(x => x.ruleId === id); if (d) { d.status = 'disabled'; d.version += 1; d.updateTime = '2024-12-05 16:00'; } });
+  document.getElementById('ckAll').checked = false;
+  PR.toast('已批量禁用 ' + ids.length + ' 条规则');
+  render();
+});
+PR.on('batch-delete', () => {
+  const ids = Array.from(document.querySelectorAll('.rk:checked')).map(cb => cb.dataset.id);
+  if (!ids.length) { PR.toast('请选择要删除的规则'); return; }
+  if (!confirm('确定删除选中的 ' + ids.length + ' 条规则吗？')) return;
+  DATA = DATA.filter(x => !ids.includes(x.ruleId));
+  document.getElementById('ckAll').checked = false;
+  PR.toast('已删除 ' + ids.length + ' 条规则');
+  render();
+});
+PR.on('filter-status', (el) => {
+  statusTab = el.dataset.status;
+  document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  render();
+});
+PR.on('sort-col', (el) => {
+  const col = el.dataset.col;
+  if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+  else { sortCol = col; sortDir = 'asc'; }
+  el.textContent = el.textContent.replace(/[↕↑↓]/, sortDir === 'asc' ? '↑' : '↓');
+  render();
+});
+PR.on('open-filter-category', () => PR.openModal('filterCategory'));
+PR.on('open-filter-status', () => PR.openModal('filterStatus'));
+PR.on('apply-filter-category', () => {
+  catFilter = Array.from(document.querySelectorAll('.cat-cb:checked')).map(cb => cb.value);
+  PR.closeModal('filterCategory');
+  render();
+});
+PR.on('apply-filter-status', () => {
+  statusFilter = Array.from(document.querySelectorAll('.status-cb:checked')).map(cb => cb.value);
+  PR.closeModal('filterStatus');
+  render();
+});
+PR.on('go-edit', (el) => PR.nav(el.dataset.nav));
+PR.on('toggle-status', (el) => {
+  const d = DATA.find(x => x.ruleId === el.dataset.id);
+  if (!d) return;
+  d.status = d.status === 'enabled' ? 'disabled' : 'enabled';
+  d.version += 1;
+  d.updateTime = '2024-12-05 16:00';
+  render();
+});
+
+render();
+</script>
+</body>
+</html>

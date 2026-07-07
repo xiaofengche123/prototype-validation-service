@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>风险事件详情 - 风险事件池</title>
+    <style>
+        :root {
+            --primary: #1565c0; --primary-dark: #0d47a1; --primary-light: #e3f2fd;
+            --success: #43a047; --warning: #fb8c00; --danger: #e53935; --info: #5e35b1;
+            --text-primary: #333; --text-secondary: #666; --text-muted: #999;
+            --border-color: #e0e0e0; --bg-body: #f0f2f5; --bg-card: #fff;
+            --sidebar-width: 220px; --header-height: 56px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px; color: var(--text-primary); background: var(--bg-body);
+            overflow: hidden; height: 100%;
+        }
+
+        .top-header {
+            height: var(--header-height);
+            background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; color: #fff; position: fixed;
+            top: 0; left: 0; right: 0; z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px 0; position: relative; }
+        .main-content::-webkit-scrollbar { width: 10px; }
+        .main-content::-webkit-scrollbar-track { background: #f0f2f5; border-radius: 5px; }
+        .main-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 5px; border: 2px solid #f0f2f5; }
+        .main-content::-webkit-scrollbar-thumb:hover { background: #999; }
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); cursor: pointer; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; }
+        .page-title { font-size: 16px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .top-actions { display: flex; align-items: center; gap: 6px; }
+
+        .btn { height: 28px; padding: 0 14px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-sm { height: 24px; padding: 0 10px; font-size: 11px; }
+
+        .scroll-content { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+        .scroll-content::-webkit-scrollbar { width: 10px; }
+        .scroll-content::-webkit-scrollbar-track { background: #f0f2f5; border-radius: 5px; }
+        .scroll-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 5px; border: 2px solid #f0f2f5; }
+        .scroll-content::-webkit-scrollbar-thumb:hover { background: #999; }
+
+        /* 卡片通用 */
+        .card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; }
+        .card-header { padding: 12px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .card-header::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .card-body { padding: 16px; }
+
+        /* 双栏布局 */
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        /* 信息表格 */
+        .info-table { width: 100%; }
+        .info-row { display: flex; padding: 10px 0; border-bottom: 1px dashed #f0f0f0; }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { width: 120px; color: var(--text-secondary); flex-shrink: 0; font-size: 12px; }
+        .info-value { flex: 1; color: var(--text-primary); font-size: 12px; }
+        .info-value.warning { color: var(--warning); font-weight: bold; }
+        .info-value.danger { color: var(--danger); font-weight: bold; }
+        .info-value.success { color: var(--success); font-weight: bold; }
+        .info-value .col-link { color: var(--primary); cursor: pointer; }
+        .info-value .col-link:hover { text-decoration: underline; }
+
+        /* 供应商卡片 */
+        .supplier-card { background: linear-gradient(135deg, #f5f7fa 0%, #e3f2fd 100%); border-radius: 4px; padding: 16px; }
+        .supplier-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .supplier-avatar { width: 48px; height: 48px; border-radius: 50%; background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: bold; }
+        .supplier-name { font-size: 15px; font-weight: bold; color: var(--text-primary); }
+        .supplier-code { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .supplier-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0; }
+        .supplier-stat { background: #fff; border-radius: 4px; padding: 8px; text-align: center; }
+        .supplier-stat-value { font-size: 18px; font-weight: bold; color: var(--primary); }
+        .supplier-stat-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .supplier-actions { display: flex; gap: 8px; margin-top: 12px; }
+
+        /* 证据链 */
+        .evidence-list { background: #fafafa; border-radius: 4px; padding: 12px 16px; }
+        .evidence-item { display: flex; align-items: flex-start; gap: 10px; padding: 8px 0; font-size: 12px; border-bottom: 1px dashed #e0e0e0; }
+        .evidence-item:last-child { border-bottom: none; }
+        .evidence-item::before { content: "●"; color: var(--primary); font-size: 8px; margin-top: 4px; flex-shrink: 0; }
+        .evidence-item.danger::before { color: var(--danger); }
+        .evidence-item.warning::before { color: var(--warning); }
+
+        /* Tab */
+        .tabs { display: flex; align-items: center; gap: 2px; padding: 0 16px; border-bottom: 1px solid var(--border-color); background: #fafafa; }
+        .tab { padding: 8px 16px; cursor: pointer; font-size: 12px; color: var(--text-secondary); border-bottom: 2px solid transparent; transition: all .2s; white-space: nowrap; }
+        .tab:hover { color: var(--primary); }
+        .tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: bold; background: #fff; }
+        .tab .tab-count { font-size: 10px; padding: 1px 5px; border-radius: 8px; background: #e0e0e0; margin-left: 4px; }
+        .tab.active .tab-count { background: var(--primary); color: #fff; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* 表格 */
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .data-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 10px 8px; text-align: center; border-bottom: 1px solid #bbdefb; white-space: nowrap; }
+        .data-table tbody td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #f0f0f0; color: var(--text-primary); }
+        .data-table tbody tr:hover { background: #f5f7fa; }
+        .data-table .col-link { color: var(--primary); cursor: pointer; }
+        .data-table .col-link:hover { text-decoration: underline; }
+
+        /* 状态标签 */
+        .status-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .status-daichuli { background: #fff3e0; color: #e65100; }
+        .status-chulizhong { background: #e3f2fd; color: #1565c0; }
+        .status-yibiguan { background: #e8f5e9; color: #2e7d32; }
+
+        /* 处置操作区 */
+        .action-bar { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 16px; display: flex; align-items: center; justify-content: space-between; }
+        .action-left { display: flex; align-items: center; gap: 8px; }
+        .action-right { display: flex; align-items: center; gap: 8px; }
+
+        /* 穿透弹窗 */
+        .modal-overlay { position: fixed; top: var(--header-height); left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.4); z-index: 3000; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal { background: #fff; border-radius: 6px; width: 900px; max-height: 80vh; display: flex; flex-direction: column; box-shadow: 0 8px 32px rgba(0,0,0,.2); }
+        .modal-header { padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .modal-title { font-size: 15px; font-weight: bold; }
+        .modal-close { font-size: 20px; color: var(--text-muted); cursor: pointer; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 3px; }
+        .modal-close:hover { background: #f5f5f5; color: var(--text-primary); }
+        .modal-body { flex: 1; overflow-y: auto; padding: 20px; }
+        .modal-body::-webkit-scrollbar { width: 8px; }
+        .modal-body::-webkit-scrollbar-thumb { background: #bbb; border-radius: 4px; }
+
+        .scene-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .scene-zhunru { background: #ffebee; color: #c62828; }
+        .scene-jihua { background: #fff3e0; color: #e65100; }
+        .scene-xunyuan { background: #f3e5f5; color: #6a1b9a; }
+        .scene-zhixing { background: #e3f2fd; color: #1565c0; }
+        .scene-jiesuan { background: #e0f2f1; color: #00695c; }
+
+        .level-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .level-high { background: #ffebee; color: var(--danger); }
+        .level-mid { background: #fff3e0; color: var(--warning); }
+        .level-low { background: #e8f5e9; color: var(--success); }
+
+        .op-btn { font-size: 12px; color: var(--primary); cursor: pointer; padding: 2px 6px; border-radius: 2px; transition: background .2s; border: none; background: transparent; }
+        .op-btn:hover { background: var(--primary-light); }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system"><span class="brand-name">绿星链通</span><span class="brand-version">2.0</span></div>
+            <div class="brand-divider"></div>
+            <div class="logo-text"><span class="cn">中国铝业集团有限公司</span><span class="en">ALUMINUM CORPORATION OF CHINA</span></div>
+        </div>
+        <div class="header-center">
+            <div class="header-search"><input type="text" placeholder="请输入页面号"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg></div>
+        </div>
+        <div class="header-right"><span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span><div class="user-badge"><div class="user-avatar">潘</div></div></div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group">
+                <div class="menu-item expanded active">
+                    <div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险管理</span></div>
+                </div>
+                <div class="submenu" style="display:block;background:#fafafa;">
+                    <div class="menu-item"><div class="menu-left"><span>风险驾驶舱</span></div></div>
+                    <div class="menu-item active"><div class="menu-left"><span>风险事件池</span></div></div>
+                    <div class="menu-item"><div class="menu-left"><span>风险监督场景</span></div></div>
+                </div>
+            </div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务中心</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#9881;</span><span>模型中心</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>系统管理</span></div></div></div>
+        </aside>
+
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a>风险管理</a><span class="sep">&gt;</span><a>风险事件池</a><span class="sep">&gt;</span><span>风险事件详情</span>
+            </div>
+
+            <div class="page-header">
+                <div class="page-title"><span>风险事件详情</span><span style="font-size:12px;color:var(--text-muted);font-weight:normal;">风险编号：FX-2024-00125</span></div>
+                <div class="top-actions">
+                    <button class="btn btn-default">&#8592; 返回列表</button>
+                    <button class="btn btn-primary">生成监督任务</button>
+                    <button class="btn btn-success">标记误报</button>
+                    <button class="btn btn-warning">加入黑名单</button>
+                </div>
+            </div>
+
+            <div class="scroll-content">
+                <!-- 第一行：基本信息 + 供应商信息 -->
+                <div class="two-col">
+                    <!-- 左侧：风险基本信息 -->
+                    <div class="card">
+                        <div class="card-header">风险基本信息</div>
+                        <div class="card-body">
+                            <div class="info-table">
+                                <div class="info-row">
+                                    <div class="info-label">风险编号</div>
+                                    <div class="info-value">FX-2024-00125</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">业务场景</div>
+                                    <div class="info-value warning">违规准入分析</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">风险点</div>
+                                    <div class="info-value warning">万能供应商分析</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">风险等级</div>
+                                    <div class="info-value danger"><span class="level-tag level-high">高风险</span></div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">触发规则</div>
+                                    <div class="info-value">覆盖品类异常（超过15个品类）</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">规则编号</div>
+                                    <div class="info-value"><span class="col-link">R001-覆盖品类异常</span></div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">发现时间</div>
+                                    <div class="info-value">2024-11-15 14:32:18</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">处理状态</div>
+                                    <div class="info-value"><span class="status-tag status-daichuli">待处理</span></div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">责任部门</div>
+                                    <div class="info-value">采购二部</div>
+                                </div>
+                                <div class="info-row">
+                                    <div class="info-label">关联采购员</div>
+                                    <div class="info-value">张某（工号：100132899）</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧：供应商信息 -->
+                    <div class="card">
+                        <div class="card-header">供应商信息</div>
+                        <div class="card-body">
+                            <div class="supplier-card">
+                                <div class="supplier-header">
+                                    <div class="supplier-avatar">广</div>
+                                    <div>
+                                        <div class="supplier-name">广西某铝业贸易有限公司</div>
+                                        <div class="supplier-code">统一社会信用代码：91450100MA5KEXXXXX</div>
+                                    </div>
+                                </div>
+                                <div class="supplier-stats">
+                                    <div class="supplier-stat">
+                                        <div class="supplier-stat-value">3</div>
+                                        <div class="supplier-stat-label">历史风险</div>
+                                    </div>
+                                    <div class="supplier-stat">
+                                        <div class="supplier-stat-value">18</div>
+                                        <div class="supplier-stat-label">覆盖品类</div>
+                                    </div>
+                                    <div class="supplier-stat">
+                                        <div class="supplier-stat-value">2,580万</div>
+                                        <div class="supplier-stat-label">年交易额</div>
+                                    </div>
+                                </div>
+                                <div class="info-table" style="margin-top:12px;">
+                                    <div class="info-row">
+                                        <div class="info-label">法人代表</div>
+                                        <div class="info-value">李某某</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">注册地址</div>
+                                        <div class="info-value">广西南宁市青秀区XX路XX号</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">准入日期</div>
+                                        <div class="info-value">2022-03-15</div>
+                                    </div>
+                                    <div class="info-row">
+                                        <div class="info-label">合作年限</div>
+                                        <div class="info-value">2年8个月</div>
+                                    </div>
+                                </div>
+                                <div class="supplier-actions">
+                                    <button class="btn btn-primary btn-sm" onclick="openModal()">&#128269; 查看该供应商全部业务单据</button>
+                                    <button class="btn btn-default btn-sm">&#128200; 供应商画像</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 来源模型信息 -->
+                <div class="card" style="border-left: 3px solid var(--info);">
+                    <div class="card-header">
+                        <span>来源模型</span>
+                        <span style="font-size:11px;color:var(--text-muted);font-weight:normal;margin-left:auto;">模型执行追溯</span>
+                    </div>
+                    <div class="card-body">
+                        <div class="info-table">
+                            <div class="info-row">
+                                <div class="info-label">来源模型名称</div>
+                                <div class="info-value"><span class="col-link" onclick="viewModel('M-01')">万能供应商识别</span></div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">模型编号</div>
+                                <div class="info-value">M-01</div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">模型类型</div>
+                                <div class="info-value"><span class="model-tag model-rule" style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:bold;background:#e3f2fd;color:#1565c0;">规则模型</span></div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">命中规则</div>
+                                <div class="info-value"><span class="col-link" onclick="viewRule()">ACCESS_SIGN_IMMEDIATELY（准入即签约）</span></div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">执行ID</div>
+                                <div class="info-value"><span class="col-link" onclick="viewExecution()">EXEC-20260629-001</span></div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">风险评分维度</div>
+                                <div class="info-value" style="font-size:11px;">
+                                    <span style="display:inline-flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                                        <span>金额影响度 <strong style="color:var(--primary);">85</strong></span>
+                                        <span>频次异常度 <strong style="color:var(--warning);">63</strong></span>
+                                        <span>供应商关联度 <strong style="color:var(--danger);">45</strong></span>
+                                        <span>时间异常度 <strong style="color:var(--success);">92</strong></span>
+                                        <span>流程合规度 <strong style="color:var(--warning);">72</strong></span>
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="info-row">
+                                <div class="info-label">综合评分</div>
+                                <div class="info-value">
+                                    <span style="display:inline-flex;align-items:center;gap:8px;">
+                                        <strong style="font-size:18px;color:var(--primary);">71.4</strong>
+                                        <span class="level-tag level-mid" style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:bold;background:#fff3e0;color:var(--warning);">中风险</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 风险证据链 -->
+                <div class="card">
+                    <div class="card-header">风险证据链</div>
+                    <div class="card-body">
+                        <div class="evidence-list">
+                            <div class="evidence-item danger">该供应商当前覆盖品类数：<strong>18个</strong>，超过阈值（15个），超出比例 20%</div>
+                            <div class="evidence-item danger">合作企业数量：<strong>7家</strong>，集中在同一采购员（张某）名下，集中度 100%</div>
+                            <div class="evidence-item warning">近一年交易金额：<strong>2,580万元</strong>，占总采购额 12.3%，较上年度增长 45%</div>
+                            <div class="evidence-item warning">关联采购员张某（采购二部），该采购员名下单一来源采购占比 <strong>68%</strong>，远高于部门均值 22%</div>
+                            <div class="evidence-item">该供应商在集团内其他分公司也有合作记录（3家分公司），覆盖品类累计达 <strong>23个</strong></div>
+                            <div class="evidence-item">该供应商与中标单位"南宁某铝业有限公司"存在股权关联关系，疑似同一实际控制人</div>
+                            <div class="evidence-item">准入审批流程中，第3级审批节点（采购部副总）审批时长仅 <strong>2分钟</strong>，存在批量审批嫌疑</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 关联业务单据 -->
+                <div class="card">
+                    <div class="card-header">关联业务单据</div>
+                    <div class="tabs">
+                        <div class="tab active" onclick="switchTab(this, 'tab-zhunru')">准入单<span class="tab-count">1</span></div>
+                        <div class="tab" onclick="switchTab(this, 'tab-hetong')">合同<span class="tab-count">2</span></div>
+                        <div class="tab" onclick="switchTab(this, 'tab-dingdan')">采购订单<span class="tab-count">6</span></div>
+                        <div class="tab" onclick="switchTab(this, 'tab-jihua')">采购计划<span class="tab-count">3</span></div>
+                        <div class="tab" onclick="switchTab(this, 'tab-jingjia')">竞价单<span class="tab-count">4</span></div>
+                        <div class="tab" onclick="switchTab(this, 'tab-jiesuan')">结算单<span class="tab-count">5</span></div>
+                        <div class="tab" onclick="switchTab(this, 'tab-fukuan')">付款单<span class="tab-count">3</span></div>
+                    </div>
+                    <div class="card-body">
+                        <div class="tab-content active" id="tab-zhunru">
+                            <table class="data-table">
+                                <thead><tr><th>单据编号</th><th>准入日期</th><th>准入品类</th><th>审批状态</th><th>操作</th></tr></thead>
+                                <tbody>
+                                    <tr><td><span class="col-link">准入单-2024-00125</span></td><td>2024-03-15</td><td>氧化铝、电解铝、铝锭等15类</td><td><span class="status-tag status-yibiguan">已办结</span></td><td><button class="op-btn">查看</button></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tab-content" id="tab-hetong">
+                            <table class="data-table">
+                                <thead><tr><th>合同编号</th><th>签订日期</th><th>合同金额</th><th>有效期</th><th>状态</th><th>操作</th></tr></thead>
+                                <tbody>
+                                    <tr><td><span class="col-link">合同-2024-C00876</span></td><td>2024-04-01</td><td>860万元</td><td>2024.04-2025.04</td><td><span class="status-tag status-chulizhong">执行中</span></td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">合同-2024-C00877</span></td><td>2024-06-15</td><td>420万元</td><td>2024.06-2025.06</td><td><span class="status-tag status-chulizhong">执行中</span></td><td><button class="op-btn">查看</button></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tab-content" id="tab-dingdan">
+                            <table class="data-table">
+                                <thead><tr><th>订单编号</th><th>下单日期</th><th>金额</th><th>状态</th><th>操作</th></tr></thead>
+                                <tbody>
+                                    <tr><td><span class="col-link">PO-2024-11560</span></td><td>2024-05-10</td><td>125万</td><td><span class="status-tag status-yibiguan">已收货</span></td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">PO-2024-11892</span></td><td>2024-06-22</td><td>80万</td><td><span class="status-tag status-yibiguan">已收货</span></td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">PO-2024-12201</span></td><td>2024-08-05</td><td>210万</td><td><span class="status-tag status-chulizhong">待发货</span></td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">PO-2024-12568</span></td><td>2024-09-18</td><td>95万</td><td><span class="status-tag status-daichuli">待审批</span></td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">PO-2024-12901</span></td><td>2024-10-30</td><td>150万</td><td><span class="status-tag status-daichuli">待审批</span></td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">PO-2024-13120</span></td><td>2024-11-10</td><td>180万</td><td><span class="status-tag status-daichuli">待审批</span></td><td><button class="op-btn">查看</button></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tab-content" id="tab-jihua">
+                            <table class="data-table">
+                                <thead><tr><th>计划编号</th><th>计划日期</th><th>采购方式</th><th>金额</th><th>操作</th></tr></thead>
+                                <tbody>
+                                    <tr><td><span class="col-link">JH-2024-0562</span></td><td>2024-04-01</td><td>单一来源</td><td>860万</td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">JH-2024-0678</span></td><td>2024-06-10</td><td>单一来源</td><td>420万</td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">JH-2024-0891</span></td><td>2024-10-20</td><td>单一来源</td><td>580万</td><td><button class="op-btn">查看</button></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tab-content" id="tab-jingjia">
+                            <table class="data-table">
+                                <thead><tr><th>竞价单号</th><th>竞价日期</th><th>中标价</th><th>参与供应商</th><th>操作</th></tr></thead>
+                                <tbody>
+                                    <tr><td><span class="col-link">JJ-2024-0321</span></td><td>2024-03-20</td><td>852万</td><td>3家</td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">JJ-2024-0456</span></td><td>2024-05-15</td><td>418万</td><td>2家</td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">JJ-2024-0589</span></td><td>2024-08-01</td><td>575万</td><td>2家</td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">JJ-2024-0623</span></td><td>2024-10-10</td><td>——</td><td>流标</td><td><button class="op-btn">查看</button></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tab-content" id="tab-jiesuan">
+                            <table class="data-table">
+                                <thead><tr><th>结算单号</th><th>结算日期</th><th>结算金额</th><th>质检结果</th><th>状态</th><th>操作</th></tr></thead>
+                                <tbody>
+                                    <tr><td><span class="col-link">JS-2024-0456</span></td><td>2024-05-20</td><td>125万</td><td>合格</td><td><span class="status-tag status-yibiguan">已结算</span></td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">JS-2024-0523</span></td><td>2024-07-05</td><td>80万</td><td>合格</td><td><span class="status-tag status-yibiguan">已结算</span></td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">JS-2024-0589</span></td><td>2024-08-25</td><td>210万</td><td>部分不合格</td><td><span class="status-tag status-yibiguan">已结算</span></td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">JS-2024-0656</span></td><td>2024-10-12</td><td>95万</td><td>合格</td><td><span class="status-tag status-chulizhong">结算中</span></td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">JS-2024-0723</span></td><td>2024-11-18</td><td>150万</td><td>待检</td><td><span class="status-tag status-daichuli">待结算</span></td><td><button class="op-btn">查看</button></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="tab-content" id="tab-fukuan">
+                            <table class="data-table">
+                                <thead><tr><th>付款单号</th><th>付款日期</th><th>付款金额</th><th>付款方式</th><th>状态</th><th>操作</th></tr></thead>
+                                <tbody>
+                                    <tr><td><span class="col-link">FK-2024-0345</span></td><td>2024-05-25</td><td>125万</td><td>银行转账</td><td><span class="status-tag status-yibiguan">已付款</span></td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">FK-2024-0412</span></td><td>2024-07-10</td><td>80万</td><td>银行转账</td><td><span class="status-tag status-yibiguan">已付款</span></td><td><button class="op-btn">查看</button></td></tr>
+                                    <tr><td><span class="col-link">FK-2024-0523</span></td><td>2024-09-05</td><td>210万</td><td>预付款</td><td><span class="status-tag status-daichuli">待核销</span></td><td><button class="op-btn">查看</button></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 该供应商同类风险历史 -->
+                <div class="card">
+                    <div class="card-header">该供应商同类风险历史</div>
+                    <div class="card-body">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>序号</th>
+                                    <th>风险编号</th>
+                                    <th>风险点</th>
+                                    <th>业务场景</th>
+                                    <th>风险等级</th>
+                                    <th>发现时间</th>
+                                    <th>处理状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>1</td>
+                                    <td><span class="col-link">FX-2024-00125</span></td>
+                                    <td>万能供应商分析</td>
+                                    <td><span class="scene-tag scene-zhunru">违规准入分析</span></td>
+                                    <td><span class="level-tag level-high">高风险</span></td>
+                                    <td>2024-11-15</td>
+                                    <td><span class="status-tag status-daichuli">待处理</span></td>
+                                    <td><button class="op-btn">查看</button></td>
+                                </tr>
+                                <tr>
+                                    <td>2</td>
+                                    <td><span class="col-link">FX-2024-00089</span></td>
+                                    <td>单一来源专业户</td>
+                                    <td><span class="scene-tag scene-jihua">计划管理</span></td>
+                                    <td><span class="level-tag level-mid">中风险</span></td>
+                                    <td>2024-08-22</td>
+                                    <td><span class="status-tag status-yibiguan">已闭环</span></td>
+                                    <td><button class="op-btn">查看</button></td>
+                                </tr>
+                                <tr>
+                                    <td>3</td>
+                                    <td><span class="col-link">FX-2024-00056</span></td>
+                                    <td>应招未招</td>
+                                    <td><span class="scene-tag scene-xunyuan">采购寻源</span></td>
+                                    <td><span class="level-tag level-mid">中风险</span></td>
+                                    <td>2024-06-10</td>
+                                    <td><span class="status-tag status-yibiguan">已闭环</span></td>
+                                    <td><button class="op-btn">查看</button></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 处置操作 -->
+                <div class="action-bar">
+                    <div class="action-left">
+                        <span style="font-size:12px;color:var(--text-secondary);">当前状态：<span class="status-tag status-daichuli">待处理</span></span>
+                    </div>
+                    <div class="action-right">
+                        <button class="btn btn-primary">生成监督任务</button>
+                        <button class="btn btn-success">标记误报</button>
+                        <button class="btn btn-warning">加入黑名单</button>
+                        <button class="btn btn-default">转发</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 供应商业务单据穿透弹窗 -->
+    <div class="modal-overlay" id="modalOverlay" onclick="closeModal(event)">
+        <div class="modal" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title">&#128269; 广西某铝业贸易有限公司 — 全部业务单据</div>
+                <div class="modal-close" onclick="closeModal()">&#10005;</div>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom:12px;font-size:12px;color:var(--text-secondary);">共检索到 <strong style="color:var(--primary);">24</strong> 笔业务单据，涵盖准入、合同、订单、结算、付款全流程</div>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>单据类型</th>
+                            <th>单据编号</th>
+                            <th>单据日期</th>
+                            <th>金额</th>
+                            <th>状态</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>准入单</td><td><span class="col-link">准入单-2024-00125</span></td><td>2024-03-15</td><td>—</td><td><span class="status-tag status-yibiguan">已办结</span></td><td><button class="op-btn">查看</button></td></tr>
+                        <tr><td>采购计划</td><td><span class="col-link">JH-2024-0562</span></td><td>2024-04-01</td><td>860万</td><td><span class="status-tag status-yibiguan">已执行</span></td><td><button class="op-btn">查看</button></td></tr>
+                        <tr><td>竞价单</td><td><span class="col-link">JJ-2024-0321</span></td><td>2024-03-20</td><td>852万</td><td><span class="status-tag status-yibiguan">已中标</span></td><td><button class="op-btn">查看</button></td></tr>
+                        <tr><td>合同</td><td><span class="col-link">合同-2024-C00876</span></td><td>2024-04-01</td><td>860万</td><td><span class="status-tag status-chulizhong">执行中</span></td><td><button class="op-btn">查看</button></td></tr>
+                        <tr><td>采购订单</td><td><span class="col-link">PO-2024-11560</span></td><td>2024-05-10</td><td>125万</td><td><span class="status-tag status-yibiguan">已收货</span></td><td><button class="op-btn">查看</button></td></tr>
+                        <tr><td>结算单</td><td><span class="col-link">JS-2024-0456</span></td><td>2024-05-20</td><td>125万</td><td><span class="status-tag status-yibiguan">已结算</span></td><td><button class="op-btn">查看</button></td></tr>
+                        <tr><td>付款单</td><td><span class="col-link">FK-2024-0345</span></td><td>2024-05-25</td><td>125万</td><td><span class="status-tag status-yibiguan">已付款</span></td><td><button class="op-btn">查看</button></td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tab, contentId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(contentId).classList.add('active');
+        }
+
+        function openModal() {
+            document.getElementById('modalOverlay').classList.add('show');
+        }
+
+        function closeModal(event) {
+            if (!event || event.target === document.getElementById('modalOverlay')) {
+                document.getElementById('modalOverlay').classList.remove('show');
+            }
+        }
+
+        function viewModel(id) {
+            window.location.href = '../../模型中心/模型列表.html?model=' + id;
+        }
+
+        function viewRule() {
+            window.location.href = '../../模型中心/规则模型/规则配置管理.html';
+        }
+
+        function viewExecution() {
+            window.location.href = '../../模型中心/执行监控/执行结果查询.html';
+        }
+    </script>
+</body>
+</html>

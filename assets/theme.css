@@ -1,0 +1,70 @@
+/* ============================================================================
+   旧版审计监督模型风格覆盖（仅 skin，不含 layout）
+   来源: test-01/审计监督模型_2026年6月30日/审计监督模型/任务中心/1.任务驾驶舱.html
+   约定: 不写 display/grid/position/width，只覆盖颜色/阴影/圆角/字号/字重
+   ============================================================================ */
+
+:root {
+  --shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+
+/* 卡片阴影更轻 */
+.card,
+.prototype-card,
+.stat-card,
+.prototype-stat-card,
+.chart-card {
+  box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+
+/* 按钮更扁 */
+.btn {
+  height: 28px;
+  border-radius: 3px;
+  font-size: 12px;
+}
+.btn-primary {
+  border-radius: 3px;
+}
+
+/* 统计卡片激活态：底部蓝色条 */
+.stat-card.active,
+.prototype-stat-card.active {
+  border-bottom: 3px solid var(--primary);
+}
+
+/* 图表卡片头部蓝色竖条 */
+.chart-header::before,
+.prototype-chart-header::before {
+  content: "";
+  width: 4px;
+  height: 16px;
+  background: var(--primary);
+  border-radius: 2px;
+}
+
+/* 排名序号 */
+.rank-num.top3 { background: var(--primary); color: #fff; }
+.rank-num.other { background: #e0e0e0; color: var(--text-secondary,#666); }
+
+/* 预警标签 */
+.warn-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 1px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: bold;
+}
+.warn-red  { background: #ffebee; color: #e53935; }
+.warn-orange { background: #fff3e0; color: #fb8c00; }
+.warn-yellow { background: #fffde7; color: #f57f17; }
+
+/* 进度条颜色变体 */
+.progress-fill.blue   { background: var(--primary); }
+.progress-fill.orange { background: var(--warning); }
+.progress-fill.red    { background: var(--danger); }
+
+/* 统计卡片悬停 */
+.stat-card.rich:hover { transform: translateY(-2px); }

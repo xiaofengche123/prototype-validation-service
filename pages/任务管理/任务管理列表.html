@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<!--
+  规格卡（转 Vue 的唯一真源）
+  编码：RWGL01    名称：任务管理列表    类型：列表查询页
+  查询字段：任务编号(输入) / 任务标题(输入) / 任务状态(下拉) / 负责人(输入) / 计划时间(日期范围)
+  统计卡片：全部 / 待派发 / 处理中 / 待验收 / 已办结（联动 filter.status）
+  表格列：序号 / 任务编号(可点→nav RWJSC01) / 任务标题 / 任务状态(标签) / 负责人 / 计划时间 / 操作
+  行操作：待派发=派发(modal dispatchForm)+编辑(modal editForm)+删除 | 处理中=查看+催办 | 待验收=查看+验收 | 已办结=查看
+  顶部操作：新增任务(modal editForm) / 批量派发 / 批量导出
+  弹窗 editForm：任务标题(必填) / 负责人(必填) / 任务类型(下拉) / 计划时间 / 任务描述
+  弹窗 dispatchForm：执行人(必填) / 备注
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../assets/app.css">
+<link rel="stylesheet" href="../../assets/theme.css">
+<title>任务管理列表</title>
+</head>
+<body class="page-body">
+
+<div id="page-content" data-page="RWGL01">
+
+  <div class="stat-row" id="statRow">
+    <div class="stat-card active" data-status="all"><div class="label">全部</div><div class="num">186</div></div>
+    <div class="stat-card" data-status="pending"><div class="label"><span class="dot" style="background:#fb8c00"></span>待派发</div><div class="num num-warning">23</div></div>
+    <div class="stat-card" data-status="processing"><div class="label"><span class="dot" style="background:#5e35b1"></span>处理中</div><div class="num num-purple">89</div></div>
+    <div class="stat-card" data-status="review"><div class="label"><span class="dot" style="background:#43a047"></span>待验收</div><div class="num num-success">52</div></div>
+    <div class="stat-card" data-status="done"><div class="label"><span class="dot" style="background:#757575"></span>已办结</div><div class="num num-muted">22</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>查询信息</div>
+      <div class="actions">
+        <button class="btn" data-action="reset">重置</button>
+        <button class="btn btn-primary" data-action="search">查询</button>
+        <button class="btn btn-primary" data-action="open-add" data-modal-target="editForm">＋ 新增任务</button>
+      </div>
+    </div>
+    <div class="query-grid">
+      <div class="form-item"><label>任务编号</label><input placeholder="请输入任务编号"></div>
+      <div class="form-item"><label>任务标题</label><input placeholder="请输入任务标题"></div>
+      <div class="form-item"><label>任务状态</label>
+        <select id="statusSelect" onchange="setStatus(this.value)">
+          <option value="all">全部</option><option value="pending">待派发</option><option value="processing">处理中</option><option value="review">待验收</option><option value="done">已办结</option>
+        </select>
+      </div>
+      <div class="form-item"><label>负责人</label><input placeholder="请输入负责人"></div>
+      <div class="form-item"><label>计划时间</label><div class="date-range"><input type="date"><span class="sep">至</span><input type="date"></div></div>
+    </div>
+  </div>
+
+  <div class="card list-card" id="listCard">
+    <div class="list-toolbar">
+      <div class="title">任务清单</div>
+      <div class="actions">
+        <button class="btn btn-sm" data-action="batch-dispatch">批量派发</button>
+        <button class="btn btn-sm" data-action="batch-export">批量导出</button>
+      </div>
+    </div>
+    <div class="batch-bar">已选择 <b id="selCount">0</b> 项
+      <button class="btn btn-sm btn-primary" data-action="batch-delete">批量删除</button>
+    </div>
+    <div class="status-tabs" id="statusTabs">
+      <div class="status-tab active" data-status="all">全部 <span class="st-count">186</span></div>
+      <div class="status-tab" data-status="pending">待派发 <span class="st-count">23</span></div>
+      <div class="status-tab" data-status="processing">处理中 <span class="st-count">89</span></div>
+      <div class="status-tab" data-status="review">待验收 <span class="st-count">52</span></div>
+      <div class="status-tab" data-status="done">已办结 <span class="st-count">22</span></div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:40px"><input type="checkbox" id="ckAll" onclick="toggleAll(this)"></th>
+          <th>序号</th><th>任务编号</th><th>任务标题</th><th>任务状态</th><th>负责人</th><th>计划时间</th><th>操作</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span class="total">共 <b id="total">186</b> 条</span>
+      <span class="pg active">1</span><span class="pg">2</span><span class="pg">3</span><span class="pg">›</span>
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-mask" id="editFormMask" data-modal="editForm">
+  <div class="modal">
+    <div class="modal-title">编辑任务</div>
+    <div class="modal-body">
+      <div class="form-item"><label>任务标题<span class="req">*</span></label><input id="f_title"></div>
+      <div class="form-item"><label>负责人<span class="req">*</span></label><input id="f_person"></div>
+      <div class="form-item"><label>任务类型</label><select><option>常规审计</option><option>专项核查</option><option>合规检查</option></select></div>
+      <div class="form-item"><label>计划时间</label><input type="date" id="f_date"></div>
+      <div class="form-item field-block"><label>任务描述</label><textarea rows="3" id="f_desc"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-action="close-modal" data-modal-target="editForm">取消</button>
+      <button class="btn btn-primary" data-action="save" data-modal-target="editForm">确定</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-mask" id="dispatchFormMask" data-modal="dispatchForm">
+  <div class="modal">
+    <div class="modal-title">派发任务</div>
+    <div class="modal-body">
+      <div class="form-item"><label>执行人<span class="req">*</span></label><select><option>王建国</option><option>李晓明</option><option>张丽娟</option><option>赵志强</option></select></div>
+      <div class="form-item field-block"><label>备注</label><textarea rows="3" id="f_remark"></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-action="close-modal" data-modal-target="dispatchForm">取消</button>
+      <button class="btn btn-primary" data-action="save" data-modal-target="dispatchForm">确定派发</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+const STATUS={pending:{c:'pending',t:'待派发'},processing:{c:'processing',t:'处理中'},review:{c:'review',t:'待验收'},done:{c:'done',t:'已办结'}};
+const OPS={
+  pending:'<button class="op blue" data-action="open-dispatch" data-modal-target="dispatchForm">派发</button><button class="op blue" data-action="open-edit" data-modal-target="editForm">编辑</button><button class="op red" data-action="delete-row">删除</button>',
+  processing:'<button class="op blue" data-action="open-view">查看</button><button class="op green" data-action="urge">催办</button>',
+  review:'<button class="op blue" data-action="open-view">查看</button><button class="op green" data-action="accept">验收</button>',
+  done:'<button class="op blue" data-action="open-view">查看</button>'
+};
+const titles=["围标串标专项核查","供应商关联关系排查","价格异常核查-铝锭采购","合同变更合规检查","质检数据造假核查","采购流程审计","财务合规审查","库存盘点核查","安全环保检查","运输费用审计"];
+const pool=["pending","processing","processing","review","review","done"];
+const persons=["王建国","李晓明","张丽娟","赵志强","刘婷婷","陈伟","杨芳","周强"];
+const DATA=[];
+for(let i=1;i<=186;i++){const st=pool[i%pool.length];DATA.push({id:i,no:'RW2024'+(1000000+i),title:titles[i%titles.length],status:st,person:persons[i%persons.length],date:'2024-'+String(10+i%3).padStart(2,'0')+'-'+String(1+i%28).padStart(2,'0')});}
+
+let curStatus='all';
+function render(){
+  const list=DATA.filter(d=>curStatus==='all'||d.status===curStatus).slice(0,20);
+  document.getElementById('total').textContent=DATA.filter(d=>curStatus==='all'||d.status===curStatus).length;
+  document.getElementById('tbody').innerHTML=list.map((d,i)=>{
+    const m=STATUS[d.status];
+    return '<tr><td><input type="checkbox" class="rk" onclick="onCk()"></td><td>'+(i+1)+'</td>'+
+    '<td><span class="link" data-nav="RWJSC01">'+d.no+'</span></td>'+
+    '<td style="text-align:left">'+d.title+'</td>'+
+    '<td><span class="tag '+m.c+'"><span class="td"></span>'+m.t+'</span></td>'+
+    '<td>'+d.person+'</td><td>'+d.date+'</td><td>'+OPS[d.status]+'</td></tr>';
+  }).join('');
+  PR.bindActions();
+}
+function setStatus(s){curStatus=s;
+  document.querySelectorAll('#statRow .stat-card,#statusTabs .status-tab').forEach(t=>t.classList.toggle('active',t.dataset.status===s));
+  document.getElementById('statusSelect').value=s; render();}
+document.querySelectorAll('#statRow .stat-card,#statusTabs .status-tab').forEach(el=>el.addEventListener('click',()=>setStatus(el.dataset.status)));
+function toggleAll(cb){document.querySelectorAll('.rk').forEach(c=>c.checked=cb.checked);onCk();}
+function onCk(){const n=document.querySelectorAll('.rk:checked').length;document.getElementById('selCount').textContent=n;document.getElementById('listCard').classList.toggle('has-sel',n>0);}
+
+PR.on('search', render);
+PR.on('reset', ()=>{ setStatus('all'); });
+PR.on('urge', ()=>PR.toast('「催办」待实现'));
+PR.on('accept', ()=>PR.toast('「验收」待实现'));
+PR.on('open-dispatch', (e)=>{ PR.openModal(e.dataset.modalTarget || 'dispatchForm'); });
+PR.on('batch-dispatch', ()=>PR.toast('批量派发'));
+PR.on('batch-export', ()=>PR.toast('批量导出'));
+PR.on('batch-delete', ()=>PR.toast('批量删除'));
+
+render();
+</script>
+</body>
+</html>

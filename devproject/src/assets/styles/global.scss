@@ -1,0 +1,132 @@
+html,
+body,
+#app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Microsoft YaHei', 'PingFang SC', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 13px;
+  color: $text-color;
+  background: $layout-body-bg;
+  -webkit-font-smoothing: antialiased;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.text-ellipsis {
+  @include text-ellipsis;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c5cc;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+// 与 app.css 对齐：按钮/输入框圆角 4px，标签 3px
+.ant-btn,
+.ant-input,
+.ant-select-selector,
+.ant-input-number {
+  border-radius: $border-radius-base;
+}
+
+.ant-tag {
+  border-radius: 3px;
+}
+
+.ant-btn {
+  font-size: 13px;
+}
+
+.ant-btn-primary {
+  background: $primary-color;
+  border-color: $primary-color;
+}
+
+.ant-btn-primary:hover,
+.ant-btn-primary:focus {
+  background: $primary-dark;
+  border-color: $primary-dark;
+}
+
+.ant-card {
+  border-color: $border-color;
+  border-radius: $border-radius-base;
+  box-shadow: $box-shadow-card;
+}
+
+.ant-card-head {
+  min-height: 44px;
+  padding: 0 16px;
+  border-bottom-color: $border-color;
+}
+
+.ant-card-head-title {
+  padding: 11px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.ant-card-body {
+  padding: 16px;
+}
+
+.ant-table {
+  color: $text-color;
+  font-size: 12px;
+}
+
+.ant-table-thead > tr > th {
+  height: 42px;
+  padding: 0 12px;
+  color: $primary-dark;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  background: $primary-light;
+  border-bottom-color: #cfe0f5;
+}
+
+.ant-table-tbody > tr > td {
+  height: 44px;
+  padding: 0 12px;
+  border-bottom-color: #f0f0f0;
+}
+
+.ant-table-tbody > tr:hover:not(.ant-table-expanded-row) > td {
+  background: #f8fbff;
+}
+
+.ant-form-item {
+  margin-bottom: 14px;
+}
+
+.ant-form-item-label > label {
+  color: $text-color-secondary;
+  font-size: 12px;
+}
+
+.ant-pagination-item-active {
+  background: $primary-color;
+  border-color: $primary-color;
+}
+
+.ant-pagination-item-active a {
+  color: #fff;
+}
+
+@import './prototype-parity.scss';

@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>风险监督场景 - 风险管理</title>
+    <style>
+        :root {
+            --primary: #1565c0; --primary-dark: #0d47a1; --primary-light: #e3f2fd;
+            --success: #43a047; --warning: #fb8c00; --danger: #e53935; --info: #5e35b1;
+            --text-primary: #333; --text-secondary: #666; --text-muted: #999;
+            --border-color: #e0e0e0; --bg-body: #f0f2f5; --bg-card: #fff;
+            --sidebar-width: 220px; --header-height: 56px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px; color: var(--text-primary); background: var(--bg-body);
+            overflow: hidden; height: 100%;
+        }
+
+        .top-header {
+            height: var(--header-height);
+            background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; color: #fff; position: fixed;
+            top: 0; left: 0; right: 0; z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .menu-item .arrow { width: 12px; height: 12px; transition: transform .2s; opacity: .4; }
+        .menu-item.expanded .arrow { transform: rotate(90deg); }
+        .submenu { display: none; background: #fafafa; }
+        .submenu.open { display: block; }
+        .submenu .menu-item { padding-left: 38px; height: 36px; font-size: 12px; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px 0; position: relative; }
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); cursor: pointer; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+        .page-title { font-size: 16px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .top-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+        .btn { height: 28px; padding: 0 14px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-sm { height: 24px; padding: 0 10px; font-size: 11px; }
+
+        /* 统计卡片区 */
+        .stat-section { position: relative; margin-bottom: 12px; flex-shrink: 0; }
+        .stat-row {
+            display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px;
+            transition: max-height .3s ease; overflow: hidden;
+        }
+        .stat-row.collapsed { max-height: 120px; }
+        .stat-row.expanded { max-height: 400px; }
+        .stat-card {
+            background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06);
+            padding: 14px 12px; display: flex; flex-direction: column; cursor: pointer;
+            transition: all .2s; border: 2px solid transparent; position: relative;
+        }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+        .stat-card.active { border-color: var(--primary); background: var(--primary-light); }
+        .stat-card.collapsed-hidden { display: none; }
+        .stat-card .scene-name { font-size: 13px; font-weight: bold; color: var(--text-primary); margin-bottom: 6px; }
+        .stat-card .scene-stage { font-size: 10px; color: var(--text-muted); margin-bottom: 8px; background: #f5f5f5; padding: 1px 6px; border-radius: 3px; display: inline-block; align-self: flex-start; }
+        .stat-card.active .scene-stage { background: rgba(21,101,192,.1); color: var(--primary); }
+        .stat-bottom { display: flex; align-items: baseline; justify-content: space-between; margin-top: auto; }
+        .stat-value { font-size: 24px; font-weight: bold; color: var(--primary); }
+        .stat-card.active .stat-value { color: var(--primary-dark); }
+        .stat-ratio { font-size: 11px; color: var(--text-muted); }
+
+        /* 展开/收起按钮 */
+        .expand-toggle {
+            position: absolute; right: 0; bottom: -8px;
+            width: 28px; height: 28px; border-radius: 50%;
+            background: #fff; border: 1px solid var(--border-color);
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.1);
+            z-index: 10; font-size: 12px; color: var(--text-secondary);
+            transition: all .2s;
+        }
+        .expand-toggle:hover { border-color: var(--primary); color: var(--primary); transform: scale(1.1); }
+
+        /* 查询区 */
+        .query-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; flex-shrink: 0; }
+        .section-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: bold; color: var(--primary); }
+        .section-header .header-left-part { display: flex; align-items: center; gap: 8px; }
+        .section-header .section-icon { width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .section-actions { display: flex; align-items: center; gap: 8px; }
+        .query-form { padding: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 16px; }
+        .form-item { display: flex; align-items: center; gap: 8px; }
+        .form-item .form-label { width: 90px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+        .form-item .form-input, .form-item .form-select { flex: 1; height: 30px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; color: var(--text-primary); outline: none; transition: border-color .2s; min-width: 0; }
+        .form-item .form-input:focus, .form-item .form-select:focus { border-color: var(--primary); }
+
+        /* 风险点标签区 */
+        .risk-tag-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; flex-shrink: 0; padding: 12px 16px; max-height: 200px; overflow-y: auto; }
+        .risk-tag-section::-webkit-scrollbar { width: 8px; }
+        .risk-tag-section::-webkit-scrollbar-track { background: #f5f5f5; border-radius: 4px; }
+        .risk-tag-section::-webkit-scrollbar-thumb { background: #bbb; border-radius: 4px; }
+        .risk-tag-section::-webkit-scrollbar-thumb:hover { background: #999; }
+        .tag-group { margin-bottom: 10px; }
+        .tag-group:last-child { margin-bottom: 0; }
+        .tag-group.hidden { display: none; }
+        .tag-group-title { font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 6px; display: flex; align-items: center; gap: 6px; }
+        .tag-group-title::before { content: ""; width: 3px; height: 12px; background: var(--primary); border-radius: 2px; }
+        .tag-group-title.stage-zhunru::before { background: var(--danger); }
+        .tag-group-title.stage-jihua::before { background: var(--warning); }
+        .tag-group-title.stage-xunyuan::before { background: var(--info); }
+        .tag-group-title.stage-zhixing::before { background: var(--success); }
+        .tag-group-title.stage-jiesuan::before { background: #00838f; }
+        .risk-tags { display: flex; flex-wrap: wrap; gap: 6px; }
+        .risk-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 3px; font-size: 11px; color: var(--text-secondary); background: #f5f5f5; border: 1px solid transparent; cursor: pointer; transition: all .2s; user-select: none; }
+        .risk-tag:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+        .risk-tag.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .risk-tag .tag-count { font-size: 10px; padding: 0 5px; border-radius: 8px; background: rgba(0,0,0,.08); font-weight: bold; }
+        .risk-tag.active .tag-count { background: rgba(255,255,255,.25); }
+
+        /* 列表区 */
+        .list-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        .list-toolbar { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .toolbar-left { display: flex; align-items: center; gap: 10px; }
+        .toolbar-right { display: flex; align-items: center; gap: 8px; }
+        .section-title { font-size: 14px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+        .section-title .title-badge { font-size: 11px; padding: 1px 6px; border-radius: 10px; background: var(--primary); color: #fff; font-weight: normal; }
+
+        /* 表格 */
+        .data-table-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        .table-scroll-area { flex: 1; overflow: auto; min-height: 0; }
+        .table-scroll-area::-webkit-scrollbar { width: 10px; height: 10px; }
+        .table-scroll-area::-webkit-scrollbar-track { background: #f5f5f5; border-radius: 5px; }
+        .table-scroll-area::-webkit-scrollbar-thumb { background: #bbb; border-radius: 5px; border: 2px solid #f5f5f5; }
+        .table-scroll-area::-webkit-scrollbar-thumb:hover { background: #999; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1300px; }
+        .data-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 10px 8px; text-align: center; border-bottom: 1px solid #bbdefb; white-space: nowrap; position: sticky; top: 0; z-index: 10; }
+        .data-table tbody td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #f0f0f0; color: var(--text-primary); }
+        .data-table tbody tr:hover { background: #f5f7fa; }
+        .data-table tbody tr.filtered-out { display: none; }
+        .data-table .col-link { color: var(--primary); cursor: pointer; }
+        .data-table .col-link:hover { text-decoration: underline; }
+        .data-table td:first-child { position: sticky; left: 0; background: #fff; z-index: 5; }
+        .data-table tbody tr:hover td:first-child { background: #f5f7fa; }
+
+        /* 标签 */
+        .scene-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .scene-zhunru { background: #ffebee; color: #c62828; }
+        .scene-jihua-danyi { background: #fff3e0; color: #e65100; }
+        .scene-jihua-jinji { background: #ffe0b2; color: #ef6c00; }
+        .scene-xunyuan-weichuan { background: #f3e5f5; color: #6a1b9a; }
+        .scene-xunyuan-yingzhao { background: #e1bee7; color: #7b1fa2; }
+        .scene-xunyuan-xietong { background: #d1c4e9; color: #5e35b1; }
+        .scene-zhixing { background: #e3f2fd; color: #1565c0; }
+        .scene-jiesuan { background: #e0f2f1; color: #00695c; }
+        .scene-guazhang { background: #fff8e1; color: #f57f17; }
+
+        .level-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .level-high { background: #ffebee; color: var(--danger); }
+        .level-mid { background: #fff3e0; color: var(--warning); }
+        .level-low { background: #e8f5e9; color: var(--success); }
+
+        .op-btns { display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .op-btn { font-size: 12px; color: var(--primary); cursor: pointer; padding: 2px 6px; border-radius: 2px; transition: background .2s; border: none; background: transparent; }
+        .op-btn:hover { background: var(--primary-light); }
+
+        /* 分页 */
+        .pagination-bar { padding: 10px 16px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); background: #fff; flex-shrink: 0; }
+        .pagination-bar .page-info { color: var(--text-secondary); font-size: 12px; }
+        .page-btns { display: flex; align-items: center; gap: 4px; }
+        .page-btn { min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); background: #fff; border-radius: 3px; cursor: pointer; font-size: 12px; color: var(--text-secondary); padding: 0 6px; }
+        .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .page-btn.disabled { opacity: .4; cursor: not-allowed; }
+
+        /* 详情抽屉 */
+        .detail-drawer { position: fixed; top: var(--header-height); right: -600px; width: 600px; height: calc(100% - var(--header-height)); background: #fff; box-shadow: -2px 0 12px rgba(0,0,0,.15); z-index: 2000; transition: right .3s; display: flex; flex-direction: column; }
+        .detail-drawer.open { right: 0; }
+        .drawer-header { padding: 16px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .drawer-title { font-size: 15px; font-weight: bold; color: var(--text-primary); }
+        .drawer-close { font-size: 20px; color: var(--text-muted); cursor: pointer; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border-radius: 3px; }
+        .drawer-close:hover { background: #f5f5f5; color: var(--text-primary); }
+        .drawer-body { flex: 1; overflow-y: auto; padding: 20px; }
+        .drawer-body::-webkit-scrollbar { width: 10px; }
+        .drawer-body::-webkit-scrollbar-track { background: #f5f5f5; border-radius: 5px; }
+        .drawer-body::-webkit-scrollbar-thumb { background: #bbb; border-radius: 5px; border: 2px solid #f5f5f5; }
+        .drawer-body::-webkit-scrollbar-thumb:hover { background: #999; }
+        .detail-section { margin-bottom: 24px; }
+        .detail-section-title { font-size: 14px; font-weight: bold; color: var(--primary); margin-bottom: 12px; padding-left: 8px; border-left: 3px solid var(--primary); }
+        .detail-row { display: flex; padding: 8px 0; border-bottom: 1px dashed #f0f0f0; }
+        .detail-label { width: 120px; color: var(--text-secondary); flex-shrink: 0; }
+        .detail-value { flex: 1; color: var(--text-primary); }
+        .detail-value.warning { color: var(--warning); font-weight: bold; }
+        .detail-value.danger { color: var(--danger); font-weight: bold; }
+        .evidence-list { background: #fafafa; border-radius: 4px; padding: 12px; }
+        .evidence-item { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12px; }
+        .evidence-item::before { content: "●"; color: var(--primary); font-size: 8px; }
+        .overlay { position: fixed; top: var(--header-height); left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.3); z-index: 1999; display: none; }
+        .overlay.show { display: block; }
+
+        /* 回到顶部按钮 */
+        .back-to-top {
+            position: fixed; right: 24px; bottom: 32px;
+            width: 40px; height: 40px; border-radius: 50%;
+            background: var(--primary); color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; box-shadow: 0 4px 12px rgba(13,71,161,.3);
+            z-index: 500; font-size: 16px; opacity: 0; pointer-events: none;
+            transition: all .3s;
+        }
+        .back-to-top.show { opacity: 1; pointer-events: auto; }
+        .back-to-top:hover { transform: translateY(-3px); background: var(--primary-dark); }
+
+        /* 右侧自定义滚动滑块 - 主内容区 */
+        .main-content::-webkit-scrollbar { width: 10px; }
+        .main-content::-webkit-scrollbar-track { background: #f0f2f5; border-radius: 5px; }
+        .main-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 5px; border: 2px solid #f0f2f5; }
+        .main-content::-webkit-scrollbar-thumb:hover { background: #999; }
+        .main-content::-webkit-scrollbar-button { display: none; }
+
+        /* 顶部进度条 */
+        .scroll-progress {
+            position: fixed; top: var(--header-height); left: 0; height: 3px;
+            background: linear-gradient(90deg, #42a5f5, var(--primary));
+            z-index: 999; width: 0%; transition: width .1s;
+        }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <div class="scroll-progress" id="scrollProgress"></div>
+
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system"><span class="brand-name">绿星链通</span><span class="brand-version">2.0</span></div>
+            <div class="brand-divider"></div>
+            <div class="logo-text"><span class="cn">中国铝业集团有限公司</span><span class="en">ALUMINUM CORPORATION OF CHINA</span></div>
+        </div>
+        <div class="header-center">
+            <div class="header-search"><input type="text" placeholder="请输入页面号"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg></div>
+        </div>
+        <div class="header-right"><span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span><div class="user-badge"><div class="user-avatar">潘</div></div></div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group">
+                <div class="menu-item expanded active">
+                    <div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险管理</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="submenu open">
+                    <div class="menu-item"><div class="menu-left"><span>风险驾驶舱</span></div></div>
+                    <div class="menu-item"><div class="menu-left"><span>风险事件池</span></div></div>
+                    <div class="menu-item active"><div class="menu-left"><span>风险监督场景</span></div></div>
+                </div>
+            </div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务中心</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#9881;</span><span>模型中心</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>系统管理</span></div></div></div>
+        </aside>
+
+        <main class="main-content" id="mainContent">
+            <div class="breadcrumb">
+                <a>风险管理</a><span class="sep">&gt;</span><span>风险监督场景</span>
+            </div>
+
+            <div class="page-header">
+                <div class="page-title"><span>风险监督场景</span></div>
+                <div class="top-actions">
+                    <button class="btn btn-primary">+ 手动录入风险</button>
+                    <button class="btn btn-default">&#128229; 导出</button>
+                </div>
+            </div>
+
+            <!-- 统计卡片：业务场景 -->
+            <div class="stat-section">
+                <div class="stat-row expanded" id="statRow">
+                    <div class="stat-card active" data-scene="all" onclick="selectScene(this, 'all')">
+                        <div class="scene-stage">全部场景</div>
+                        <div class="scene-name">全部风险</div>
+                        <div class="stat-bottom"><div class="stat-value">160</div><div class="stat-ratio">100%</div></div>
+                    </div>
+                    <div class="stat-card" data-scene="zhunru" onclick="selectScene(this, 'zhunru')">
+                        <div class="scene-stage" style="color:var(--danger)">供应商准入</div>
+                        <div class="scene-name">违规准入分析</div>
+                        <div class="stat-bottom"><div class="stat-value">23</div><div class="stat-ratio">14.4%</div></div>
+                    </div>
+                    <div class="stat-card" data-scene="jihua-danyi" onclick="selectScene(this, 'jihua-danyi')">
+                        <div class="scene-stage" style="color:var(--warning)">计划管理</div>
+                        <div class="scene-name">单一来源合理性</div>
+                        <div class="stat-bottom"><div class="stat-value">15</div><div class="stat-ratio">9.4%</div></div>
+                    </div>
+                    <div class="stat-card" data-scene="jihua-jinji" onclick="selectScene(this, 'jihua-jinji')">
+                        <div class="scene-stage" style="color:var(--warning)">计划管理</div>
+                        <div class="scene-name">紧急采购合理性</div>
+                        <div class="stat-bottom"><div class="stat-value">18</div><div class="stat-ratio">11.3%</div></div>
+                    </div>
+                    <div class="stat-card" data-scene="xunyuan-weichuan" onclick="selectScene(this, 'xunyuan-weichuan')">
+                        <div class="scene-stage" style="color:var(--info)">采购寻源</div>
+                        <div class="scene-name">围串标识别分析</div>
+                        <div class="stat-bottom"><div class="stat-value">31</div><div class="stat-ratio">19.4%</div></div>
+                    </div>
+                    <div class="stat-card" data-scene="xunyuan-yingzhao" onclick="selectScene(this, 'xunyuan-yingzhao')">
+                        <div class="scene-stage" style="color:var(--info)">采购寻源</div>
+                        <div class="scene-name">应招未招识别</div>
+                        <div class="stat-bottom"><div class="stat-value">12</div><div class="stat-ratio">7.5%</div></div>
+                    </div>
+                    <div class="stat-card" data-scene="xunyuan-xietong" onclick="selectScene(this, 'xunyuan-xietong')">
+                        <div class="scene-stage" style="color:var(--info)">采购寻源</div>
+                        <div class="scene-name">采购协同性检查</div>
+                        <div class="stat-bottom"><div class="stat-value">9</div><div class="stat-ratio">5.6%</div></div>
+                    </div>
+                    <div class="stat-card" data-scene="zhixing" onclick="selectScene(this, 'zhixing')">
+                        <div class="scene-stage" style="color:var(--success)">采购执行</div>
+                        <div class="scene-name">采购执行管理</div>
+                        <div class="stat-bottom"><div class="stat-value">27</div><div class="stat-ratio">16.9%</div></div>
+                    </div>
+                    <div class="stat-card" data-scene="jiesuan" onclick="selectScene(this, 'jiesuan')">
+                        <div class="scene-stage" style="color:#00838f">采购结算</div>
+                        <div class="scene-name">采购结算管理</div>
+                        <div class="stat-bottom"><div class="stat-value">14</div><div class="stat-ratio">8.8%</div></div>
+                    </div>
+                    <div class="stat-card" data-scene="guazhang" onclick="selectScene(this, 'guazhang')">
+                        <div class="scene-stage" style="color:#6d4c41">挂账付款</div>
+                        <div class="scene-name">挂账付款监督</div>
+                        <div class="stat-bottom"><div class="stat-value">8</div><div class="stat-ratio">5.0%</div></div>
+                    </div>
+                    <div class="stat-card" data-scene="shouxin" onclick="selectScene(this, 'shouxin')">
+                        <div class="scene-stage" style="color:#455a64">授信管理</div>
+                        <div class="scene-name">授信管理监督</div>
+                        <div class="stat-bottom"><div class="stat-value">3</div><div class="stat-ratio">1.9%</div></div>
+                    </div>
+                </div>
+                <div class="expand-toggle" id="expandToggle" onclick="toggleExpand()" title="收起">&#9650;</div>
+            </div>
+
+            <!-- 查询区 -->
+            <div class="query-section">
+                <div class="section-header">
+                    <div class="header-left-part"><span class="section-icon"></span><span>查询信息</span></div>
+                    <div class="section-actions">
+                        <button class="btn btn-default" onclick="resetAll()">&#8634; 重置</button>
+                        <button class="btn btn-primary">&#128269; 查询</button>
+                    </div>
+                </div>
+                <div class="query-form">
+                    <div class="form-item"><label class="form-label">业务场景</label><select class="form-select" id="sceneSelect" onchange="onSceneChange(this.value)"><option value="all">全部场景</option><option value="zhunru">违规准入分析</option><option value="jihua-danyi">单一来源合理性</option><option value="jihua-jinji">紧急采购合理性</option><option value="xunyuan-weichuan">围串标识别分析</option><option value="xunyuan-yingzhao">应招未招识别</option><option value="xunyuan-xietong">采购协同性检查</option><option value="zhixing">采购执行管理</option><option value="jiesuan">采购结算管理</option><option value="guazhang">挂账付款监督</option><option value="shouxin">授信管理监督</option></select></div>
+                    <div class="form-item"><label class="form-label">风险点</label><select class="form-select" id="riskPointSelect"><option value="all">全部风险点</option></select></div>
+                    <div class="form-item"><label class="form-label">供应商名称</label><input type="text" class="form-input" placeholder="请输入供应商名称"></div>
+                    <div class="form-item"><label class="form-label">风险等级</label><select class="form-select"><option>全部</option><option>高风险</option><option>中风险</option><option>低风险</option></select></div>
+                    <div class="form-item"><label class="form-label">发现时间-起</label><input type="date" class="form-input"></div>
+                    <div class="form-item"><label class="form-label">发现时间-止</label><input type="date" class="form-input"></div>
+                    <div class="form-item"><label class="form-label">处理状态</label><select class="form-select"><option>全部</option><option>待处理</option><option>处理中</option><option>已闭环</option></select></div>
+                    <div class="form-item"><label class="form-label">关联单据</label><input type="text" class="form-input" placeholder="准入单/合同/订单号"></div>
+                </div>
+            </div>
+
+            <!-- 风险点标签区 -->
+            <div class="risk-tag-section" id="riskTagSection">
+                <div class="tag-group" data-scene="zhunru">
+                    <div class="tag-group-title stage-zhunru">供应商准入 · 违规准入分析</div>
+                    <div class="risk-tags">
+                        <div class="risk-tag active" data-risk="万能供应商分析" onclick="selectRiskTag(this)">万能供应商分析<span class="tag-count">8</span></div>
+                        <div class="risk-tag active" data-risk="准入即签约" onclick="selectRiskTag(this)">准入即签约<span class="tag-count">6</span></div>
+                        <div class="risk-tag active" data-risk="供应商带病准入" onclick="selectRiskTag(this)">供应商带病准入<span class="tag-count">9</span></div>
+                    </div>
+                </div>
+                <div class="tag-group" data-scene="jihua-danyi">
+                    <div class="tag-group-title stage-jihua">计划管理 · 单一来源合理性</div>
+                    <div class="risk-tags">
+                        <div class="risk-tag active" data-risk="单一来源计划最多品类" onclick="selectRiskTag(this)">单一来源计划最多品类<span class="tag-count">5</span></div>
+                        <div class="risk-tag active" data-risk="单一来源专业户" onclick="selectRiskTag(this)">单一来源专业户<span class="tag-count">4</span></div>
+                        <div class="risk-tag active" data-risk="违规采取单一来源线索识别" onclick="selectRiskTag(this)">违规采取单一来源线索识别<span class="tag-count">6</span></div>
+                    </div>
+                </div>
+                <div class="tag-group" data-scene="jihua-jinji">
+                    <div class="tag-group-title stage-jihua">计划管理 · 紧急采购合理性</div>
+                    <div class="risk-tags">
+                        <div class="risk-tag active" data-risk="紧急计划提报总监" onclick="selectRiskTag(this)">紧急计划提报总监<span class="tag-count">3</span></div>
+                        <div class="risk-tag active" data-risk="紧急采购专业户" onclick="selectRiskTag(this)">紧急采购专业户<span class="tag-count">7</span></div>
+                        <div class="risk-tag active" data-risk="紧急计划要货期过长" onclick="selectRiskTag(this)">紧急计划要货期过长<span class="tag-count">5</span></div>
+                        <div class="risk-tag active" data-risk="要货期间隔长" onclick="selectRiskTag(this)">要货期间隔长<span class="tag-count">3</span></div>
+                    </div>
+                </div>
+                <div class="tag-group" data-scene="xunyuan-weichuan">
+                    <div class="tag-group-title stage-xunyuan">采购寻源 · 围串标识别分析</div>
+                    <div class="risk-tags">
+                        <div class="risk-tag active" data-risk="涉嫌串标" onclick="selectRiskTag(this)">涉嫌串标<span class="tag-count">4</span></div>
+                        <div class="risk-tag active" data-risk="供应商IP地址相同" onclick="selectRiskTag(this)">供应商IP地址相同<span class="tag-count">6</span></div>
+                        <div class="risk-tag active" data-risk="供应商存在关联关系" onclick="selectRiskTag(this)">供应商存在关联关系<span class="tag-count">8</span></div>
+                        <div class="risk-tag active" data-risk="报价文件作者/修改者相同" onclick="selectRiskTag(this)">报价文件作者/修改者相同<span class="tag-count">5</span></div>
+                        <div class="risk-tag active" data-risk="逢投必中&只陪不中" onclick="selectRiskTag(this)">逢投必中&只陪不中<span class="tag-count">8</span></div>
+                    </div>
+                </div>
+                <div class="tag-group" data-scene="xunyuan-yingzhao">
+                    <div class="tag-group-title stage-xunyuan">采购寻源 · 应招未招识别</div>
+                    <div class="risk-tags">
+                        <div class="risk-tag active" data-risk="应招未招" onclick="selectRiskTag(this)">应招未招<span class="tag-count">7</span></div>
+                        <div class="risk-tag active" data-risk="分拆规避招标" onclick="selectRiskTag(this)">分拆规避招标<span class="tag-count">5</span></div>
+                    </div>
+                </div>
+                <div class="tag-group" data-scene="xunyuan-xietong">
+                    <div class="tag-group-title stage-xunyuan">采购寻源 · 采购协同性检查</div>
+                    <div class="risk-tags">
+                        <div class="risk-tag active" data-risk="采购方式选择错误" onclick="selectRiskTag(this)">采购方式选择错误<span class="tag-count">3</span></div>
+                        <div class="risk-tag active" data-risk="采购协同不足检查" onclick="selectRiskTag(this)">采购协同不足检查<span class="tag-count">4</span></div>
+                        <div class="risk-tag active" data-risk="流废标占比较高" onclick="selectRiskTag(this)">流废标占比较高<span class="tag-count">2</span></div>
+                    </div>
+                </div>
+                <div class="tag-group" data-scene="zhixing">
+                    <div class="tag-group-title stage-zhixing">采购执行 · 采购执行管理</div>
+                    <div class="risk-tags">
+                        <div class="risk-tag active" data-risk="企业应结算未结算" onclick="selectRiskTag(this)">企业应结算未结算<span class="tag-count">9</span></div>
+                        <div class="risk-tag active" data-risk="质量不合格仍全额结算" onclick="selectRiskTag(this)">质量不合格仍全额结算<span class="tag-count">12</span></div>
+                        <div class="risk-tag active" data-risk="企业应付款未付款" onclick="selectRiskTag(this)">企业应付款未付款<span class="tag-count">6</span></div>
+                    </div>
+                </div>
+                <div class="tag-group" data-scene="jiesuan">
+                    <div class="tag-group-title stage-jiesuan">履约结算</div>
+                    <div class="risk-tags">
+                        <div class="risk-tag active" data-risk="超合同数量执行" onclick="selectRiskTag(this)">超合同数量执行<span class="tag-count">8</span></div>
+                        <div class="risk-tag active" data-risk="合同超过交货截止日仍未执行" onclick="selectRiskTag(this)">合同超过交货截止日仍未执行<span class="tag-count">6</span></div>
+                        <div class="risk-tag active" data-risk="供应商预付款长期未核销" onclick="selectRiskTag(this)">供应商预付款长期未核销<span class="tag-count">5</span></div>
+                        <div class="risk-tag active" data-risk="合同标准模版使用率较低" onclick="selectRiskTag(this)">合同标准模版使用率较低<span class="tag-count">3</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 列表区 -->
+            <div class="list-section">
+                <div class="list-toolbar">
+                    <div class="toolbar-left"><span class="section-title">&#9776; 风险监督结果清单 <span class="title-badge" id="listCount">160</span></span></div>
+                    <div class="toolbar-right">
+                        <button class="btn btn-success btn-sm">&#128227; 批量生成任务</button>
+                        <button class="btn btn-default btn-sm">&#128229; 批量导出</button>
+                    </div>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <div class="table-scroll-area">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th><input type="checkbox"></th>
+                                    <th>序号</th>
+                                    <th>业务场景</th>
+                                    <th>风险点</th>
+                                    <th>供应商名称</th>
+                                    <th>统一社会信用代码</th>
+                                    <th>风险等级</th>
+                                    <th>触发规则</th>
+                                    <th>关联业务单据</th>
+                                    <th>发现时间</th>
+                                    <th>处理状态</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tableBody">
+                                <tr data-scene="zhunru" data-risk="万能供应商分析">
+                                    <td><input type="checkbox"></td>
+                                    <td>1</td>
+                                    <td><span class="scene-tag scene-zhunru">违规准入分析</span></td>
+                                    <td>万能供应商分析</td>
+                                    <td><span class="col-link">广西某铝业贸易有限公司</span></td>
+                                    <td>91450100MA5KEXXXXX</td>
+                                    <td><span class="level-tag level-high">高风险</span></td>
+                                    <td>覆盖品类异常</td>
+                                    <td><span class="col-link">准入单-2024-00125</span></td>
+                                    <td>2024-11-15</td>
+                                    <td><span style="color:var(--warning)">待处理</span></td>
+                                    <td><div class="op-btns"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+                                </tr>
+                                <tr data-scene="zhunru" data-risk="准入即签约">
+                                    <td><input type="checkbox"></td>
+                                    <td>2</td>
+                                    <td><span class="scene-tag scene-zhunru">违规准入分析</span></td>
+                                    <td>准入即签约</td>
+                                    <td><span class="col-link">南宁某物资供应有限公司</span></td>
+                                    <td>91450100MA5KBXXXXX</td>
+                                    <td><span class="level-tag level-mid">中风险</span></td>
+                                    <td>准入流程未完成</td>
+                                    <td><span class="col-link">合同-2024-C00892</span></td>
+                                    <td>2024-11-18</td>
+                                    <td><span style="color:var(--warning)">待处理</span></td>
+                                    <td><div class="op-btns"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+                                </tr>
+                                <tr data-scene="zhunru" data-risk="供应商带病准入">
+                                    <td><input type="checkbox"></td>
+                                    <td>3</td>
+                                    <td><span class="scene-tag scene-zhunru">违规准入分析</span></td>
+                                    <td>供应商带病准入</td>
+                                    <td><span class="col-link">柳州某化工原料有限公司</span></td>
+                                    <td>91450200MA5K9XXXXX</td>
+                                    <td><span class="level-tag level-high">高风险</span></td>
+                                    <td>历史质量不合格</td>
+                                    <td><span class="col-link">准入单-2024-00131</span></td>
+                                    <td>2024-11-20</td>
+                                    <td><span style="color:var(--primary)">处理中</span></td>
+                                    <td><div class="op-btns"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+                                </tr>
+                                <tr data-scene="jihua-danyi" data-risk="单一来源专业户">
+                                    <td><input type="checkbox"></td>
+                                    <td>4</td>
+                                    <td><span class="scene-tag scene-jihua-danyi">单一来源合理性</span></td>
+                                    <td>单一来源专业户</td>
+                                    <td><span class="col-link">桂林某金属材料有限公司</span></td>
+                                    <td>91450300MA5K8XXXXX</td>
+                                    <td><span class="level-tag level-mid">中风险</span></td>
+                                    <td>单一来源次数异常</td>
+                                    <td><span class="col-link">采购计划-2024-JH0892</span></td>
+                                    <td>2024-11-20</td>
+                                    <td><span style="color:var(--primary)">处理中</span></td>
+                                    <td><div class="op-btns"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+                                </tr>
+                                <tr data-scene="jihua-jinji" data-risk="紧急采购专业户">
+                                    <td><input type="checkbox"></td>
+                                    <td>5</td>
+                                    <td><span class="scene-tag scene-jihua-jinji">紧急采购合理性</span></td>
+                                    <td>紧急采购专业户</td>
+                                    <td><span class="col-link">桂林某金属材料有限公司</span></td>
+                                    <td>91450300MA5K8XXXXX</td>
+                                    <td><span class="level-tag level-high">高风险</span></td>
+                                    <td>紧急采购次数异常</td>
+                                    <td><span class="col-link">采购计划-2024-JH0901</span></td>
+                                    <td>2024-11-22</td>
+                                    <td><span style="color:var(--warning)">待处理</span></td>
+                                    <td><div class="op-btns"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+                                </tr>
+                                <tr data-scene="xunyuan-weichuan" data-risk="供应商存在关联关系">
+                                    <td><input type="checkbox"></td>
+                                    <td>6</td>
+                                    <td><span class="scene-tag scene-xunyuan-weichuan">围串标识别分析</span></td>
+                                    <td>供应商存在关联关系</td>
+                                    <td><span class="col-link">北海某运输服务有限公司</span></td>
+                                    <td>91450500MA5K7XXXXX</td>
+                                    <td><span class="level-tag level-high">高风险</span></td>
+                                    <td>股权关系关联</td>
+                                    <td><span class="col-link">竞价单-2024-JJ0321</span></td>
+                                    <td>2024-11-25</td>
+                                    <td><span style="color:var(--warning)">待处理</span></td>
+                                    <td><div class="op-btns"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+                                </tr>
+                                <tr data-scene="xunyuan-yingzhao" data-risk="应招未招">
+                                    <td><input type="checkbox"></td>
+                                    <td>7</td>
+                                    <td><span class="scene-tag scene-xunyuan-yingzhao">应招未招识别</span></td>
+                                    <td>应招未招</td>
+                                    <td><span class="col-link">玉林某设备制造有限公司</span></td>
+                                    <td>91450900MA5K6XXXXX</td>
+                                    <td><span class="level-tag level-mid">中风险</span></td>
+                                    <td>金额超阈值未招标</td>
+                                    <td><span class="col-link">采购计划-2024-JH0915</span></td>
+                                    <td>2024-11-28</td>
+                                    <td><span style="color:var(--success)">已闭环</span></td>
+                                    <td><div class="op-btns"><button class="op-btn" onclick="openDetail()">查看详情</button></div></td>
+                                </tr>
+                                <tr data-scene="xunyuan-xietong" data-risk="流废标占比较高">
+                                    <td><input type="checkbox"></td>
+                                    <td>8</td>
+                                    <td><span class="scene-tag scene-xunyuan-xietong">采购协同性检查</span></td>
+                                    <td>流废标占比较高</td>
+                                    <td><span class="col-link">贵港某能源科技有限公司</span></td>
+                                    <td>91450800MA5K5XXXXX</td>
+                                    <td><span class="level-tag level-low">低风险</span></td>
+                                    <td>流废标率超30%</td>
+                                    <td><span class="col-link">竞价单-2024-JJ0338</span></td>
+                                    <td>2024-12-01</td>
+                                    <td><span style="color:var(--success)">已闭环</span></td>
+                                    <td><div class="op-btns"><button class="op-btn" onclick="openDetail()">查看详情</button></div></td>
+                                </tr>
+                                <tr data-scene="zhixing" data-risk="质量不合格仍全额结算">
+                                    <td><input type="checkbox"></td>
+                                    <td>9</td>
+                                    <td><span class="scene-tag scene-zhixing">采购执行管理</span></td>
+                                    <td>质量不合格仍全额结算</td>
+                                    <td><span class="col-link">钦州某物流有限公司</span></td>
+                                    <td>91450700MA5K4XXXXX</td>
+                                    <td><span class="level-tag level-high">高风险</span></td>
+                                    <td>质检不合格仍结算</td>
+                                    <td><span class="col-link">结算单-2024-JS0562</span></td>
+                                    <td>2024-12-03</td>
+                                    <td><span style="color:var(--primary)">处理中</span></td>
+                                    <td><div class="op-btns"><button class="op-btn" onclick="openDetail()">查看详情</button></div></td>
+                                </tr>
+                                <tr data-scene="jiesuan" data-risk="超合同数量执行">
+                                    <td><input type="checkbox"></td>
+                                    <td>10</td>
+                                    <td><span class="scene-tag scene-jiesuan">采购结算管理</span></td>
+                                    <td>超合同数量执行</td>
+                                    <td><span class="col-link">百色某建材有限公司</span></td>
+                                    <td>91451000MA5K3XXXXX</td>
+                                    <td><span class="level-tag level-mid">中风险</span></td>
+                                    <td>执行量超合同110%</td>
+                                    <td><span class="col-link">采购订单-2024-PO1178</span></td>
+                                    <td>2024-12-05</td>
+                                    <td><span style="color:var(--warning)">待处理</span></td>
+                                    <td><div class="op-btns"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+                                </tr>
+                                <tr data-scene="guazhang" data-risk="供应商预付款长期未核销">
+                                    <td><input type="checkbox"></td>
+                                    <td>11</td>
+                                    <td><span class="scene-tag scene-guazhang">挂账付款监督</span></td>
+                                    <td>供应商预付款长期未核销</td>
+                                    <td><span class="col-link">贺州某贸易有限责任公司</span></td>
+                                    <td>91451100MA5K2XXXXX</td>
+                                    <td><span class="level-tag level-mid">中风险</span></td>
+                                    <td>预付账龄超180天</td>
+                                    <td><span class="col-link">付款单-2024-FK0345</span></td>
+                                    <td>2024-12-08</td>
+                                    <td><span style="color:var(--warning)">待处理</span></td>
+                                    <td><div class="op-btns"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="pagination-bar">
+                    <span class="page-info">共 160 条</span>
+                    <select class="page-size-select" style="height:28px;border:1px solid var(--border-color);border-radius:3px;font-size:12px;"><option>10 条/页</option><option selected>20 条/页</option><option>50 条/页</option></select>
+                    <div class="page-btns">
+                        <button class="page-btn disabled">&lt;&lt;</button>
+                        <button class="page-btn disabled">&lt;</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">4</button>
+                        <button class="page-btn">5</button>
+                        <button class="page-btn">&gt;</button>
+                        <button class="page-btn">&gt;&gt;</button>
+                    </div>
+                    <div class="page-jump" style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary);">前往 <input type="text" value="1" style="width:40px;height:28px;border:1px solid var(--border-color);border-radius:3px;text-align:center;font-size:12px;outline:none;"> 页</div>
+                </div>
+            </div>
+
+            <!-- 回到顶部按钮 -->
+            <div class="back-to-top" id="backToTop" onclick="scrollToTop()">&#9650;</div>
+        </main>
+    </div>
+
+    <!-- 详情抽屉 -->
+    <div class="overlay" id="overlay" onclick="closeDetail()"></div>
+    <div class="detail-drawer" id="detailDrawer">
+        <div class="drawer-header">
+            <div class="drawer-title">风险详情</div>
+            <div class="drawer-close" onclick="closeDetail()">&#10005;</div>
+        </div>
+        <div class="drawer-body">
+            <div class="detail-section">
+                <div class="detail-section-title">基本信息</div>
+                <div class="detail-row"><div class="detail-label">业务场景</div><div class="detail-value warning">违规准入分析</div></div>
+                <div class="detail-row"><div class="detail-label">风险点</div><div class="detail-value warning">万能供应商分析</div></div>
+                <div class="detail-row"><div class="detail-label">供应商名称</div><div class="detail-value">广西某铝业贸易有限公司</div></div>
+                <div class="detail-row"><div class="detail-label">统一社会信用代码</div><div class="detail-value">91450100MA5KEXXXXX</div></div>
+                <div class="detail-row"><div class="detail-label">风险等级</div><div class="detail-value danger">高风险</div></div>
+                <div class="detail-row"><div class="detail-label">触发规则</div><div class="detail-value">覆盖品类异常（超过15个品类）</div></div>
+                <div class="detail-row"><div class="detail-label">发现时间</div><div class="detail-value">2024-11-15 14:32:18</div></div>
+                <div class="detail-row"><div class="detail-label">处理状态</div><div class="detail-value warning">待处理</div></div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-section-title">风险证据链</div>
+                <div class="evidence-list">
+                    <div class="evidence-item">该供应商当前覆盖品类数：18个，超过阈值（15个）</div>
+                    <div class="evidence-item">合作企业数量：7家，集中在同一采购员名下</div>
+                    <div class="evidence-item">近一年交易金额：2,580万元，占总采购额 12.3%</div>
+                    <div class="evidence-item">关联采购员：张某（采购二部），该采购员名下单一来源采购占比 68%</div>
+                    <div class="evidence-item">该供应商在集团内其他分公司也有合作记录，覆盖品类累计达 23 个</div>
+                </div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-section-title">关联业务单据</div>
+                <div class="detail-row"><div class="detail-label">准入单号</div><div class="detail-value"><span class="col-link">准入单-2024-00125</span></div></div>
+                <div class="detail-row"><div class="detail-label">合同编号</div><div class="detail-value"><span class="col-link">合同-2024-C00876</span>、<span class="col-link">合同-2024-C00877</span></div></div>
+                <div class="detail-row"><div class="detail-label">采购订单</div><div class="detail-value"><span class="col-link">PO-2024-11560</span> 等 6 笔</div></div>
+            </div>
+
+            <div class="detail-section">
+                <div class="detail-section-title">处置操作</div>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-primary">生成监督任务</button>
+                    <button class="btn btn-default">标记误报</button>
+                    <button class="btn btn-default">加入黑名单</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 级联数据映射 ==========
+        const sceneRiskMap = {
+            'all': [],
+            'zhunru': ['万能供应商分析', '准入即签约', '供应商带病准入'],
+            'jihua-danyi': ['单一来源计划最多品类', '单一来源专业户', '违规采取单一来源线索识别'],
+            'jihua-jinji': ['紧急计划提报总监', '紧急采购专业户', '紧急计划要货期过长', '要货期间隔长'],
+            'xunyuan-weichuan': ['涉嫌串标', '供应商IP地址相同', '供应商存在关联关系', '报价文件作者/修改者相同', '逢投必中&只陪不中'],
+            'xunyuan-yingzhao': ['应招未招', '分拆规避招标'],
+            'xunyuan-xietong': ['采购方式选择错误', '采购协同不足检查', '流废标占比较高'],
+            'zhixing': ['企业应结算未结算', '质量不合格仍全额结算', '企业应付款未付款'],
+            'jiesuan': ['超合同数量执行', '合同超过交货截止日仍未执行', '供应商预付款长期未核销', '合同标准模版使用率较低'],
+            'guazhang': ['供应商预付款长期未核销', '合同标准模版使用率较低'],
+            'shouxin': []
+        };
+
+        let currentScene = 'all';
+        let currentRiskPoint = null;
+        let isExpanded = true;
+
+        // ========== 卡片折叠 ==========
+        function toggleExpand() {
+            const row = document.getElementById('statRow');
+            const btn = document.getElementById('expandToggle');
+            const cards = row.querySelectorAll('.stat-card');
+            isExpanded = !isExpanded;
+
+            if (isExpanded) {
+                row.classList.remove('collapsed');
+                row.classList.add('expanded');
+                cards.forEach((c, i) => { if (i >= 10) c.style.display = ''; });
+                btn.innerHTML = '&#9650;';
+                btn.title = '收起';
+            } else {
+                row.classList.remove('expanded');
+                row.classList.add('collapsed');
+                cards.forEach((c, i) => { if (i >= 10) c.style.display = 'none'; });
+                btn.innerHTML = '&#9660;';
+                btn.title = '展开';
+            }
+        }
+
+        // ========== 选择业务场景 ==========
+        function selectScene(card, sceneType) {
+            document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+            card.classList.add('active');
+            currentScene = sceneType;
+            currentRiskPoint = null;
+
+            // 同步下拉框
+            document.getElementById('sceneSelect').value = sceneType;
+            updateRiskSelect(sceneType);
+
+            // 更新风险点标签区
+            updateRiskTags(sceneType);
+
+            // 筛选列表
+            filterTable();
+        }
+
+        function onSceneChange(sceneValue) {
+            const card = document.querySelector('.stat-card[data-scene="' + sceneValue + '"]');
+            if (card) selectScene(card, sceneValue);
+        }
+
+        function updateRiskSelect(sceneType) {
+            const sel = document.getElementById('riskPointSelect');
+            sel.innerHTML = '<option value="all">全部风险点</option>';
+            const risks = sceneRiskMap[sceneType] || [];
+            risks.forEach(r => {
+                const opt = document.createElement('option');
+                opt.value = r; opt.textContent = r;
+                sel.appendChild(opt);
+            });
+        }
+
+        // ========== 风险点标签区联动 ==========
+        function updateRiskTags(sceneType) {
+            const groups = document.querySelectorAll('.tag-group');
+            groups.forEach(g => {
+                if (sceneType === 'all' || g.dataset.scene === sceneType) {
+                    g.classList.remove('hidden');
+                } else {
+                    g.classList.add('hidden');
+                }
+            });
+
+            // 重置标签为全部active
+            document.querySelectorAll('.risk-tag').forEach(t => {
+                t.classList.add('active');
+                t.style.opacity = '';
+            });
+        }
+
+        // ========== 点击风险点标签 ==========
+        function selectRiskTag(tag) {
+            const riskName = tag.dataset.risk;
+            const allTags = document.querySelectorAll('.risk-tag');
+
+            // 单选逻辑：点击A -> A高亮，其他变暗；再次点击A -> 全部恢复
+            if (tag.classList.contains('active') && currentRiskPoint === riskName) {
+                // 取消筛选，恢复全部
+                currentRiskPoint = null;
+                allTags.forEach(t => {
+                    t.classList.add('active');
+                    t.style.opacity = '';
+                });
+            } else {
+                // 只高亮当前
+                currentRiskPoint = riskName;
+                allTags.forEach(t => {
+                    if (t.dataset.risk === riskName) {
+                        t.classList.add('active');
+                        t.style.opacity = '';
+                    } else {
+                        t.classList.remove('active');
+                        t.style.opacity = '0.4';
+                    }
+                });
+            }
+
+            filterTable();
+        }
+
+        // ========== 列表筛选 ==========
+        function filterTable() {
+            const rows = document.querySelectorAll('#tableBody tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const rowScene = row.dataset.scene;
+                const rowRisk = row.dataset.risk;
+                let show = true;
+
+                if (currentScene !== 'all' && rowScene !== currentScene) {
+                    show = false;
+                }
+                if (currentRiskPoint && rowRisk !== currentRiskPoint) {
+                    show = false;
+                }
+
+                if (show) {
+                    row.classList.remove('filtered-out');
+                    visibleCount++;
+                } else {
+                    row.classList.add('filtered-out');
+                }
+            });
+
+            document.getElementById('listCount').textContent = visibleCount;
+        }
+
+        // ========== 重置 ==========
+        function resetAll() {
+            currentScene = 'all';
+            currentRiskPoint = null;
+
+            // 重置卡片
+            document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+            document.querySelector('.stat-card[data-scene="all"]').classList.add('active');
+
+            // 重置下拉框
+            document.getElementById('sceneSelect').value = 'all';
+            updateRiskSelect('all');
+
+            // 重置标签
+            updateRiskTags('all');
+
+            // 重置列表
+            filterTable();
+        }
+
+        // ========== 滚动进度条 + 回到顶部 ==========
+        const mainContent = document.getElementById('mainContent');
+        const scrollProgress = document.getElementById('scrollProgress');
+        const backToTop = document.getElementById('backToTop');
+
+        mainContent.addEventListener('scroll', function() {
+            const scrollTop = mainContent.scrollTop;
+            const scrollHeight = mainContent.scrollHeight - mainContent.clientHeight;
+            const percent = scrollHeight > 0 ? (scrollTop / scrollHeight) * 100 : 0;
+            scrollProgress.style.width = percent + '%';
+
+            if (scrollTop > 200) {
+                backToTop.classList.add('show');
+            } else {
+                backToTop.classList.remove('show');
+            }
+        });
+
+        function scrollToTop() {
+            mainContent.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // ========== 详情抽屉 ==========
+        function openDetail() {
+            document.getElementById('detailDrawer').classList.add('open');
+            document.getElementById('overlay').classList.add('show');
+        }
+        function closeDetail() {
+            document.getElementById('detailDrawer').classList.remove('open');
+            document.getElementById('overlay').classList.remove('show');
+        }
+    </script>
+</body>
+</html>

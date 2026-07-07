@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prototype Site"
+  short_description: "Generate shared-shell static prototype sites."
+  default_prompt: "Use this skill to create or update a static prototype site page with shared shell, menu registration, IR markers, and PSM visual style."

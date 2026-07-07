@@ -1,0 +1,45 @@
+// 全局 SCSS 变量与 mixin（通过 vue.config.js 的 additionalData 自动注入到每个 <style lang="scss"> 与 .scss 文件）
+// 注意：此文件只能包含变量/mixin/函数，不能产生实际 CSS 输出，否则会在每个样式块中重复打包。
+// 与原型站点 app.css、psm-ui variables.scss 同源同值，三方视觉一致。
+
+// 品牌主色（与 Ant Design Vue 默认主色对齐；如需改主题，配合 a-config-provider 的 theme.token 一起改）
+$primary-color: #1565c0;
+$primary-dark: #0d47a1;
+$primary-light: #e3f2fd;
+$success-color: #43a047;
+$warning-color: #fb8c00;
+$error-color: #e53935;
+$info-color: #5e35b1;
+
+// 文字
+$text-color: #333;
+$text-color-secondary: #666;
+$text-color-muted: #999;
+
+// 背景 / 边框
+$layout-body-bg: #f0f2f5;
+$component-bg: #fff;
+$border-color: #e0e0e0;
+
+// 圆角 / 阴影
+$border-radius-base: 4px;
+$box-shadow-card: 0 1px 4px rgba(0, 0, 0, 0.08);
+$box-shadow-header: 0 2px 8px rgba(0, 0, 0, 0.15);
+
+// 头部高度
+$header-height: 56px;
+$sidebar-width: 220px;
+
+// 文本省略
+@mixin text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// flex 居中
+@mixin flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}

@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  原型站点外壳 —— 固定文件，请勿在此写业务内容
+  顶栏 + 左菜单(读 menu.config.js) + 页签 + iframe 内容区
+  业务页都在 pages/<编码>.html；新增页面只改 menu.config.js + 加 pages 文件
+  双击本文件即可运行（无需起服务）；切页通过 iframe，跨页联动走 postMessage
+  ============================================================================
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>绿星链通 - 原型演示</title>
+<link rel="stylesheet" href="assets/app.css">
+</head>
+<body>
+<header class="top-header">
+  <div class="hl">
+    <div class="brand"><b>绿星链通</b><small>GREEN STAR CHAIN LINK</small></div>
+    <div class="hdivider"></div>
+    <div class="sys"><b>中国铝业集团有限公司</b><small>ALUMINUM CORPORATION OF CHINA</small></div>
+  </div>
+  <div class="hsearch"><input placeholder="请输入页面号"><span class="si">🔍</span></div>
+  <div class="hr"><span class="company">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span><div class="uava">潘</div></div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar" id="sidebar"><!-- 由 shell.js 读 menu.config.js 渲染 --></aside>
+  <main class="main-shell">
+    <div class="page-tabs">
+      <button class="tab-scroll tab-scroll-left" id="tabScrollLeft" aria-label="向左滚动页签">‹</button>
+      <div class="tab-list" id="tabList"></div>
+      <button class="tab-scroll tab-scroll-right" id="tabScrollRight" aria-label="向右滚动页签">›</button>
+    </div>
+    <iframe class="content-frame" id="contentFrame" name="contentFrame" src="about:blank"></iframe>
+  </main>
+</div>
+
+<script src="menu.config.js"></script>
+<script src="assets/shell.js"></script>
+</body>
+</html>

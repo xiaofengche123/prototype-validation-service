@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>规则配置编辑 - 审计监督</title>
+    <style>
+        :root {
+            --primary: #1565c0;
+            --primary-dark: #0d47a1;
+            --primary-light: #e3f2fd;
+            --success: #43a047;
+            --warning: #fb8c00;
+            --danger: #e53935;
+            --info: #5e35b1;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-muted: #999;
+            --border-color: #e0e0e0;
+            --bg-body: #f0f2f5;
+            --bg-card: #fff;
+            --sidebar-width: 220px;
+            --header-height: 56px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-body);
+            overflow: hidden;
+            height: 100%;
+        }
+
+        /* ========== 顶部 Banner ========== */
+        .top-header {
+            height: var(--header-height);
+            background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            color: #fff;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+            flex-shrink: 0;
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; letter-spacing: 1px; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+
+        /* ========== 布局框架 ========== */
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+
+        /* ========== 左侧菜单 ========== */
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .menu-item .arrow { width: 12px; height: 12px; transition: transform .2s; opacity: .4; }
+        .menu-item.expanded .arrow { transform: rotate(90deg); }
+        .submenu { display: none; background: #fafafa; }
+        .submenu.open { display: block; }
+        .submenu .menu-item { padding-left: 38px; height: 36px; font-size: 12px; }
+        .submenu .submenu { background: #f5f5f5; }
+        .submenu .submenu .menu-item { padding-left: 56px; height: 34px; font-size: 12px; }
+
+        /* ========== 主内容区 ========== */
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px; }
+        .main-content::-webkit-scrollbar { width: 6px; }
+        .main-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+
+        /* 面包屑 */
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); cursor: pointer; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+
+        /* 页面标题区 */
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+        .page-title { font-size: 16px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .page-title .title-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--primary-light); color: var(--primary); font-weight: normal; }
+        .page-title .title-badge.success { background: #e8f5e9; color: var(--success); }
+        .page-title .title-badge.danger { background: #ffebee; color: var(--danger); }
+        .top-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+        /* 按钮 */
+        .btn { height: 28px; padding: 0 12px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-ghost { background: transparent; border-color: transparent; color: var(--text-secondary); }
+        .btn-ghost:hover { background: #f5f5f5; }
+        .btn-sm { height: 24px; padding: 0 8px; font-size: 11px; }
+        .btn-icon { padding: 0 6px; }
+
+        /* 滚动内容区 */
+        .scroll-content { flex: 1; overflow-y: auto; min-height: 0; }
+        .scroll-content::-webkit-scrollbar { width: 6px; }
+        .scroll-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+
+        /* 表单卡片 */
+        .form-card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; }
+        .form-card-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .form-card-header::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .form-card-header .header-actions { margin-left: auto; display: flex; gap: 6px; }
+        .form-card-body { padding: 14px 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 16px; }
+        .form-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .form-row .form-label { width: 120px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; white-space: nowrap; }
+        .form-row .form-label.required::before { content: "*"; color: var(--danger); margin-right: 2px; }
+        .form-row .form-input, .form-row .form-select { flex: 1; min-width: 0; height: 28px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; color: var(--text-primary); outline: none; transition: border-color .2s; font-family: inherit; }
+        .form-row .form-input:focus, .form-row .form-select:focus { border-color: var(--primary); }
+        .form-row .form-input::placeholder { color: #bbb; }
+        .form-row .form-input[readonly], .form-row .form-select[disabled] { background: #f5f5f5; color: var(--text-muted); cursor: not-allowed; }
+        .form-row .form-textarea { flex: 1; min-width: 0; min-height: 60px; height: auto; border: 1px solid var(--border-color); border-radius: 3px; padding: 6px 8px; font-size: 12px; color: var(--text-primary); outline: none; resize: vertical; font-family: inherit; }
+        .form-row .form-textarea:focus { border-color: var(--primary); }
+        .form-row.full-width { grid-column: span 2; }
+        .form-row.three-col { grid-column: span 3; }
+
+        /* 开关 */
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .3s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; }
+        .switch input:checked + .slider { background-color: var(--success); }
+        .switch input:checked + .slider:before { transform: translateX(20px); }
+        .switch-label { font-size: 12px; color: var(--text-secondary); margin-left: 6px; }
+
+        /* 动态表格 */
+        .dynamic-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .dynamic-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 8px 6px; text-align: center; border-bottom: 1px solid #bbdefb; white-space: nowrap; }
+        .dynamic-table tbody td { padding: 6px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .dynamic-table tbody tr:hover { background: #f5f7fa; }
+        .dynamic-table .dt-input { width: 100%; height: 26px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 4px; font-size: 12px; outline: none; font-family: inherit; }
+        .dynamic-table .dt-input:focus { border-color: var(--primary); }
+        .dynamic-table .dt-select { width: 100%; height: 26px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 4px; font-size: 12px; outline: none; font-family: inherit; }
+        .dynamic-table .dt-btn { font-size: 11px; color: var(--danger); cursor: pointer; padding: 2px 6px; border: none; background: transparent; border-radius: 2px; }
+        .dynamic-table .dt-btn:hover { background: #ffebee; }
+        .dynamic-table .dt-btn.add { color: var(--success); }
+        .dynamic-table .dt-btn.add:hover { background: #e8f5e9; }
+        .logic-badge { display: inline-flex; align-items: center; justify-content: center; padding: 2px 10px; border-radius: 3px; font-size: 11px; font-weight: bold; background: #e3f2fd; color: var(--primary); }
+        .logic-badge.or { background: #fff3e0; color: var(--warning); }
+
+        /* 测试匹配区域 */
+        .test-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; display: none; }
+        .test-section.show { display: block; }
+        .test-section-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; color: var(--success); display: flex; align-items: center; gap: 8px; }
+        .test-section-header::before { content: ""; width: 4px; height: 16px; background: var(--success); border-radius: 2px; }
+        .test-section-body { padding: 14px 16px; }
+        .test-input-row { display: flex; gap: 12px; align-items: center; margin-bottom: 12px; }
+        .test-input-row .form-label { width: 100px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+        .test-input-row .form-input { flex: 1; height: 28px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; outline: none; }
+        .test-input-row .form-input:focus { border-color: var(--primary); }
+
+        /* 测试结果表格 */
+        .result-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 12px; }
+        .result-table thead th { background: #e8f5e9; color: #2e7d32; font-weight: bold; padding: 8px 6px; text-align: center; border-bottom: 1px solid #a5d6a7; }
+        .result-table tbody td { padding: 8px 6px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .result-table tbody tr:hover { background: #f5f7fa; }
+        .result-table .rank-1 { color: var(--danger); font-weight: bold; font-size: 14px; }
+        .result-table .rank-2 { color: var(--warning); font-weight: bold; }
+        .result-table .rank-3 { color: var(--primary); font-weight: bold; }
+        .hit-rule-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 3px; font-size: 11px; background: var(--primary-light); color: var(--primary-dark); }
+        .score-cell { font-weight: bold; color: var(--danger); }
+
+        /* 底部操作栏 */
+        .bottom-actions { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-top: 12px; flex-shrink: 0; }
+
+        /* 提示框 */
+        .tip-box { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 4px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #e65100; }
+
+        /* ========== 风险锁配置预览卡片 ========== */
+        .risklock-preview { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; }
+        .risklock-preview-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .risklock-preview-header::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .risklock-preview-header .header-actions { margin-left: auto; display: flex; gap: 6px; }
+        .risklock-preview-body { padding: 14px 16px; }
+        .risklock-summary { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .risklock-summary-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-secondary); }
+        .risklock-summary-item .rl-label { color: var(--text-muted); }
+        .risklock-summary-item .rl-value { color: var(--text-primary); font-weight: bold; }
+        .rl-status-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 3px; font-size: 11px; font-weight: bold; }
+        .rl-status-tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+        .rl-enabled { background: #e8f5e9; color: #2e7d32; }
+        .rl-enabled::before { background: #66bb6a; }
+        .rl-disabled { background: #f5f5f5; color: #757575; }
+        .rl-disabled::before { background: #bdbdbd; }
+        .rl-mode-block { background: #ffebee; color: #c62828; }
+        .rl-mode-block::before { background: #ef5350; }
+        .rl-mode-warn { background: #fff3e0; color: #e65100; }
+        .rl-mode-warn::before { background: #fb8c00; }
+        .rl-mode-none { background: #e3f2fd; color: #1565c0; }
+        .rl-mode-none::before { background: #42a5f5; }
+
+        /* ========== 抽屉弹窗 ========== */
+        .drawer-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.4); z-index: 2000; display: none; opacity: 0; transition: opacity .3s; }
+        .drawer-overlay.show { display: block; opacity: 1; }
+        .drawer-panel { position: fixed; top: 0; right: 0; width: 640px; height: 100vh; background: #fff; z-index: 2001; transform: translateX(100%); transition: transform .3s ease; display: flex; flex-direction: column; box-shadow: -4px 0 16px rgba(0,0,0,.1); }
+        .drawer-panel.open { transform: translateX(0); }
+        .drawer-header { padding: 14px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; flex-shrink: 0; }
+        .drawer-header-title { font-size: 16px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .drawer-close { width: 32px; height: 32px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 4px; color: var(--text-muted); font-size: 18px; border: none; background: transparent; }
+        .drawer-close:hover { background: #f5f5f5; color: var(--text-primary); }
+        .drawer-body { flex: 1; overflow-y: auto; padding: 16px 20px; }
+        .drawer-body::-webkit-scrollbar { width: 6px; }
+        .drawer-body::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+        .drawer-footer { padding: 12px 20px; border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0; background: #fafafa; }
+
+        /* 抽屉内表单区块 */
+        .rl-section { margin-bottom: 20px; }
+        .rl-section-title { font-size: 13px; font-weight: bold; color: var(--primary-dark); margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid #e3f2fd; display: flex; align-items: center; gap: 6px; }
+        .rl-section-title .rl-num { width: 20px; height: 20px; border-radius: 50%; background: var(--primary); color: #fff; font-size: 11px; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+        .rl-form-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 16px; }
+        .rl-form-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .rl-form-row .rl-label { width: 110px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; white-space: nowrap; }
+        .rl-form-row .rl-label.required::before { content: "*"; color: var(--danger); margin-right: 2px; }
+        .rl-form-row .rl-input, .rl-form-row .rl-select { flex: 1; min-width: 0; height: 30px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; color: var(--text-primary); outline: none; font-family: inherit; }
+        .rl-form-row .rl-input:focus, .rl-form-row .rl-select:focus { border-color: var(--primary); }
+        .rl-form-row .rl-textarea { flex: 1; min-width: 0; min-height: 60px; border: 1px solid var(--border-color); border-radius: 3px; padding: 6px 8px; font-size: 12px; color: var(--text-primary); outline: none; resize: vertical; font-family: inherit; }
+        .rl-form-row .rl-textarea:focus { border-color: var(--primary); }
+        .rl-form-row.full-width { grid-column: span 2; }
+        .rl-form-row.three-col { grid-column: span 2; }
+
+        /* 控制方式选择卡片 */
+        .ctrl-mode-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+        .ctrl-mode-card { border: 2px solid var(--border-color); border-radius: 6px; padding: 16px; cursor: pointer; transition: all .2s; text-align: center; }
+        .ctrl-mode-card:hover { border-color: #bbdefb; background: #fafafa; }
+        .ctrl-mode-card.active { border-color: var(--primary); background: var(--primary-light); }
+        .ctrl-mode-card .cm-icon { font-size: 28px; margin-bottom: 8px; }
+        .ctrl-mode-card .cm-title { font-size: 14px; font-weight: bold; color: var(--text-primary); margin-bottom: 4px; }
+        .ctrl-mode-card .cm-desc { font-size: 11px; color: var(--text-muted); line-height: 1.4; }
+        .ctrl-mode-card.active .cm-title { color: var(--primary); }
+
+        /* 子区域折叠 */
+        .sub-block { background: #fafafa; border: 1px solid #f0f0f0; border-radius: 4px; padding: 14px 16px; margin-top: 12px; }
+        .sub-block-title { font-size: 12px; font-weight: bold; color: var(--text-secondary); margin-bottom: 12px; }
+        .sub-block-hint { font-size: 11px; color: var(--text-muted); margin-top: 8px; }
+
+        /* 提醒对象标签 */
+        .notify-tags { display: flex; flex-wrap: wrap; gap: 8px; flex: 1; }
+        .notify-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 3px; font-size: 12px; border: 1px solid var(--border-color); cursor: pointer; user-select: none; transition: all .2s; }
+        .notify-tag:hover { border-color: var(--primary); color: var(--primary); }
+        .notify-tag.active { background: var(--primary-light); border-color: var(--primary); color: var(--primary); font-weight: bold; }
+        .notify-tag input { display: none; }
+
+        /* 豁免条件表格 */
+        .exempt-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .exempt-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 8px 6px; text-align: center; border-bottom: 1px solid #bbdefb; }
+        .exempt-table tbody td { padding: 6px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .exempt-table .dt-input { width: 100%; height: 26px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 4px; font-size: 12px; outline: none; font-family: inherit; }
+        .exempt-table .dt-select { width: 100%; height: 26px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 4px; font-size: 12px; outline: none; font-family: inherit; }
+
+        /* 隐藏区域 */
+        .rl-hidden { display: none !important; }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <!-- 顶部 Banner -->
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system">
+                <span class="brand-name">绿星链通</span>
+                <span class="brand-version">2.0</span>
+            </div>
+            <div class="brand-divider"></div>
+            <div class="logo-text">
+                <span class="cn">中国铝业集团有限公司</span>
+                <span class="en">ALUMINUM CORPORATION OF CHINA</span>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="header-search">
+                <input type="text" placeholder="请输入页面号">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="M21 21l-4.35-4.35"></path>
+                </svg>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span>
+            <div class="user-badge">
+                <div class="user-avatar">潘</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="layout">
+        <!-- 左侧菜单 -->
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险驾驶舱</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128203;</span><span>风险事件池</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128188;</span><span>我的工作台</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务管理</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#9989;</span><span>验收审核</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128226;</span><span>超期督办</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>统计分析</span></div></div></div>
+            <div class="menu-group">
+                <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#9881;</span><span>模型中心</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="submenu open">
+                    <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>规则模型</span></div>
+                    </div>
+                    <div class="submenu open">
+                        <div class="menu-item active"><div class="menu-left"><span>规则配置管理</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>规则命中日志</span></div></div>
+                    </div>
+                    <div class="menu-item" style="opacity:0.5;cursor:not-allowed;" title="阶段二开放">
+                        <div class="menu-left"><span>风险模型</span></div>
+                        <span style="font-size:10px;color:var(--text-muted);margin-left:auto;background:#f5f5f5;padding:1px 4px;border-radius:2px;">后续</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容 -->
+        <main class="main-content">
+            <!-- 面包屑 -->
+            <div class="breadcrumb">
+                <a onclick="goBack()">模型中心</a><span class="sep">&gt;</span>
+                <a onclick="goBack()">规则模型</a><span class="sep">&gt;</span>
+                <a onclick="goBack()">规则配置管理</a><span class="sep">&gt;</span>
+                <span id="bcAction">新增规则</span>
+            </div>
+
+            <!-- 页面标题 -->
+            <div class="page-header">
+                <div class="page-title">
+                    <span id="pageTitle">规则配置编辑</span>
+                    <span class="title-badge" id="titleBadge">新增</span>
+                </div>
+                <div class="top-actions">
+                    <button class="btn btn-success" onclick="toggleTestSection()">&#128300; 测试匹配</button>
+                    <button class="btn btn-default" onclick="copyRule()">&#128203; 复制规则</button>
+                </div>
+            </div>
+
+            <div class="scroll-content">
+                <!-- 提示 -->
+                <div class="tip-box" id="tipBox">
+                    <span>&#128161;</span>
+                    <span>规则优先级数字越小越优先（1为最高），系统按优先级升序匹配规则。</span>
+                </div>
+
+                <!-- ========== 基本信息 ========== -->
+                <div class="form-card">
+                    <div class="form-card-header">基本信息</div>
+                    <div class="form-card-body">
+                        <div class="form-row">
+                            <label class="form-label required">规则编码</label>
+                            <input type="text" class="form-input" id="ruleId" placeholder="如 R001">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label required">规则名称</label>
+                            <input type="text" class="form-input" id="ruleName" placeholder="请输入规则名称">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label required">规则分类</label>
+                            <select class="form-select" id="ruleCategory">
+                                <option value="">请选择</option>
+                                <option value="基础规则">基础规则</option>
+                                <option value="等级规则">等级规则</option>
+                                <option value="聚合规则">聚合规则</option>
+                                <option value="负荷规则">负荷规则</option>
+                                <option value="时效规则">时效规则</option>
+                                <option value="回避规则">回避规则</option>
+                            </select>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label required">优先级</label>
+                            <input type="number" class="form-input" id="priority" placeholder="1-999，数字越小越优先" min="1" max="999">
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">状态</label>
+                            <div style="display:flex;align-items:center;">
+                                <label class="switch">
+                                    <input type="checkbox" id="ruleStatus" checked>
+                                    <span class="slider"></span>
+                                </label>
+                                <span class="switch-label" id="statusLabel">启用</span>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label">版本号</label>
+                            <input type="text" class="form-input" id="version" value="1" readonly>
+                        </div>
+                        <div class="form-row three-col">
+                            <label class="form-label">规则说明</label>
+                            <textarea class="form-textarea" id="ruleDesc" rows="2" placeholder="请输入规则的业务说明，便于后续维护人员理解"></textarea>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== 条件配置 ========== -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        条件配置
+                        <div class="header-actions">
+                            <button class="btn btn-success btn-sm" onclick="addCondition()">+ 添加条件</button>
+                        </div>
+                    </div>
+                    <div class="form-card-body" style="display: block; padding: 0;">
+                        <table class="dynamic-table" id="conditionTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">序号</th>
+                                    <th style="width: 180px;">风险字段</th>
+                                    <th style="width: 140px;">运算符</th>
+                                    <th>条件值</th>
+                                    <th style="width: 100px;">逻辑关系</th>
+                                    <th style="width: 80px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="conditionBody">
+                                <!-- 动态填充 -->
+                            </tbody>
+                        </table>
+                        <div style="padding: 12px 16px; color: var(--text-muted); font-size: 12px;">
+                            <span>&#9432;</span> 第一条条件不设置逻辑关系，后续条件通过 AND/OR 与上一条条件组合
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== 动作配置 ========== -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        动作配置
+                        <div class="header-actions">
+                            <button class="btn btn-success btn-sm" onclick="addAction()">+ 添加动作</button>
+                        </div>
+                    </div>
+                    <div class="form-card-body" style="display: block; padding: 0;">
+                        <table class="dynamic-table" id="actionTable">
+                            <thead>
+                                <tr>
+                                    <th style="width: 60px;">序号</th>
+                                    <th style="width: 160px;">动作类型</th>
+                                    <th style="width: 140px;">目标类型</th>
+                                    <th>目标值</th>
+                                    <th style="width: 100px;">加权得分</th>
+                                    <th style="width: 80px;">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="actionBody">
+                                <!-- 动态填充 -->
+                            </tbody>
+                        </table>
+                        <div style="padding: 12px 16px; color: var(--text-muted); font-size: 12px;">
+                            <span>&#9432;</span> 回避规则请将得分设为 -999，系统将直接排除该候选人
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== 风险锁配置 ========== -->
+                <div class="risklock-preview" id="riskLockPreview">
+                    <div class="risklock-preview-header">
+                        <span>风险锁配置</span>
+                        <span style="font-size:11px;color:var(--text-muted);font-weight:normal;">配置规则命中后的业务干预行为（阻断 / 提醒 / 不控制）</span>
+                        <div class="header-actions">
+                            <button class="btn btn-primary btn-sm" onclick="openRiskLockDrawer()">&#9881; 配置风险锁</button>
+                        </div>
+                    </div>
+                    <div class="risklock-preview-body">
+                        <div class="risklock-summary" id="riskLockSummary">
+                            <div class="risklock-summary-item">
+                                <span class="rl-label">启用状态：</span>
+                                <span class="rl-status-tag rl-disabled" id="rlSummaryStatus">未启用</span>
+                            </div>
+                            <div class="risklock-summary-item">
+                                <span class="rl-label">控制方式：</span>
+                                <span class="rl-value" id="rlSummaryMode">—</span>
+                            </div>
+                            <div class="risklock-summary-item">
+                                <span class="rl-label">阻断节点：</span>
+                                <span class="rl-value" id="rlSummaryNode">—</span>
+                            </div>
+                            <div class="risklock-summary-item">
+                                <span class="rl-label">提醒对象：</span>
+                                <span class="rl-value" id="rlSummaryNotify">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ========== 测试匹配 ========== -->
+                <div class="test-section" id="testSection">
+                    <div class="test-section-header">&#128300; 规则测试匹配</div>
+                    <div class="test-section-body">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 16px;">
+                            <div class="test-input-row">
+                                <label class="form-label">风险编号</label>
+                                <input type="text" class="form-input" id="testRiskId" placeholder="如 FX20241201001" value="FX20241201001">
+                            </div>
+                            <div class="test-input-row">
+                                <label class="form-label">风险分类</label>
+                                <select class="form-input" id="testRiskCategory" style="flex:1;">
+                                    <option value="招投标风险">招投标风险</option>
+                                    <option value="供应商管理风险">供应商管理风险</option>
+                                    <option value="价格与结算风险">价格与结算风险</option>
+                                    <option value="合同管理风险">合同管理风险</option>
+                                    <option value="质量与库存风险">质量与库存风险</option>
+                                    <option value="廉洁合规风险">廉洁合规风险</option>
+                                </select>
+                            </div>
+                            <div class="test-input-row">
+                                <label class="form-label">风险等级</label>
+                                <select class="form-input" id="testRiskLevel" style="flex:1;">
+                                    <option value="红色-重大">红色-重大</option>
+                                    <option value="橙色-较大">橙色-较大</option>
+                                    <option value="黄色-一般">黄色-一般</option>
+                                    <option value="蓝色-关注">蓝色-关注</option>
+                                </select>
+                            </div>
+                            <div class="test-input-row">
+                                <label class="form-label">涉及金额(万元)</label>
+                                <input type="number" class="form-input" id="testAmount" value="600">
+                            </div>
+                            <div class="test-input-row">
+                                <label class="form-label">供应商</label>
+                                <input type="text" class="form-input" id="testSupplier" value="广西铝业设备制造有限公司">
+                            </div>
+                            <div class="test-input-row">
+                                <label class="form-label">发现来源</label>
+                                <select class="form-input" id="testSource" style="flex:1;">
+                                    <option value="系统预警">系统预警</option>
+                                    <option value="举报">举报</option>
+                                    <option value="审计发现">审计发现</option>
+                                    <option value="日常巡检">日常巡检</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="display: flex; justify-content: center; margin-top: 12px;">
+                            <button class="btn btn-success" onclick="runTest()">&#9654; 执行匹配</button>
+                        </div>
+
+                        <!-- 测试结果 -->
+                        <div id="testResult" style="display: none;">
+                            <div style="font-size: 13px; font-weight: bold; color: var(--text-primary); margin: 16px 0 8px;">匹配结果</div>
+                            <table class="result-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px;">排序</th>
+                                        <th>推荐候选人</th>
+                                        <th>命中规则</th>
+                                        <th>规则得分</th>
+                                        <th>优先级权重</th>
+                                        <th>加权总分</th>
+                                        <th>推荐角色</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="resultBody">
+                                    <!-- 动态填充 -->
+                                </tbody>
+                            </table>
+                            <div style="margin-top: 12px; padding: 10px 14px; background: #e3f2fd; border-radius: 4px; font-size: 12px; color: var(--primary-dark);">
+                                <strong>推荐结论：</strong><span id="testConclusion"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部操作 -->
+            <div class="bottom-actions">
+                <button class="btn btn-success" onclick="saveRule()">&#10004; 保存</button>
+                <button class="btn btn-primary" onclick="toggleTestSection()">&#128300; 测试匹配</button>
+                <button class="btn btn-default" onclick="goBack()">返回列表</button>
+            </div>
+        </main>
+    </div>
+
+    <!-- ========== 风险锁配置抽屉弹窗 ========== -->
+    <div class="drawer-overlay" id="riskLockOverlay" onclick="closeRiskLockDrawer()"></div>
+    <div class="drawer-panel" id="riskLockDrawer">
+        <div class="drawer-header">
+            <div class="drawer-header-title">
+                <span>&#128274;</span>
+                <span>风险锁配置</span>
+            </div>
+            <button class="drawer-close" onclick="closeRiskLockDrawer()">&#10005;</button>
+        </div>
+        <div class="drawer-body">
+            <!-- 1. 基础配置 -->
+            <div class="rl-section">
+                <div class="rl-section-title"><span class="rl-num">1</span>基础配置</div>
+                <div class="rl-form-grid">
+                    <div class="rl-form-row">
+                        <label class="rl-label">风险锁启用</label>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label class="switch">
+                                <input type="checkbox" id="rlEnabled" onchange="toggleRLEnabled()">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="switch-label" id="rlEnabledLabel">禁用</span>
+                        </div>
+                    </div>
+                    <div class="rl-form-row full-width" id="rlModeRow">
+                        <label class="rl-label required">控制方式</label>
+                        <div style="flex:1;">
+                            <div class="ctrl-mode-cards">
+                                <div class="ctrl-mode-card" data-mode="block" onclick="selectCtrlMode('block')">
+                                    <div class="cm-icon">&#9940;</div>
+                                    <div class="cm-title">阻断</div>
+                                    <div class="cm-desc">命中后阻断业务流程<br>禁止继续执行</div>
+                                </div>
+                                <div class="ctrl-mode-card" data-mode="warn" onclick="selectCtrlMode('warn')">
+                                    <div class="cm-icon">&#128276;</div>
+                                    <div class="cm-title">提醒</div>
+                                    <div class="cm-desc">命中后发出提醒<br>允许用户确认后继续</div>
+                                </div>
+                                <div class="ctrl-mode-card active" data-mode="none" onclick="selectCtrlMode('none')">
+                                    <div class="cm-icon">&#128275;</div>
+                                    <div class="cm-title">不控制</div>
+                                    <div class="cm-desc">仅记录命中日志<br>不做任何业务干预</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 阻断配置 -->
+            <div class="rl-section rl-hidden" id="rlBlockSection">
+                <div class="rl-section-title"><span class="rl-num">2</span>阻断配置</div>
+                <div class="rl-form-grid">
+                    <div class="rl-form-row">
+                        <label class="rl-label required">阻断节点</label>
+                        <select class="rl-select" id="rlBlockNode">
+                            <option value="">请选择</option>
+                            <option value="准入提交">供应商准入提交</option>
+                            <option value="准入审批">供应商准入审批</option>
+                            <option value="订单创建">采购订单创建</option>
+                            <option value="订单审批">采购订单审批</option>
+                            <option value="方案编制">采购方案编制</option>
+                            <option value="方案审批">采购方案审批</option>
+                            <option value="合同签订">合同签订</option>
+                            <option value="合同执行">合同执行</option>
+                            <option value="付款申请">付款申请</option>
+                            <option value="付款审批">付款审批</option>
+                            <option value="结算确认">结算确认</option>
+                        </select>
+                    </div>
+                    <div class="rl-form-row">
+                        <label class="rl-label required">阻断后动作</label>
+                        <select class="rl-select" id="rlBlockAction">
+                            <option value="">请选择</option>
+                            <option value="forbid">禁止继续，记录风险</option>
+                            <option value="approve">转人工审批</option>
+                            <option value="task">生成督办任务</option>
+                            <option value="escalate">升级上报</option>
+                        </select>
+                    </div>
+                    <div class="rl-form-row three-col">
+                        <label class="rl-label">阻断提示语</label>
+                        <textarea class="rl-textarea" id="rlBlockMsg" rows="2" placeholder="业务人员被阻断时看到的提示文案，如：该供应商存在围串标风险，已被系统阻断。请联系风险管理员处理。">该操作存在风险，已被系统阻断。请联系风险管理员处理。</textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 提醒配置 -->
+            <div class="rl-section rl-hidden" id="rlWarnSection">
+                <div class="rl-section-title"><span class="rl-num">2</span>提醒配置</div>
+                <div class="rl-form-grid">
+                    <div class="rl-form-row full-width">
+                        <label class="rl-label required">提醒方式</label>
+                        <div class="notify-tags">
+                            <label class="notify-tag" onclick="toggleNotifyTag(this)">
+                                <input type="checkbox" value="popup" checked>
+                                <span>&#128172; 系统弹窗</span>
+                            </label>
+                            <label class="notify-tag" onclick="toggleNotifyTag(this)">
+                                <input type="checkbox" value="todo">
+                                <span>&#128203; 待办通知</span>
+                            </label>
+                            <label class="notify-tag" onclick="toggleNotifyTag(this)">
+                                <input type="checkbox" value="email">
+                                <span>&#128231; 邮件</span>
+                            </label>
+                            <label class="notify-tag" onclick="toggleNotifyTag(this)">
+                                <input type="checkbox" value="sms">
+                                <span>&#128242; 短信</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="rl-form-row full-width">
+                        <label class="rl-label required">提醒对象</label>
+                        <div class="notify-tags">
+                            <label class="notify-tag active" onclick="toggleNotifyTag(this)">
+                                <input type="checkbox" value="operator" checked>
+                                <span>当前操作人</span>
+                            </label>
+                            <label class="notify-tag" onclick="toggleNotifyTag(this)">
+                                <input type="checkbox" value="deptLeader">
+                                <span>部门负责人</span>
+                            </label>
+                            <label class="notify-tag" onclick="toggleNotifyTag(this)">
+                                <input type="checkbox" value="riskAdmin">
+                                <span>风险管理员</span>
+                            </label>
+                            <label class="notify-tag" onclick="toggleNotifyTag(this)">
+                                <input type="checkbox" value="customRole">
+                                <span>指定角色</span>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="rl-form-row full-width">
+                        <label class="rl-label">提醒内容模板</label>
+                        <textarea class="rl-textarea" id="rlWarnTemplate" rows="2" placeholder="支持变量：{ruleName} 规则名称, {dataId} 数据标识, {fieldValue} 命中字段值">规则【{ruleName}】已命中，数据标识：{dataId}，命中值：{fieldValue}，请及时关注。</textarea>
+                    </div>
+                    <div class="rl-form-row">
+                        <label class="rl-label">要求确认</label>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label class="switch">
+                                <input type="checkbox" id="rlRequireConfirm" checked>
+                                <span class="slider"></span>
+                            </label>
+                            <span class="switch-label">提醒后需点击"已知晓"才能继续</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. 豁免/白名单配置 -->
+            <div class="rl-section" id="rlExemptSection">
+                <div class="rl-section-title"><span class="rl-num">3</span>豁免/白名单配置</div>
+                <div class="rl-form-grid">
+                    <div class="rl-form-row">
+                        <label class="rl-label">豁免开关</label>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label class="switch">
+                                <input type="checkbox" id="rlExemptEnabled" onchange="toggleExemptSection()">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="switch-label" id="rlExemptLabel">禁用</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="sub-block rl-hidden" id="rlExemptBlock">
+                    <div class="sub-block-title">豁免条件</div>
+                    <table class="exempt-table" id="exemptTable">
+                        <thead>
+                            <tr>
+                                <th style="width:60px;">序号</th>
+                                <th style="width:160px;">豁免字段</th>
+                                <th style="width:120px;">运算符</th>
+                                <th>豁免阈值</th>
+                                <th style="width:80px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="exemptBody">
+                            <tr>
+                                <td>1</td>
+                                <td>
+                                    <select class="dt-select">
+                                        <option value="">请选择</option>
+                                        <option value="amount">涉及金额</option>
+                                        <option value="urgencyType">紧急类型</option>
+                                        <option value="supplierLevel">供应商等级</option>
+                                        <option value="projectType">项目类型</option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <select class="dt-select">
+                                        <option value="LT">小于(LT)</option>
+                                        <option value="LE">小于等于(LE)</option>
+                                        <option value="EQ">等于(EQ)</option>
+                                    </select>
+                                </td>
+                                <td><input type="text" class="dt-input" placeholder="如：100（万元）"></td>
+                                <td><button class="dt-btn" onclick="removeExemptRow(this)">删除</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div style="margin-top:8px;">
+                        <button class="btn btn-success btn-sm" onclick="addExemptRow()">+ 添加豁免条件</button>
+                    </div>
+                    <div class="rl-form-grid" style="margin-top:12px;">
+                        <div class="rl-form-row">
+                            <label class="rl-label">豁免审批</label>
+                            <select class="rl-select" id="rlExemptApprove">
+                                <option value="none">无需审批，自动豁免</option>
+                                <option value="leader">需部门负责人审批</option>
+                                <option value="riskAdmin">需风险管理员审批</option>
+                            </select>
+                        </div>
+                        <div class="rl-form-row">
+                            <label class="rl-label">白名单角色</label>
+                            <select class="rl-select" id="rlWhitelistRole" multiple size="1" style="height:auto;min-height:30px;">
+                                <option value="">请选择（可多选）</option>
+                                <option value="系统管理员">系统管理员</option>
+                                <option value="风险管理员">风险管理员</option>
+                                <option value="审计人员">审计人员</option>
+                                <option value="部门正职">部门正职</option>
+                                <option value="分管领导">分管领导</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 5. 高级配置 -->
+            <div class="rl-section" id="rlAdvancedSection">
+                <div class="rl-section-title"><span class="rl-num">4</span>高级配置</div>
+                <div class="rl-form-grid">
+                    <div class="rl-form-row">
+                        <label class="rl-label">风险等级联动</label>
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <label class="switch">
+                                <input type="checkbox" id="rlAutoMode" onchange="toggleAutoMode()">
+                                <span class="slider"></span>
+                            </label>
+                            <span class="switch-label">根据风险等级自动匹配控制方式</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="sub-block rl-hidden" id="rlAutoModeBlock">
+                    <div class="sub-block-title">风险等级自动映射</div>
+                    <div class="rl-form-grid">
+                        <div class="rl-form-row">
+                            <label class="rl-label">高风险</label>
+                            <select class="rl-select" id="rlAutoHigh">
+                                <option value="block" selected>阻断</option>
+                                <option value="warn">提醒</option>
+                                <option value="none">不控制</option>
+                            </select>
+                        </div>
+                        <div class="rl-form-row">
+                            <label class="rl-label">中风险</label>
+                            <select class="rl-select" id="rlAutoMedium">
+                                <option value="block">阻断</option>
+                                <option value="warn" selected>提醒</option>
+                                <option value="none">不控制</option>
+                            </select>
+                        </div>
+                        <div class="rl-form-row">
+                            <label class="rl-label">低风险</label>
+                            <select class="rl-select" id="rlAutoLow">
+                                <option value="block">阻断</option>
+                                <option value="warn">提醒</option>
+                                <option value="none" selected>不控制</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="rl-form-grid" style="margin-top:12px;">
+                    <div class="rl-form-row">
+                        <label class="rl-label">生效时间范围</label>
+                        <div class="date-range" style="flex:1;">
+                            <input type="datetime-local" id="rlValidStart">
+                            <span class="date-sep">至</span>
+                            <input type="datetime-local" id="rlValidEnd">
+                        </div>
+                    </div>
+                    <div class="rl-form-row">
+                        <label class="rl-label">优先级</label>
+                        <input type="number" class="rl-input" id="rlPriority" placeholder="1-999，冲突时高优先级优先" min="1" max="999" value="100">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="drawer-footer">
+            <button class="btn btn-default" onclick="closeRiskLockDrawer()">取消</button>
+            <button class="btn btn-primary" onclick="saveRiskLockConfig()">保存配置</button>
+        </div>
+    </div>
+
+    <script>
+        // ========== 菜单展开收起 ==========
+        function toggleMenu(el) {
+            const submenu = el.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                el.classList.toggle('expanded');
+                submenu.classList.toggle('open');
+            }
+        }
+
+        // ========== 状态开关联动 ==========
+        document.getElementById('ruleStatus').addEventListener('change', function() {
+            document.getElementById('statusLabel').textContent = this.checked ? '启用' : '禁用';
+        });
+
+        // ========== 获取URL参数 ==========
+        function getUrlParam(name) {
+            const params = new URLSearchParams(window.location.search);
+            return params.get(name);
+        }
+
+        const editRuleId = getUrlParam('id');
+        const isEdit = !!editRuleId;
+
+        // ========== 模拟规则数据 ==========
+        const mockRules = {
+            'R001': {
+                ruleId: 'R001', ruleName: '部门对口-招投标风险', category: '基础规则', priority: 10, status: true, version: 3,
+                desc: '当风险分类为招投标风险时，主责部门自动指派为招标办',
+                conditions: [
+                    { field: 'risk_category', operator: 'EQ', value: '招投标风险', logic: '' }
+                ],
+                actions: [
+                    { type: 'ASSIGN', targetType: 'DEPT', targetValue: '招标办', score: 100 }
+                ]
+            },
+            'R102': {
+                ruleId: 'R102', ruleName: '红色资金阈值', category: '等级规则', priority: 1, status: true, version: 2,
+                desc: '红色风险且涉及金额≥500万，升级至集团审计委员会',
+                conditions: [
+                    { field: 'risk_level', operator: 'EQ', value: '红色-重大', logic: '' },
+                    { field: 'amount', operator: 'GT', value: '500', logic: 'AND' }
+                ],
+                actions: [
+                    { type: 'UPGRADE', targetType: 'DEPT', targetValue: '集团审计委员会', score: 200 }
+                ]
+            }
+        };
+
+        // ========== 初始化页面 ==========
+        function initPage() {
+            if (isEdit && mockRules[editRuleId]) {
+                const rule = mockRules[editRuleId];
+                document.getElementById('bcAction').textContent = '编辑规则 - ' + editRuleId;
+                document.getElementById('pageTitle').textContent = '规则配置编辑';
+                document.getElementById('titleBadge').textContent = '编辑';
+                document.getElementById('titleBadge').className = 'title-badge';
+
+                document.getElementById('ruleId').value = rule.ruleId;
+                document.getElementById('ruleId').readOnly = true;
+                document.getElementById('ruleName').value = rule.ruleName;
+                document.getElementById('ruleCategory').value = rule.category;
+                document.getElementById('priority').value = rule.priority;
+                document.getElementById('ruleStatus').checked = rule.status;
+                document.getElementById('statusLabel').textContent = rule.status ? '启用' : '禁用';
+                document.getElementById('version').value = rule.version;
+                document.getElementById('ruleDesc').value = rule.desc || '';
+
+                // 填充条件
+                const condBody = document.getElementById('conditionBody');
+                condBody.innerHTML = '';
+                rule.conditions.forEach((cond, idx) => renderConditionRow(idx + 1, cond));
+                condCount = rule.conditions.length;
+
+                // 填充动作
+                const actBody = document.getElementById('actionBody');
+                actBody.innerHTML = '';
+                rule.actions.forEach((act, idx) => renderActionRow(idx + 1, act));
+                actCount = rule.actions.length;
+            } else {
+                // 新增：添加默认空行
+                addCondition();
+                addAction();
+            }
+        }
+
+        // ========== 条件配置 ==========
+        let condCount = 0;
+        const fieldOptions = `
+            <option value="">请选择</option>
+            <option value="risk_level">风险等级</option>
+            <option value="risk_category">风险分类</option>
+            <option value="amount">涉及金额</option>
+            <option value="supplier_id">供应商ID</option>
+            <option value="supplier_name">供应商名称</option>
+            <option value="project_id">项目ID</option>
+            <option value="discovery_source">发现来源</option>
+            <option value="risk_person">风险涉及人员</option>
+        `;
+        const operatorOptions = `
+            <option value="">请选择</option>
+            <option value="EQ">等于(EQ)</option>
+            <option value="NE">不等于(NE)</option>
+            <option value="GT">大于(GT)</option>
+            <option value="LT">小于(LT)</option>
+            <option value="GE">大于等于(GE)</option>
+            <option value="LE">小于等于(LE)</option>
+            <option value="IN">包含(IN)</option>
+            <option value="CONTAINS">模糊匹配(CONTAINS)</option>
+        `;
+
+        function renderConditionRow(idx, data) {
+            const tbody = document.getElementById('conditionBody');
+            const tr = document.createElement('tr');
+            const logicHtml = idx === 1
+                ? '<span class="logic-badge">—</span>'
+                : `<select class="dt-select" style="width:80px;">
+                    <option value="AND" ${data && data.logic === 'AND' ? 'selected' : ''}>AND</option>
+                    <option value="OR" ${data && data.logic === 'OR' ? 'selected' : ''}>OR</option>
+                   </select>`;
+            tr.innerHTML = `
+                <td>${idx}</td>
+                <td><select class="dt-select">${fieldOptions}<option value="${data ? data.field : ''}" selected>${getFieldLabel(data ? data.field : '')}</option></select></td>
+                <td><select class="dt-select">${operatorOptions}<option value="${data ? data.operator : ''}" selected>${data ? data.operator : ''}</option></select></td>
+                <td><input type="text" class="dt-input" value="${data ? data.value : ''}" placeholder="条件值，多个用逗号分隔"></td>
+                <td>${logicHtml}</td>
+                <td><button class="dt-btn" onclick="removeCondition(this)">删除</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function getFieldLabel(value) {
+            const map = { 'risk_level': '风险等级', 'risk_category': '风险分类', 'amount': '涉及金额', 'supplier_id': '供应商ID',
+                'supplier_name': '供应商名称', 'project_id': '项目ID', 'discovery_source': '发现来源', 'risk_person': '风险涉及人员' };
+            return map[value] || value;
+        }
+
+        function addCondition() {
+            condCount++;
+            renderConditionRow(condCount);
+        }
+
+        function removeCondition(btn) {
+            const tbody = document.getElementById('conditionBody');
+            btn.closest('tr').remove();
+            // 重新编号
+            Array.from(tbody.children).forEach((tr, idx) => {
+                tr.cells[0].textContent = idx + 1;
+                if (idx === 0) {
+                    tr.cells[4].innerHTML = '<span class="logic-badge">—</span>';
+                } else {
+                    const currentLogic = tr.cells[4].querySelector('select')?.value || 'AND';
+                    tr.cells[4].innerHTML = `<select class="dt-select" style="width:80px;">
+                        <option value="AND" ${currentLogic === 'AND' ? 'selected' : ''}>AND</option>
+                        <option value="OR" ${currentLogic === 'OR' ? 'selected' : ''}>OR</option>
+                    </select>`;
+                }
+            });
+            condCount = tbody.children.length;
+        }
+
+        // ========== 动作配置 ==========
+        let actCount = 0;
+        const actionTypeOptions = `
+            <option value="">请选择</option>
+            <option value="ASSIGN">主负责人(ASSIGN)</option>
+            <option value="CC">抄送(CC)</option>
+            <option value="UPGRADE">升级(UPGRADE)</option>
+            <option value="MERGE">聚合(MERGE)</option>
+        `;
+        const targetTypeOptions = `
+            <option value="">请选择</option>
+            <option value="DEPT">部门(DEPT)</option>
+            <option value="ROLE">角色(ROLE)</option>
+            <option value="USER">人员(USER)</option>
+            <option value="DEFAULT">默认(DEFAULT)</option>
+        `;
+
+        function renderActionRow(idx, data) {
+            const tbody = document.getElementById('actionBody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${idx}</td>
+                <td><select class="dt-select">${actionTypeOptions}<option value="${data ? data.type : ''}" selected>${data ? data.type : ''}</option></select></td>
+                <td><select class="dt-select">${targetTypeOptions}<option value="${data ? data.targetType : ''}" selected>${data ? data.targetType : ''}</option></select></td>
+                <td><input type="text" class="dt-input" value="${data ? data.targetValue : ''}" placeholder="如：招标办 / 王建国 / 分管领导"></td>
+                <td><input type="number" class="dt-input" value="${data ? data.score : ''}" placeholder="得分"></td>
+                <td><button class="dt-btn" onclick="removeAction(this)">删除</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function addAction() {
+            actCount++;
+            renderActionRow(actCount);
+        }
+
+        function removeAction(btn) {
+            const tbody = document.getElementById('actionBody');
+            btn.closest('tr').remove();
+            Array.from(tbody.children).forEach((tr, idx) => {
+                tr.cells[0].textContent = idx + 1;
+            });
+            actCount = tbody.children.length;
+        }
+
+        // ========== 测试匹配 ==========
+        function toggleTestSection() {
+            document.getElementById('testSection').classList.toggle('show');
+        }
+
+        function runTest() {
+            const riskLevel = document.getElementById('testRiskLevel').value;
+            const riskCategory = document.getElementById('testRiskCategory').value;
+            const amount = parseFloat(document.getElementById('testAmount').value) || 0;
+            const source = document.getElementById('testSource').value;
+
+            const results = [];
+
+            // 模拟规则匹配逻辑
+            if (riskCategory === '招投标风险') {
+                results.push({ candidate: '招标办（王建国）', rule: 'R001 部门对口', score: 100, weight: 100, total: 10000, role: '主负责人' });
+            }
+            if (riskCategory === '供应商管理风险') {
+                results.push({ candidate: '采购部（李晓明）', rule: 'R002 部门对口', score: 100, weight: 100, total: 10000, role: '主负责人' });
+            }
+            if (riskCategory === '价格与结算风险') {
+                results.push({ candidate: '财务部（张丽娟）', rule: 'R003 部门对口', score: 100, weight: 100, total: 10000, role: '主负责人' });
+            }
+            if (riskLevel === '红色-重大') {
+                results.push({ candidate: '审计部（张丽）', rule: 'R101 红色风险直报', score: 150, weight: 333, total: 49950, role: '主负责人' });
+            }
+            if (riskLevel === '红色-重大' && amount >= 500) {
+                results.push({ candidate: '集团审计委员会', rule: 'R102 红色资金阈值', score: 200, weight: 1000, total: 200000, role: '升级指派' });
+            }
+            if (amount >= 500 && riskCategory === '招投标风险') {
+                results.push({ candidate: '采购部（李晓明）', rule: 'R201 同供应商聚合', score: 50, weight: 50, total: 2500, role: '协办' });
+            }
+            if (riskLevel === '红色-重大' && source === '举报') {
+                results.push({ candidate: '部门正职', rule: 'R401 24h紧急响应', score: 30, weight: 125, total: 3750, role: '紧急指派' });
+            }
+
+            // 按总分排序
+            results.sort((a, b) => b.total - a.total);
+
+            const tbody = document.getElementById('resultBody');
+            tbody.innerHTML = '';
+            if (results.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" style="color:var(--text-muted);">未命中任何规则</td></tr>';
+                document.getElementById('testConclusion').textContent = '当前测试数据未命中任何规则，请调整条件后重试。';
+            } else {
+                results.forEach((r, idx) => {
+                    const rankClass = idx === 0 ? 'rank-1' : (idx === 1 ? 'rank-2' : (idx === 2 ? 'rank-3' : ''));
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><span class="${rankClass}">${idx + 1}</span></td>
+                        <td><strong>${r.candidate}</strong></td>
+                        <td><span class="hit-rule-tag">${r.rule}</span></td>
+                        <td>${r.score}</td>
+                        <td>${r.weight}</td>
+                        <td class="score-cell">${r.total.toLocaleString()}</td>
+                        <td>${r.role}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+                const top = results[0];
+                document.getElementById('testConclusion').innerHTML =
+                    `推荐 <strong>${top.candidate}</strong> 作为主负责人（命中 ${top.rule}，` +
+                    `加权总分 ${top.total.toLocaleString()} 分），` +
+                    `建议抄送：审计部、分管副总。`;
+            }
+
+            document.getElementById('testResult').style.display = 'block';
+        }
+
+        // ========== 操作 ==========
+        function saveRule() {
+            const ruleId = document.getElementById('ruleId').value.trim();
+            const ruleName = document.getElementById('ruleName').value.trim();
+            const category = document.getElementById('ruleCategory').value;
+            const priority = document.getElementById('priority').value;
+
+            if (!ruleId) { alert('请输入规则编码'); return; }
+            if (!ruleName) { alert('请输入规则名称'); return; }
+            if (!category) { alert('请选择规则分类'); return; }
+            if (!priority) { alert('请输入优先级'); return; }
+
+            alert(isEdit ? '规则修改成功！' : '规则创建成功！');
+            goBack();
+        }
+
+        function copyRule() {
+            document.getElementById('ruleId').value = '';
+            document.getElementById('ruleId').readOnly = false;
+            document.getElementById('version').value = '1';
+            document.getElementById('bcAction').textContent = '复制规则';
+            document.getElementById('titleBadge').textContent = '新增（复制）';
+            isEdit = false;
+            alert('已复制当前规则配置，请修改规则编码后保存');
+        }
+
+        function goBack() {
+            window.location.href = '规则配置管理.html';
+        }
+
+        // ========== 风险锁抽屉 ==========
+        function openRiskLockDrawer() {
+            document.getElementById('riskLockOverlay').classList.add('show');
+            document.getElementById('riskLockDrawer').classList.add('open');
+        }
+
+        function closeRiskLockDrawer() {
+            document.getElementById('riskLockOverlay').classList.remove('show');
+            document.getElementById('riskLockDrawer').classList.remove('open');
+        }
+
+        // 风险锁启用切换
+        function toggleRLEnabled() {
+            const checked = document.getElementById('rlEnabled').checked;
+            document.getElementById('rlEnabledLabel').textContent = checked ? '启用' : '禁用';
+            document.getElementById('rlModeRow').style.display = checked ? 'flex' : 'none';
+            if (!checked) {
+                document.getElementById('rlBlockSection').classList.add('rl-hidden');
+                document.getElementById('rlWarnSection').classList.add('rl-hidden');
+            } else {
+                const activeCard = document.querySelector('.ctrl-mode-card.active');
+                if (activeCard) {
+                    const mode = activeCard.dataset.mode;
+                    document.getElementById('rlBlockSection').classList.toggle('rl-hidden', mode !== 'block');
+                    document.getElementById('rlWarnSection').classList.toggle('rl-hidden', mode !== 'warn');
+                }
+            }
+        }
+
+        // 控制方式选择
+        function selectCtrlMode(mode) {
+            document.querySelectorAll('.ctrl-mode-card').forEach(card => card.classList.remove('active'));
+            document.querySelector('.ctrl-mode-card[data-mode="' + mode + '"]').classList.add('active');
+            document.getElementById('rlBlockSection').classList.toggle('rl-hidden', mode !== 'block');
+            document.getElementById('rlWarnSection').classList.toggle('rl-hidden', mode !== 'warn');
+        }
+
+        // 提醒标签切换
+        function toggleNotifyTag(el) {
+            const input = el.querySelector('input');
+            input.checked = !input.checked;
+            el.classList.toggle('active', input.checked);
+        }
+
+        // 豁免开关
+        function toggleExemptSection() {
+            const checked = document.getElementById('rlExemptEnabled').checked;
+            document.getElementById('rlExemptLabel').textContent = checked ? '启用' : '禁用';
+            document.getElementById('rlExemptBlock').classList.toggle('rl-hidden', !checked);
+        }
+
+        // 豁免条件行操作
+        function addExemptRow() {
+            const tbody = document.getElementById('exemptBody');
+            const idx = tbody.children.length + 1;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${idx}</td>
+                <td>
+                    <select class="dt-select">
+                        <option value="">请选择</option>
+                        <option value="amount">涉及金额</option>
+                        <option value="urgencyType">紧急类型</option>
+                        <option value="supplierLevel">供应商等级</option>
+                        <option value="projectType">项目类型</option>
+                    </select>
+                </td>
+                <td>
+                    <select class="dt-select">
+                        <option value="LT">小于(LT)</option>
+                        <option value="LE">小于等于(LE)</option>
+                        <option value="EQ">等于(EQ)</option>
+                    </select>
+                </td>
+                <td><input type="text" class="dt-input" placeholder="阈值"></td>
+                <td><button class="dt-btn" onclick="removeExemptRow(this)">删除</button></td>
+            `;
+            tbody.appendChild(tr);
+        }
+
+        function removeExemptRow(btn) {
+            const tbody = document.getElementById('exemptBody');
+            btn.closest('tr').remove();
+            Array.from(tbody.children).forEach((tr, idx) => {
+                tr.cells[0].textContent = idx + 1;
+            });
+        }
+
+        // 风险等级联动
+        function toggleAutoMode() {
+            const checked = document.getElementById('rlAutoMode').checked;
+            document.getElementById('rlAutoModeBlock').classList.toggle('rl-hidden', !checked);
+        }
+
+        // 保存风险锁配置
+        function saveRiskLockConfig() {
+            const enabled = document.getElementById('rlEnabled').checked;
+            if (enabled) {
+                const activeCard = document.querySelector('.ctrl-mode-card.active');
+                const mode = activeCard ? activeCard.dataset.mode : 'none';
+                if (mode === 'block') {
+                    const node = document.getElementById('rlBlockNode').value;
+                    if (!node) { alert('请选择阻断节点'); return; }
+                    const action = document.getElementById('rlBlockAction').value;
+                    if (!action) { alert('请选择阻断后动作'); return; }
+                }
+            }
+            updateRiskLockSummary();
+            closeRiskLockDrawer();
+        }
+
+        // 更新预览摘要
+        function updateRiskLockSummary() {
+            const enabled = document.getElementById('rlEnabled').checked;
+            const statusEl = document.getElementById('rlSummaryStatus');
+            const modeEl = document.getElementById('rlSummaryMode');
+            const nodeEl = document.getElementById('rlSummaryNode');
+            const notifyEl = document.getElementById('rlSummaryNotify');
+
+            if (!enabled) {
+                statusEl.textContent = '未启用';
+                statusEl.className = 'rl-status-tag rl-disabled';
+                modeEl.textContent = '—';
+                nodeEl.textContent = '—';
+                notifyEl.textContent = '—';
+                return;
+            }
+
+            const activeCard = document.querySelector('.ctrl-mode-card.active');
+            const mode = activeCard ? activeCard.dataset.mode : 'none';
+
+            statusEl.textContent = '已启用';
+            statusEl.className = 'rl-status-tag rl-enabled';
+
+            if (mode === 'block') {
+                modeEl.textContent = '阻断';
+                modeEl.style.color = 'var(--danger)';
+                const node = document.getElementById('rlBlockNode').value;
+                nodeEl.textContent = node || '未设置';
+                notifyEl.textContent = '—';
+            } else if (mode === 'warn') {
+                modeEl.textContent = '提醒';
+                modeEl.style.color = 'var(--warning)';
+                nodeEl.textContent = '—';
+                const checkedTags = document.querySelectorAll('#rlWarnSection .notify-tag.active');
+                const targets = Array.from(checkedTags).map(t => t.querySelector('span').textContent.trim());
+                notifyEl.textContent = targets.length ? targets.join('、') : '未设置';
+            } else {
+                modeEl.textContent = '不控制';
+                modeEl.style.color = 'var(--primary)';
+                nodeEl.textContent = '—';
+                notifyEl.textContent = '—';
+            }
+        }
+
+        // ========== 初始化 ==========
+        initPage();
+    </script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>评估结果详情 - 审计监督</title>
+    <style>
+        :root { --primary: #1565c0; --primary-dark: #0d47a1; --primary-light: #e3f2fd; --success: #43a047; --warning: #fb8c00; --danger: #e53935; --info: #5e35b1; --text-primary: #333; --text-secondary: #666; --text-muted: #999; --border-color: #e0e0e0; --bg-body: #f0f2f5; --bg-card: #fff; --sidebar-width: 220px; --header-height: 56px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif; font-size: 13px; color: var(--text-primary); background: var(--bg-body); overflow: hidden; height: 100%; }
+        .top-header { height: var(--header-height); background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: #fff; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .menu-item .arrow { width: 12px; height: 12px; transition: transform .2s; opacity: .4; }
+        .menu-item.expanded .arrow { transform: rotate(90deg); }
+        .submenu { display: none; background: #fafafa; }
+        .submenu.open { display: block; }
+        .submenu .menu-item { padding-left: 38px; height: 36px; font-size: 12px; }
+        .submenu .submenu { background: #f5f5f5; }
+        .submenu .submenu .menu-item { padding-left: 56px; height: 34px; font-size: 12px; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px; }
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); cursor: pointer; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+        .page-title { font-size: 16px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .top-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .btn { height: 28px; padding: 0 12px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-sm { height: 24px; padding: 0 8px; font-size: 11px; }
+        .scroll-content { flex: 1; overflow-y: auto; min-height: 0; }
+        .scroll-content::-webkit-scrollbar { width: 6px; }
+        .scroll-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+        .form-card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; }
+        .form-card-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .form-card-header::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .form-card-header .header-actions { margin-left: auto; display: flex; gap: 6px; }
+        .form-card-body { padding: 14px 16px; }
+        .info-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px 16px; }
+        .info-item { display: flex; align-items: center; gap: 8px; }
+        .info-item .info-label { width: 100px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+        .info-item .info-value { flex: 1; font-size: 12px; color: var(--text-primary); font-weight: bold; }
+        .score-big { font-size: 36px; font-weight: bold; color: var(--primary); }
+        .score-level-tag { display: inline-flex; align-items: center; gap: 4px; padding: 4px 12px; border-radius: 3px; font-size: 13px; font-weight: bold; }
+        .level-healthy { background: #e8f5e9; color: #2e7d32; }
+        .level-low { background: #fff8e1; color: #f57f17; }
+        .level-mid { background: #fff3e0; color: #e65100; }
+        .level-high { background: #ffebee; color: #c62828; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+        .detail-panel { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 14px 16px; }
+        .detail-panel-title { font-size: 13px; font-weight: bold; color: var(--text-primary); margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+        .detail-panel-title::before { content: ""; width: 3px; height: 14px; background: var(--primary); border-radius: 2px; }
+        .radar-chart { width: 100%; height: 260px; position: relative; }
+        .radar-chart svg { width: 100%; height: 100%; }
+        .trend-chart { width: 100%; height: 200px; position: relative; }
+        .trend-chart svg { width: 100%; height: 100%; }
+        .dim-score-list { display: flex; flex-direction: column; gap: 8px; }
+        .dim-score-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: #f5f7fa; border-radius: 3px; font-size: 12px; }
+        .dim-score-item .dim-name { width: 80px; flex-shrink: 0; }
+        .dim-score-item .dim-bar { flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; }
+        .dim-score-item .dim-bar-fill { height: 100%; border-radius: 4px; }
+        .dim-score-item .dim-score { font-weight: bold; color: var(--primary); width: 40px; text-align: right; }
+        .conclusion-box { background: #f5f7fa; border-radius: 4px; padding: 12px 16px; font-size: 12px; line-height: 1.8; color: var(--text-secondary); }
+        .conclusion-box strong { color: var(--text-primary); }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .history-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 8px 6px; text-align: center; border-bottom: 1px solid #bbdefb; }
+        .history-table tbody td { padding: 8px 6px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .history-table tbody tr:hover { background: #f5f7fa; }
+        .bottom-actions { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-top: 12px; flex-shrink: 0; }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system"><span class="brand-name">绿星链通</span><span class="brand-version">2.0</span></div>
+            <div class="brand-divider"></div>
+            <div class="logo-text"><span class="cn">中国铝业集团有限公司</span><span class="en">ALUMINUM CORPORATION OF CHINA</span></div>
+        </div>
+        <div class="header-center"><div class="header-search"><input type="text" placeholder="请输入页面号"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg></div></div>
+        <div class="header-right"><span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span><div class="user-badge"><div class="user-avatar">潘</div></div></div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险驾驶舱</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128203;</span><span>风险事件池</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128188;</span><span>我的工作台</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务管理</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#9989;</span><span>验收审核</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128226;</span><span>超期督办</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>统计分析</span></div></div></div>
+            <div class="menu-group">
+                <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#9881;</span><span>模型中心</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="submenu open">
+                    <div class="menu-item expanded" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>规则模型</span></div>
+                    </div>
+                    <div class="submenu">
+                        <div class="menu-item"><div class="menu-left"><span>规则配置管理</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>规则命中日志</span></div></div>
+                    </div>
+                    <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>指标模型</span></div>
+                    </div>
+                    <div class="submenu open">
+                        <div class="menu-item"><div class="menu-left"><span>供应商评分卡</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>采购业务健康度</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>知识库管理</span></div></div>
+                        <div class="menu-item active"><div class="menu-left"><span>评估结果查询</span></div></div>
+                    </div>
+                    <div class="menu-item" style="opacity:0.5;cursor:not-allowed;" title="阶段三开放">
+                        <div class="menu-left"><span>算法模型</span></div>
+                        <span style="font-size:10px;color:var(--text-muted);margin-left:auto;background:#f5f5f5;padding:1px 4px;border-radius:2px;">后续</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a onclick="goBack()">模型中心</a><span class="sep">&gt;</span><a onclick="goBack()">指标模型</a><span class="sep">&gt;</span><a onclick="goBack()">评估结果查询</a><span class="sep">&gt;</span><span>详情</span>
+            </div>
+
+            <div class="page-header">
+                <div class="page-title"><span>评估结果详情</span></div>
+                <div class="top-actions">
+                    <button class="btn btn-default">&#128229; 导出报告</button>
+                    <button class="btn btn-default" onclick="goBack()">&#10094; 返回</button>
+                </div>
+            </div>
+
+            <div class="scroll-content">
+                <!-- 基本信息 -->
+                <div class="form-card">
+                    <div class="form-card-header"><span>基本信息</span></div>
+                    <div class="form-card-body">
+                        <div class="info-grid">
+                            <div class="info-item"><span class="info-label">评估对象编码</span><span class="info-value">SUP001</span></div>
+                            <div class="info-item"><span class="info-label">评估对象名称</span><span class="info-value">广西铝业物资有限公司</span></div>
+                            <div class="info-item"><span class="info-label">评估类型</span><span class="info-value">供应商画像</span></div>
+                            <div class="info-item"><span class="info-label">评估日期</span><span class="info-value">2024-11-15</span></div>
+                            <div class="info-item"><span class="info-label">评估周期</span><span class="info-value">2024Q4</span></div>
+                            <div class="info-item"><span class="info-label">评分卡版本</span><span class="info-value">V2.0</span></div>
+                            <div class="info-item"><span class="info-label">综合得分</span><span class="info-value score-big">88.5</span></div>
+                            <div class="info-item"><span class="info-label">风险等级</span><span class="info-value"><span class="score-level-tag level-low">低风险</span></span></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 供应商画像详情（五维雷达图 + 得分明细） -->
+                <div class="detail-grid" id="supplierDetail">
+                    <div class="detail-panel">
+                        <div class="detail-panel-title">五维风险画像</div>
+                        <div class="radar-chart">
+                            <svg viewBox="0 0 300 260">
+                                <!-- 背景网格 -->
+                                <g transform="translate(150,130)">
+                                    <polygon points="0,-100 95,-31 59,81 -59,81 -95,-31" fill="none" stroke="#e0e0e0" stroke-width="1"/>
+                                    <polygon points="0,-75 71,-23 44,61 -44,61 -71,-23" fill="none" stroke="#e0e0e0" stroke-width="1"/>
+                                    <polygon points="0,-50 48,-16 29,40 -29,40 -48,-16" fill="none" stroke="#e0e0e0" stroke-width="1"/>
+                                    <polygon points="0,-25 24,-8 15,20 -15,20 -24,-8" fill="none" stroke="#e0e0e0" stroke-width="1"/>
+                                    <!-- 轴线 -->
+                                    <line x1="0" y1="0" x2="0" y2="-100" stroke="#e0e0e0" stroke-width="1"/>
+                                    <line x1="0" y1="0" x2="95" y2="-31" stroke="#e0e0e0" stroke-width="1"/>
+                                    <line x1="0" y1="0" x2="59" y2="81" stroke="#e0e0e0" stroke-width="1"/>
+                                    <line x1="0" y1="0" x2="-59" y2="81" stroke="#e0e0e0" stroke-width="1"/>
+                                    <line x1="0" y1="0" x2="-95" y2="-31" stroke="#e0e0e0" stroke-width="1"/>
+                                    <!-- 数据多边形 -->
+                                    <polygon points="0,-85 76,-25 47,65 -47,65 -76,-25" fill="rgba(21,101,192,0.15)" stroke="#1565c0" stroke-width="2"/>
+                                    <!-- 数据点 -->
+                                    <circle cx="0" cy="-85" r="4" fill="#1565c0"/>
+                                    <circle cx="76" cy="-25" r="4" fill="#1565c0"/>
+                                    <circle cx="47" cy="65" r="4" fill="#1565c0"/>
+                                    <circle cx="-47" cy="65" r="4" fill="#1565c0"/>
+                                    <circle cx="-76" cy="-25" r="4" fill="#1565c0"/>
+                                    <!-- 标签 -->
+                                    <text x="0" y="-115" text-anchor="middle" font-size="11" fill="#666">准入风险</text>
+                                    <text x="0" y="-115" text-anchor="middle" font-size="9" fill="#1565c0" font-weight="bold" dy="12">85</text>
+                                    <text x="115" y="-35" text-anchor="start" font-size="11" fill="#666">履约风险</text>
+                                    <text x="115" y="-35" text-anchor="start" font-size="9" fill="#1565c0" font-weight="bold" dy="12">92</text>
+                                    <text x="72" y="100" text-anchor="start" font-size="11" fill="#666">财务风险</text>
+                                    <text x="72" y="100" text-anchor="start" font-size="9" fill="#1565c0" font-weight="bold" dy="12">78</text>
+                                    <text x="-72" y="100" text-anchor="end" font-size="11" fill="#666">法律风险</text>
+                                    <text x="-72" y="100" text-anchor="end" font-size="9" fill="#1565c0" font-weight="bold" dy="12">95</text>
+                                    <text x="-115" y="-35" text-anchor="end" font-size="11" fill="#666">质量风险</text>
+                                    <text x="-115" y="-35" text-anchor="end" font-size="9" fill="#1565c0" font-weight="bold" dy="12">88</text>
+                                </g>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="detail-panel">
+                        <div class="detail-panel-title">维度得分明细</div>
+                        <div class="dim-score-list">
+                            <div class="dim-score-item">
+                                <span class="dim-name">准入风险</span>
+                                <div class="dim-bar"><div class="dim-bar-fill" style="width:85%;background:#43a047;"></div></div>
+                                <span class="dim-score">85</span>
+                            </div>
+                            <div class="dim-score-item">
+                                <span class="dim-name">履约风险</span>
+                                <div class="dim-bar"><div class="dim-bar-fill" style="width:92%;background:#43a047;"></div></div>
+                                <span class="dim-score">92</span>
+                            </div>
+                            <div class="dim-score-item">
+                                <span class="dim-name">财务风险</span>
+                                <div class="dim-bar"><div class="dim-bar-fill" style="width:78%;background:#fb8c00;"></div></div>
+                                <span class="dim-score">78</span>
+                            </div>
+                            <div class="dim-score-item">
+                                <span class="dim-name">法律风险</span>
+                                <div class="dim-bar"><div class="dim-bar-fill" style="width:95%;background:#43a047;"></div></div>
+                                <span class="dim-score">95</span>
+                            </div>
+                            <div class="dim-score-item">
+                                <span class="dim-name">质量风险</span>
+                                <div class="dim-bar"><div class="dim-bar-fill" style="width:88%;background:#43a047;"></div></div>
+                                <span class="dim-score">88</span>
+                            </div>
+                        </div>
+                        <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--border-color);">
+                            <div style="font-size:11px;color:var(--text-muted);margin-bottom:6px;">权重配置</div>
+                            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                                <span style="font-size:11px;padding:2px 8px;background:var(--primary-light);color:var(--primary);border-radius:3px;">准入 20%</span>
+                                <span style="font-size:11px;padding:2px 8px;background:var(--primary-light);color:var(--primary);border-radius:3px;">履约 25%</span>
+                                <span style="font-size:11px;padding:2px 8px;background:var(--primary-light);color:var(--primary);border-radius:3px;">财务 25%</span>
+                                <span style="font-size:11px;padding:2px 8px;background:var(--primary-light);color:var(--primary);border-radius:3px;">法律 15%</span>
+                                <span style="font-size:11px;padding:2px 8px;background:var(--primary-light);color:var(--primary);border-radius:3px;">质量 15%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 评估结论 -->
+                <div class="form-card">
+                    <div class="form-card-header"><span>评估结论与建议</span></div>
+                    <div class="form-card-body">
+                        <div class="conclusion-box">
+                            <strong>综合评估结论：</strong>该供应商综合得分 88.5 分，属于<span style="color:#f57f17;font-weight:bold;">低风险</span>等级。整体表现良好，准入资质完备，法律合规记录清白，产品质量稳定。主要风险点集中在<span style="color:#e65100;font-weight:bold;">财务风险</span>维度（78分），资产负债率略高，建议持续关注其现金流状况。<br><br>
+                            <strong>改进建议：</strong><br>
+                            1. 要求供应商提供近期财务报表，核实资产负债率变化趋势；<br>
+                            2. 在后续合同中适当缩短付款周期，降低资金风险；<br>
+                            3. 维持现有合作规模，暂缓扩大采购额度；<br>
+                            4. 下一评估周期（2025Q1）重点关注财务指标改善情况。
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 历史评估记录 -->
+                <div class="form-card">
+                    <div class="form-card-header"><span>历史评估记录</span></div>
+                    <div class="form-card-body" style="padding:0;">
+                        <table class="history-table">
+                            <thead>
+                                <tr><th>评估周期</th><th>综合得分</th><th>风险等级</th><th>准入</th><th>履约</th><th>财务</th><th>法律</th><th>质量</th><th>评估人</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>2024Q4</td><td style="font-weight:bold;color:var(--primary);">88.5</td><td><span class="score-level-tag level-low">低风险</span></td><td>85</td><td>92</td><td>78</td><td>95</td><td>88</td><td>系统评估</td></tr>
+                                <tr><td>2024Q3</td><td style="font-weight:bold;color:var(--primary);">86.2</td><td><span class="score-level-tag level-low">低风险</span></td><td>82</td><td>90</td><td>75</td><td>95</td><td>87</td><td>系统评估</td></tr>
+                                <tr><td>2024Q2</td><td style="font-weight:bold;color:var(--warning);">79.8</td><td><span class="score-level-tag level-mid">中风险</span></td><td>80</td><td>85</td><td>68</td><td>92</td><td>85</td><td>系统评估</td></tr>
+                                <tr><td>2024Q1</td><td style="font-weight:bold;color:var(--success);">91.5</td><td><span class="score-level-tag level-healthy">健康</span></td><td>88</td><td>95</td><td>85</td><td>96</td><td>90</td><td>系统评估</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-actions">
+                <button class="btn btn-default" onclick="goBack()">&#10094; 返回列表</button>
+                <button class="btn btn-primary">&#128229; 导出评估报告</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleMenu(el) {
+            const submenu = el.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                el.classList.toggle('expanded');
+                submenu.classList.toggle('open');
+            }
+        }
+        function goBack() { window.location.href = '评估结果查询.html'; }
+    </script>
+</body>
+</html>

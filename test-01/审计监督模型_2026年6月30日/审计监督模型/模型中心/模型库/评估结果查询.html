@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>评估结果查询 - 审计监督</title>
+    <style>
+        :root {
+            --primary: #1565c0; --primary-dark: #0d47a1; --primary-light: #e3f2fd;
+            --success: #43a047; --warning: #fb8c00; --danger: #e53935; --info: #5e35b1;
+            --text-primary: #333; --text-secondary: #666; --text-muted: #999;
+            --border-color: #e0e0e0; --bg-body: #f0f2f5; --bg-card: #fff;
+            --sidebar-width: 220px; --header-height: 56px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px; color: var(--text-primary); background: var(--bg-body);
+            overflow: hidden; height: 100%;
+        }
+        .top-header {
+            height: var(--header-height);
+            background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; color: #fff; position: fixed;
+            top: 0; left: 0; right: 0; z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .menu-item .arrow { width: 12px; height: 12px; transition: transform .2s; opacity: .4; }
+        .menu-item.expanded .arrow { transform: rotate(90deg); }
+        .submenu { display: none; background: #fafafa; }
+        .submenu.open { display: block; }
+        .submenu .menu-item { padding-left: 38px; height: 36px; font-size: 12px; }
+        .submenu .submenu { background: #f5f5f5; }
+        .submenu .submenu .menu-item { padding-left: 56px; height: 34px; font-size: 12px; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px 0; }
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); cursor: pointer; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+        .page-title { font-size: 16px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .top-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .btn { height: 28px; padding: 0 14px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-sm { height: 24px; padding: 0 10px; font-size: 11px; }
+        .query-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; flex-shrink: 0; }
+        .section-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: bold; color: var(--primary); }
+        .section-header .header-left-part { display: flex; align-items: center; gap: 8px; }
+        .section-header .section-icon { width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .section-actions { display: flex; align-items: center; gap: 8px; }
+        .query-form { padding: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 16px; }
+        .form-item { display: flex; align-items: center; gap: 8px; }
+        .form-item .form-label { width: 100px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+        .form-item .form-input, .form-item .form-select { flex: 1; height: 30px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; color: var(--text-primary); outline: none; min-width: 0; }
+        .form-item .form-input:focus, .form-item .form-select:focus { border-color: var(--primary); }
+        .tab-bar { display: flex; gap: 0; margin-bottom: 12px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); overflow: hidden; flex-shrink: 0; }
+        .tab-item { flex: 1; padding: 10px 16px; text-align: center; cursor: pointer; font-size: 13px; color: var(--text-secondary); border-bottom: 2px solid transparent; transition: all .2s; background: #fff; }
+        .tab-item:hover { color: var(--primary); background: var(--primary-light); }
+        .tab-item.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: bold; background: var(--primary-light); }
+        .list-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        .list-toolbar { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .toolbar-left { display: flex; align-items: center; gap: 10px; }
+        .section-title { font-size: 14px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+        .section-title .title-badge { font-size: 11px; padding: 1px 6px; border-radius: 10px; background: var(--primary); color: #fff; font-weight: normal; }
+        .data-table-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        .table-scroll-area { flex: 1; overflow: auto; min-height: 0; }
+        .table-scroll-area::-webkit-scrollbar { width: 6px; height: 6px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1000px; }
+        .data-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 10px 8px; text-align: center; border-bottom: 1px solid #bbdefb; white-space: nowrap; position: sticky; top: 0; z-index: 10; }
+        .data-table tbody td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .data-table tbody tr:hover { background: #f5f7fa; }
+        .data-table .col-link { color: var(--primary); cursor: pointer; }
+        .data-table .col-link:hover { text-decoration: underline; }
+        .cell-status-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 3px; font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .cell-status-tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+        .cell-healthy { background: #e8f5e9; color: #2e7d32; }
+        .cell-healthy::before { background: #66bb6a; }
+        .cell-low { background: #fff8e1; color: #f57f17; }
+        .cell-low::before { background: #ffca28; }
+        .cell-mid { background: #fff3e0; color: #e65100; }
+        .cell-mid::before { background: #fb8c00; }
+        .cell-high { background: #ffebee; color: #c62828; }
+        .cell-high::before { background: #ef5350; }
+        .score-num { font-size: 14px; font-weight: bold; }
+        .score-high { color: var(--success); }
+        .score-mid { color: var(--warning); }
+        .score-low { color: var(--danger); }
+        .op-btns { display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .op-btn { font-size: 12px; color: var(--primary); cursor: pointer; padding: 2px 6px; border-radius: 2px; transition: background .2s; border: none; background: transparent; }
+        .op-btn:hover { background: var(--primary-light); }
+        .pagination-bar { padding: 10px 16px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); background: #fff; flex-shrink: 0; }
+        .page-info { color: var(--text-secondary); font-size: 12px; }
+        .page-btn { min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); background: #fff; border-radius: 3px; cursor: pointer; font-size: 12px; color: var(--text-secondary); padding: 0 6px; }
+        .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .page-btn.disabled { opacity: .4; cursor: not-allowed; }
+        input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--primary); cursor: pointer; }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system"><span class="brand-name">绿星链通</span><span class="brand-version">2.0</span></div>
+            <div class="brand-divider"></div>
+            <div class="logo-text"><span class="cn">中国铝业集团有限公司</span><span class="en">ALUMINUM CORPORATION OF CHINA</span></div>
+        </div>
+        <div class="header-center">
+            <div class="header-search"><input type="text" placeholder="请输入页面号"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg></div>
+        </div>
+        <div class="header-right"><span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span><div class="user-badge"><div class="user-avatar">潘</div></div></div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险驾驶舱</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128203;</span><span>风险事件池</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128188;</span><span>我的工作台</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务管理</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#9989;</span><span>验收审核</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128226;</span><span>超期督办</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>统计分析</span></div></div></div>
+            <div class="menu-group">
+                <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#9881;</span><span>模型中心</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="submenu open">
+                    <div class="menu-item expanded" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>规则模型</span></div>
+                    </div>
+                    <div class="submenu">
+                        <div class="menu-item"><div class="menu-left"><span>规则配置管理</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>规则命中日志</span></div></div>
+                    </div>
+                    <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>指标模型</span></div>
+                    </div>
+                    <div class="submenu open">
+                        <div class="menu-item"><div class="menu-left"><span>供应商评分卡</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>采购业务健康度</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>知识库管理</span></div></div>
+                        <div class="menu-item active"><div class="menu-left"><span>评估结果查询</span></div></div>
+                    </div>
+                    <div class="menu-item" style="opacity:0.5;cursor:not-allowed;" title="阶段三开放">
+                        <div class="menu-left"><span>算法模型</span></div>
+                        <span style="font-size:10px;color:var(--text-muted);margin-left:auto;background:#f5f5f5;padding:1px 4px;border-radius:2px;">后续</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a>模型中心</a><span class="sep">&gt;</span><a>指标模型</a><span class="sep">&gt;</span><span>评估结果查询</span>
+            </div>
+
+            <div class="page-header">
+                <div class="page-title"><span>评估结果查询</span></div>
+                <div class="top-actions">
+                    <button class="btn btn-default">&#128229; 批量导出</button>
+                </div>
+            </div>
+
+            <div class="query-section">
+                <div class="section-header">
+                    <div class="header-left-part"><span class="section-icon"></span><span>查询信息</span></div>
+                    <div class="section-actions">
+                        <button class="btn btn-default">&#8634; 重置</button>
+                        <button class="btn btn-primary">&#128269; 查询</button>
+                    </div>
+                </div>
+                <div class="query-form">
+                    <div class="form-item"><label class="form-label">评估对象编码</label><input type="text" class="form-input" placeholder="如 SUP001 / BM001"></div>
+                    <div class="form-item"><label class="form-label">评估对象名称</label><input type="text" class="form-input" placeholder="请输入名称"></div>
+                    <div class="form-item">
+                        <label class="form-label">评估类型</label>
+                        <select class="form-select"><option value="">全部</option><option>供应商画像</option><option>采购健康度</option></select>
+                    </div>
+                    <div class="form-item">
+                        <label class="form-label">风险等级</label>
+                        <select class="form-select"><option value="">全部</option><option>健康</option><option>低风险</option><option>中风险</option><option>高风险</option></select>
+                    </div>
+                    <div class="form-item"><label class="form-label">评估日期起</label><input type="date" class="form-input" value="2024-01-01"></div>
+                    <div class="form-item"><label class="form-label">评估日期止</label><input type="date" class="form-input" value="2024-12-31"></div>
+                </div>
+            </div>
+
+            <div class="tab-bar">
+                <div class="tab-item active" onclick="switchTab(this, 'all')">全部 (8)</div>
+                <div class="tab-item" onclick="switchTab(this, 'supplier')">供应商画像 (5)</div>
+                <div class="tab-item" onclick="switchTab(this, 'health')">采购健康度 (3)</div>
+            </div>
+
+            <div class="list-section">
+                <div class="list-toolbar">
+                    <div class="toolbar-left"><span class="section-title">&#9776; 评估结果清单 <span class="title-badge">8</span></span></div>
+                </div>
+                <div class="data-table-wrapper">
+                    <div class="table-scroll-area">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>序号</th><th>评估对象编码</th><th>评估对象名称</th><th>评估类型</th><th>综合得分</th><th>风险等级</th><th>评估日期</th><th>评估周期</th><th style="width:120px;">操作</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>1</td><td><span class="col-link" onclick="goToDetail('SUP001','supplier')">SUP001</span></td><td style="text-align:left;">广西铝业物资有限公司</td><td>供应商画像</td><td><span class="score-num score-high">88.5</span></td><td><span class="cell-status-tag cell-low">低风险</span></td><td>2024-11-15</td><td>2024Q4</td><td><div class="op-btns"><button class="op-btn" onclick="goToDetail('SUP001','supplier')">详情</button><button class="op-btn">导出</button></div></td></tr>
+                                <tr><td>2</td><td><span class="col-link" onclick="goToDetail('SUP002','supplier')">SUP002</span></td><td style="text-align:left;">南宁钢铁贸易集团</td><td>供应商画像</td><td><span class="score-num score-low">52.3</span></td><td><span class="cell-status-tag cell-high">高风险</span></td><td>2024-11-15</td><td>2024Q4</td><td><div class="op-btns"><button class="op-btn" onclick="goToDetail('SUP002','supplier')">详情</button><button class="op-btn">导出</button></div></td></tr>
+                                <tr><td>3</td><td><span class="col-link" onclick="goToDetail('SUP003','supplier')">SUP003</span></td><td style="text-align:left;">柳州机械设备厂</td><td>供应商画像</td><td><span class="score-num score-high">94.2</span></td><td><span class="cell-status-tag cell-healthy">健康</span></td><td>2024-11-15</td><td>2024Q4</td><td><div class="op-btns"><button class="op-btn" onclick="goToDetail('SUP003','supplier')">详情</button><button class="op-btn">导出</button></div></td></tr>
+                                <tr><td>4</td><td><span class="col-link" onclick="goToDetail('SUP004','supplier')">SUP004</span></td><td style="text-align:left;">桂林电力设备公司</td><td>供应商画像</td><td><span class="score-num score-mid">71.8</span></td><td><span class="cell-status-tag cell-mid">中风险</span></td><td>2024-11-15</td><td>2024Q4</td><td><div class="op-btns"><button class="op-btn" onclick="goToDetail('SUP004','supplier')">详情</button><button class="op-btn">导出</button></div></td></tr>
+                                <tr><td>5</td><td><span class="col-link" onclick="goToDetail('SUP005','supplier')">SUP005</span></td><td style="text-align:left;">北海化工原料有限公司</td><td>供应商画像</td><td><span class="score-num score-high">85.6</span></td><td><span class="cell-status-tag cell-low">低风险</span></td><td>2024-11-15</td><td>2024Q4</td><td><div class="op-btns"><button class="op-btn" onclick="goToDetail('SUP005','supplier')">详情</button><button class="op-btn">导出</button></div></td></tr>
+                                <tr><td>6</td><td><span class="col-link" onclick="goToDetail('BM001','health')">BM001</span></td><td style="text-align:left;">采购一部（原材料）</td><td>采购健康度</td><td><span class="score-num score-high">91.2</span></td><td><span class="cell-status-tag cell-healthy">健康</span></td><td>2024-11-30</td><td>2024Q4</td><td><div class="op-btns"><button class="op-btn" onclick="goToDetail('BM001','health')">详情</button><button class="op-btn">导出</button></div></td></tr>
+                                <tr><td>7</td><td><span class="col-link" onclick="goToDetail('BM002','health')">BM002</span></td><td style="text-align:left;">采购二部（设备备件）</td><td>采购健康度</td><td><span class="score-num score-mid">76.5</span></td><td><span class="cell-status-tag cell-mid">中风险</span></td><td>2024-11-30</td><td>2024Q4</td><td><div class="op-btns"><button class="op-btn" onclick="goToDetail('BM002','health')">详情</button><button class="op-btn">导出</button></div></td></tr>
+                                <tr><td>8</td><td><span class="col-link" onclick="goToDetail('BM003','health')">BM003</span></td><td style="text-align:left;">采购三部（办公用品）</td><td>采购健康度</td><td><span class="score-num score-high">89.3</span></td><td><span class="cell-status-tag cell-low">低风险</span></td><td>2024-11-30</td><td>2024Q4</td><td><div class="op-btns"><button class="op-btn" onclick="goToDetail('BM003','health')">详情</button><button class="op-btn">导出</button></div></td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="pagination-bar">
+                    <span class="page-info">共 8 条</span>
+                    <div class="page-btns">
+                        <button class="page-btn disabled">&lt;</button><button class="page-btn active">1</button><button class="page-btn disabled">&gt;</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleMenu(el) {
+            const submenu = el.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                el.classList.toggle('expanded');
+                submenu.classList.toggle('open');
+            }
+        }
+        function switchTab(el, type) {
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+        function goToDetail(id, type) {
+            window.location.href = '评估结果详情.html?id=' + encodeURIComponent(id) + '&type=' + encodeURIComponent(type);
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,442 @@
+/* Prototype visual parity layer.
+   Converted pages use these classes to preserve the confirmed HTML prototype layout. */
+
+.prototype-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  // 业务内容区禁止页面级横向滚动：根容器可收缩、不超出内容视口宽度
+  min-width: 0;
+  max-width: 100%;
+
+  .prototype-card {
+    margin-bottom: 12px;
+    // 可收缩：宽表/图表不得把卡片撑宽产生页面级横向滚动（对齐 app.css .card min-width:0）
+    min-width: 0;
+    background: $component-bg;
+    border: 1px solid $border-color;
+    border-radius: $border-radius-base;
+    box-shadow: $box-shadow-card;
+  }
+
+  .prototype-card-head,
+  .prototype-list-toolbar {
+    display: flex;
+    align-items: center;
+    min-height: 44px;
+    padding: 0 16px;
+    border-bottom: 1px solid $border-color;
+  }
+
+  .prototype-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 700;
+
+    &::before {
+      width: 4px;
+      height: 16px;
+      background: $primary-color;
+      border-radius: 2px;
+      content: '';
+    }
+  }
+
+  .prototype-actions {
+    display: flex;
+    gap: 8px;
+    margin-left: auto;
+  }
+
+  .prototype-query-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px 18px;
+    padding: 16px;
+  }
+
+  .prototype-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+
+    label {
+      color: $text-color-secondary;
+      font-size: 12px;
+      line-height: 18px;
+
+      .req {
+        margin-left: 2px;
+        color: $error-color;
+      }
+    }
+  }
+
+  .prototype-stat-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+
+  .prototype-stat-card {
+    flex: 1;
+    padding: 14px 16px;
+    cursor: pointer;
+    background: $component-bg;
+    border: 1px solid $border-color;
+    border-bottom: 3px solid transparent;
+    border-radius: $border-radius-base;
+    box-shadow: $box-shadow-card;
+
+    &.active {
+      border-bottom-color: $primary-color;
+
+      .num { color: $primary-color; }
+    }
+
+    .label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: $text-color-secondary;
+      line-height: 18px;
+
+      .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+      }
+    }
+
+    .num {
+      margin-top: 6px;
+      font-size: 24px;
+      font-weight: 700;
+      line-height: 30px;
+    }
+  }
+
+  // 列表卡片：撑高 + 纵向排布（对齐 app.css .list-card）
+  .prototype-list-card {
+    display: flex;
+    flex-direction: column;
+    min-height: 320px;
+  }
+
+  .prototype-batch-bar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 16px;
+    color: $primary-color;
+    background: $primary-light;
+  }
+
+  .prototype-status-tabs {
+    display: flex;
+    gap: 8px;
+    padding: 10px 16px;
+    border-bottom: 1px solid $border-color;
+  }
+
+  .prototype-status-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 14px;
+    color: $text-color-secondary;
+    font-size: 12px;
+    cursor: pointer;
+    background: $component-bg;
+    border: 1px solid $border-color;
+    border-radius: 3px;
+
+    &:hover {
+      color: $primary-color;
+      border-color: $primary-color;
+    }
+
+    &.active {
+      color: #fff;
+      font-weight: 700;
+      background: $primary-color;
+      border-color: $primary-color;
+    }
+  }
+
+  .prototype-table-wrap {
+    overflow: auto;
+  }
+
+  .prototype-link {
+    color: $primary-color;
+    cursor: pointer;
+
+    &:hover { text-decoration: underline; }
+  }
+
+  .prototype-op {
+    margin: 0 4px;
+    font-size: 12px;
+
+    // 与 app.css 的 .op 颜色别名对齐
+    &.blue { color: $primary-color; }
+    &.green,
+    &.success { color: $success-color; }
+    &.red,
+    &.danger { color: $error-color; }
+
+    &:hover { text-decoration: underline; }
+  }
+
+  .prototype-pager {
+    display: flex;
+    align-items: center;
+    min-height: 48px;
+    padding: 0 16px;
+    color: $text-color-secondary;
+    border-top: 1px solid $border-color;
+  }
+
+  .prototype-modal-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+
+    // 网格已负责间距，去掉 a-form-item 自带的下边距
+    .ant-form-item {
+      margin-bottom: 0;
+    }
+  }
+
+  // 与 app.css 的 .tag 对齐：行内 flex + 同色小圆点，文字色取深色版
+  .status-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 2px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    border: 0;
+    border-radius: 3px;
+
+    &::before {
+      width: 6px;
+      height: 6px;
+      background: currentColor;
+      border-radius: 50%;
+      content: '';
+    }
+
+    &.draft,
+    &.disabled,
+    &.paused {
+      color: #757575;
+      background: #f5f5f5;
+    }
+
+    &.pending,
+    &.expired {
+      color: #1565c0;
+      background: #e3f2fd;
+    }
+
+    &.review {
+      color: #6a1b9a;
+      background: #f3e5f5;
+    }
+
+    &.active,
+    &.enabled,
+    &.pass {
+      color: #2e7d32;
+      background: #e8f5e9;
+    }
+
+    &.reject {
+      color: #c62828;
+      background: #ffebee;
+    }
+  }
+
+  .ant-btn {
+    height: 32px;
+    padding: 0 16px;
+    font-size: 13px;
+    border-radius: $border-radius-base;
+  }
+
+  .ant-btn-sm {
+    height: 28px;
+    padding: 0 12px;
+    font-size: 12px;
+  }
+
+  .ant-input,
+  .ant-select-selector,
+  .ant-picker {
+    min-height: 32px;
+    font-size: 13px;
+    border-radius: $border-radius-base;
+  }
+
+  // 查询网格里的下拉/日期等控件撑满单元格（对齐原型 .form-item 内控件 width:100%）
+  .prototype-field {
+    .ant-select,
+    .ant-picker {
+      width: 100%;
+    }
+  }
+
+  .prototype-table {
+    .ant-table {
+      color: $text-color;
+      font-size: 12px;
+    }
+
+    .ant-table-thead > tr > th {
+      height: 42px;
+      padding: 0 12px;
+      color: $primary-dark;
+      font-weight: 700;
+      text-align: center;
+      white-space: nowrap;
+      background: $primary-light;
+      border-bottom-color: #cfe0f5;
+    }
+
+    .ant-table-tbody > tr > td {
+      height: 44px;
+      padding: 0 12px;
+      text-align: center;
+      white-space: nowrap;
+      border-bottom-color: #f0f0f0;
+    }
+
+    .ant-table-tbody > tr:hover:not(.ant-table-expanded-row) > td {
+      background: #f8fbff;
+    }
+  }
+}
+
+/* ==========================================================================
+   体验约束（同步自 prototype-site，见 prototype-site-change-log.md）
+   1) 业务内容区禁止页面级横向滚动；只允许宽表/图表在自己 wrapper 内滚动
+   2) 窄表 fit-table：3-6 列小表铺满卡片，不强制横向滚动
+   3) 同排卡片默认等高对齐
+   4) 工作流底栏固定在业务内容视口底部
+   ========================================================================== */
+
+/* ---- 多列行：收缩安全 + 同排卡片等高 ----
+   用法：<div class="prototype-cols">两列</div>，cols-3 三列，cols-sidebar 主列+定宽侧栏。
+   含表格/图表的列必须能收缩，所以一律 minmax(0,1fr) + 子项 min-width:0，
+   避免裸 1fr 被宽表撑出页面级横向滚动条。 */
+.prototype-page .prototype-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  align-items: stretch; // 同排卡片默认等高
+  margin-bottom: 12px;
+
+  &.cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  &.cols-sidebar { grid-template-columns: minmax(0, 1fr) 340px; }
+
+  > * { min-width: 0; }
+
+  // 等高：卡片占满行高，body 纵向 flex 让主体区域撑开
+  > .prototype-card {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    margin-bottom: 0;
+  }
+}
+
+// 卡片主体在等高卡片里占据剩余高度（textarea、时间线、表格容器等设 flex:1 即可对齐底边）
+.prototype-page .prototype-card-body {
+  flex: 1;
+  min-height: 0;
+}
+
+/* ---- 表格横向滚动只作用于表格区域，不撑宽页面 ----
+   宽表：a-table 配合 :scroll="{ x }" 在表格内滚动，外层 prototype-table-wrap 兜底。 */
+.prototype-page .prototype-table-wrap {
+  max-width: 100%;
+  overflow: auto;
+}
+
+.prototype-page .prototype-table {
+  max-width: 100%;
+
+  .ant-table-content,
+  .ant-table-body { overflow-x: auto; }
+}
+
+/* ---- 窄表 fit-table ----
+   3-6 列小表用：<a-table class="prototype-table fit-table">，且不要传 :scroll="{ x }"。
+   表格自然铺满卡片、单元格换行，不出现无意义横向滚动条。 */
+.prototype-page .prototype-table.fit-table {
+  .ant-table-content,
+  .ant-table-body { overflow-x: visible; }
+
+  .ant-table table {
+    min-width: 0;
+    table-layout: fixed;
+  }
+
+  .ant-table-thead > tr > th {
+    white-space: normal;
+  }
+
+  .ant-table-tbody > tr > td {
+    height: auto;
+    min-height: 44px;
+    white-space: normal;
+  }
+}
+
+/* ---- 固定底部操作栏 ----
+   静态原型里业务页就是 iframe 视口，用 position:fixed 贴 iframe 底即可。
+   框架里业务页位于会滚动的 a-layout-content 内、左侧还有可折叠固定侧栏，
+   视口级 fixed 会压到侧栏下方且不跟随折叠。故改用「内容滚动区内的 sticky 底栏」：
+   粘在内容滚动区底部，自动尊重内容左右边界、跟随侧栏折叠，且不像页面中段 sticky 那样抖动。
+   用法：页根加 has-fixed-actions，按钮组用 .fixed-bottom-bar；左右分组用 .spacer。 */
+.prototype-page.has-fixed-actions {
+  padding-bottom: 72px; // 为固定底栏预留空间，避免遮挡最后内容
+}
+
+.prototype-page .fixed-bottom-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 60px;
+  // 抵消 a-layout-content 的 12/16/16 内边距，铺满内容区底边
+  margin: 12px -16px -16px;
+  padding: 14px 16px;
+  background: $component-bg;
+  border-top: 1px solid $border-color;
+  box-shadow: 0 -1px 3px rgba(0, 0, 0, 0.06);
+
+  .spacer { margin-left: auto; }
+  &.center { justify-content: center; }
+  &.between { justify-content: space-between; }
+}
+
+@media (max-width: 1200px) {
+  .prototype-page .prototype-query-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1100px) {
+  .prototype-page .prototype-cols,
+  .prototype-page .prototype-cols.cols-3,
+  .prototype-page .prototype-cols.cols-sidebar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

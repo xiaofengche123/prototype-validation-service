@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<!--
+  编码：BMSP01-ADD    名称：供应商准入申请填报    类型：表单录入页
+  入口：从 BMSP01 供应商准入申请列表页点「新增申请」进入
+  内容：基本信息 / 联系信息 / 资质信息 + 底部固定操作栏
+  底部操作：保存草稿、提交审核、返回列表
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../assets/app.css">
+<title>供应商准入申请填报</title>
+</head>
+<body class="page-body">
+
+<div id="page-content" data-page="BMSP01-ADD" class="prototype-page has-fixed-actions">
+
+  <!-- 基本信息 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title prototype-title"><span class="bar"></span>基本信息</div>
+    </div>
+    <div class="query-grid prototype-query-grid">
+      <div class="form-item prototype-field">
+        <label>供应商名称<span class="req">*</span></label>
+        <input type="text" id="add-name" placeholder="请输入供应商全称">
+      </div>
+      <div class="form-item prototype-field">
+        <label>统一社会信用代码<span class="req">*</span></label>
+        <input type="text" id="add-code" placeholder="请输入 18 位信用代码">
+      </div>
+      <div class="form-item prototype-field">
+        <label>所属行业</label>
+        <select id="add-industry">
+          <option value="">请选择</option>
+          <option>有色金属冶炼</option>
+          <option>物流运输</option>
+          <option>环保科技</option>
+          <option>化工原料</option>
+          <option>机械制造</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>成立日期</label>
+        <input type="date" id="add-establish">
+      </div>
+    </div>
+  </div>
+
+  <!-- 联系信息 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title prototype-title"><span class="bar"></span>联系信息</div>
+    </div>
+    <div class="query-grid prototype-query-grid">
+      <div class="form-item prototype-field">
+        <label>联系人<span class="req">*</span></label>
+        <input type="text" id="add-contact">
+      </div>
+      <div class="form-item prototype-field">
+        <label>联系电话<span class="req">*</span></label>
+        <input type="text" id="add-phone">
+      </div>
+      <div class="form-item prototype-field">
+        <label>邮箱</label>
+        <input type="text" id="add-email">
+      </div>
+      <div class="form-item prototype-field">
+        <label>地址</label>
+        <input type="text" id="add-address">
+      </div>
+    </div>
+  </div>
+
+  <!-- 资质信息 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title prototype-title"><span class="bar"></span>资质信息</div>
+    </div>
+    <div class="query-grid prototype-query-grid">
+      <div class="form-item prototype-field">
+        <label>营业执照扫描件<span class="req">*</span></label>
+        <input type="file" id="add-license">
+      </div>
+      <div class="form-item prototype-field">
+        <label>资质等级</label>
+        <select id="add-level">
+          <option value="">请选择</option>
+          <option>一级</option>
+          <option>二级</option>
+          <option>三级</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>营业执照有效期至<span class="req">*</span></label>
+        <input type="date" id="add-license-expire">
+      </div>
+      <div class="form-item prototype-field">
+        <label>其他资质附件</label>
+        <input type="file" id="add-attachment">
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- 底部固定操作栏 -->
+<div class="fixed-bottom-bar between">
+  <button class="btn" data-action="go-back" data-nav="BMSP01">← 返回列表</button>
+  <div style="display:flex;gap:10px">
+    <button class="btn" data-action="save-draft">保存草稿</button>
+    <button class="btn btn-primary" data-action="submit-renew">提交审核</button>
+  </div>
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+PR.on('save-draft', () => {
+  PR.toast('草稿已保存');
+});
+
+PR.on('submit-renew', () => {
+  const name = document.getElementById('add-name').value.trim();
+  const code = document.getElementById('add-code').value.trim();
+  const contact = document.getElementById('add-contact').value.trim();
+  const phone = document.getElementById('add-phone').value.trim();
+  const license = document.getElementById('add-license').value;
+  const expire = document.getElementById('add-license-expire').value;
+  if (!name || !code || !contact || !phone || !license || !expire) {
+    PR.toast('请填写必填项');
+    return;
+  }
+  PR.toast('准入申请已提交审核');
+});
+
+PR.on('go-back', () => {
+  PR.nav('BMSP01');
+});
+
+PR.bindActions();
+</script>
+</body>
+</html>

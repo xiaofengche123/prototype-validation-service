@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<!--
+  编码：BMSP02-DETAIL    名称：供应商证照详情    类型：详情查看页
+  入口：从 BMSP02 供应商证照管理列表页点「供应商名称」进入
+  内容：供应商基本信息卡 + 证照列表 + 历史续期记录
+  底部操作：返回列表、打印
+  样例：以「广西铝业科技有限公司」为例。
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../assets/app.css">
+<title>供应商证照详情</title>
+</head>
+<body class="page-body">
+
+<div id="page-content" data-page="BMSP02-DETAIL" class="prototype-page has-fixed-actions">
+
+  <!-- 供应商基本信息 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title prototype-title"><span class="bar"></span>供应商基本信息</div>
+      <div class="actions prototype-actions">
+        <span class="tag pass">有效</span>
+      </div>
+    </div>
+    <div class="query-grid prototype-query-grid" style="padding-bottom:8px">
+      <div class="form-item prototype-field"><label>供应商名称</label><div>广西铝业科技有限公司</div></div>
+      <div class="form-item prototype-field"><label>统一社会信用代码</label><div>91450100MA5KAXXXXX</div></div>
+      <div class="form-item prototype-field"><label>联系人</label><div>张建国</div></div>
+      <div class="form-item prototype-field"><label>联系电话</label><div>13800138001</div></div>
+      <div class="form-item prototype-field"><label>所属行业</label><div>有色金属冶炼及压延加工</div></div>
+      <div class="form-item prototype-field"><label>注册地址</label><div>广西南宁市良庆区五象大道 101 号</div></div>
+    </div>
+  </div>
+
+  <!-- 证照列表 -->
+  <div class="card list-card prototype-card prototype-list-card">
+    <div class="list-toolbar prototype-list-toolbar">
+      <div class="title prototype-title">证照清单</div>
+      <div class="actions prototype-actions">
+        <button class="btn btn-sm" data-action="refresh-detail">刷新</button>
+      </div>
+    </div>
+    <div class="table-wrap prototype-table-wrap">
+      <table class="prototype-table">
+        <thead>
+          <tr>
+            <th style="width:50px">序号</th>
+            <th>证照类型</th>
+            <th>证号</th>
+            <th>发证机关</th>
+            <th style="width:110px">有效期</th>
+            <th style="width:90px">状态</th>
+            <th style="width:100px">扫描件</th>
+          </tr>
+        </thead>
+        <tbody id="certBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- 历史续期记录 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title prototype-title"><span class="bar"></span>历史续期记录</div>
+    </div>
+    <div class="table-wrap prototype-table-wrap">
+      <table class="prototype-table">
+        <thead>
+          <tr>
+            <th style="width:50px">序号</th>
+            <th style="width:110px">日期</th>
+            <th style="width:120px">操作人</th>
+            <th style="width:80px">动作</th>
+            <th>备注</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- 底部固定操作栏 -->
+<div class="fixed-bottom-bar between">
+  <button class="btn" data-action="go-back" data-nav="BMSP02">← 返回列表</button>
+  <button class="btn btn-primary" data-action="print-detail">打印</button>
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+/* ================= 数据 ================= */
+const TODAY = '2026-06-26';
+const STATUS_MAP = {
+  valid:    { cls: 'pass',    text: '有效' },
+  warning:  { cls: 'pending', text: '即将到期' },
+  expired:  { cls: 'reject',  text: '已过期' }
+};
+const CERTS = [
+  { id:1, type:'营业执照',       no:'91450100MA5KAXXXXX',         org:'南宁市行政审批局',   expire:'2028-03-15' },
+  { id:2, type:'危废经营许可证', no:'GXWF2024-0012',              org:'自治区生态环境厅',   expire:'2026-08-10' },
+  { id:3, type:'道路运输许可证', no:'桂交运管许可南字12345号',    org:'南宁市交通运输局',   expire:'2026-07-05' }
+].map(d=>{ d.status = computeStatus(d.expire); return d; });
+
+const HISTORY = [
+  { date:'2025-03-10', user:'管理员-李婷', action:'续期', memo:'营业执照续期，有效期延至 2028-03-15' },
+  { date:'2024-08-12', user:'管理员-王强', action:'续期', memo:'危废经营许可证续期，有效期延至 2026-08-10' },
+  { date:'2024-06-20', user:'管理员-李婷', action:'新领', memo:'首次申领道路运输许可证' },
+  { date:'2023-05-08', user:'管理员-王强', action:'新领', memo:'首次申领危废经营许可证' }
+];
+
+function computeStatus(expire) {
+  const t = new Date(TODAY), e = new Date(expire);
+  const diff = Math.ceil((e - t) / (1000*60*60*24));
+  if (diff < 0) return 'expired';
+  if (diff <= 90) return 'warning';
+  return 'valid';
+}
+
+function renderCerts() {
+  document.getElementById('certBody').innerHTML = CERTS.map((d, i) => {
+    const st = STATUS_MAP[d.status];
+    return `<tr>
+      <td>${i + 1}</td>
+      <td>${d.type}</td>
+      <td>${d.no}</td>
+      <td>${d.org}</td>
+      <td>${d.expire}</td>
+      <td><span class="tag ${st.cls}">${st.text}</span></td>
+      <td><a class="op blue" data-action="view-scan" data-id="${d.id}">查看</a></td>
+    </tr>`;
+  }).join('');
+}
+
+function renderHistory() {
+  document.getElementById('historyBody').innerHTML = HISTORY.map((h, i) => `
+    <tr>
+      <td>${i + 1}</td>
+      <td>${h.date}</td>
+      <td>${h.user}</td>
+      <td>${h.action}</td>
+      <td>${h.memo}</td>
+    </tr>
+  `).join('');
+}
+
+/* ================= 动作注册 ================= */
+PR.on('refresh-detail', () => {
+  PR.toast('已刷新');
+  renderCerts();
+  renderHistory();
+});
+
+PR.on('view-scan', e => {
+  const id = e.dataset.id;
+  const d = CERTS.find(x => x.id == id);
+  PR.toast('查看「' + d.type + '」扫描件（占位）');
+});
+
+PR.on('go-back', () => {
+  PR.nav('BMSP02');
+});
+
+PR.on('print-detail', () => {
+  PR.toast('打印供应商证照详情（占位）');
+});
+
+renderCerts();
+renderHistory();
+PR.bindActions();
+</script>
+</body>
+</html>

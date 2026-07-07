@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>绿星链通审计监督系统</title>
+    <style>
+        :root { --primary: #1565c0; --primary-dark: #0d47a1; --primary-light: #e3f2fd; --success: #43a047; --warning: #fb8c00; --danger: #e53935; --info: #5e35b1; --text-primary: #333; --text-secondary: #666; --text-muted: #999; --border-color: #e0e0e0; --bg-body: #f0f2f5; --sidebar-width: 240px; --header-height: 56px; --tab-height: 38px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; font-size: 13px; color: var(--text-primary); background: var(--bg-body); height: 100%; overflow: hidden; }
+
+        /* 顶部 Header */
+        .top-header { height: var(--header-height); background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: #fff; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; gap: 2px; }
+        .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; }
+        .brand-version { font-size: 10px; opacity: .85; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; }
+        .logo-text .en { font-size: 9px; opacity: .75; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .company-info { font-size: 13px; opacity: .95; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+
+        /* 布局 */
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+
+        /* 左侧 Sidebar */
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; overflow-x: hidden; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-header { display: flex; align-items: center; justify-content: space-between; padding: 0 12px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-primary); font-size: 13px; font-weight: bold; user-select: none; }
+        .menu-header:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-header .menu-left { display: flex; align-items: center; gap: 8px; }
+        .menu-header .arrow { width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; font-size: 10px; transition: transform .2s; color: var(--text-muted); }
+        .menu-header.collapsed .arrow { transform: rotate(-90deg); }
+
+        .submenu { display: block; }
+        .submenu.collapsed { display: none; }
+
+        /* 二级分组 */
+        .sub-group { border-bottom: 1px solid #f5f5f5; }
+        .sub-group:last-child { border-bottom: none; }
+        .sub-header { display: flex; align-items: center; justify-content: space-between; padding: 0 12px 0 24px; height: 34px; cursor: pointer; transition: all .2s; color: var(--text-secondary); font-size: 12px; font-weight: bold; user-select: none; }
+        .sub-header:hover { background: #fafafa; color: var(--primary); }
+        .sub-header .arrow { width: 12px; height: 12px; display: flex; align-items: center; justify-content: center; font-size: 9px; transition: transform .2s; color: var(--text-muted); }
+        .sub-header.collapsed .arrow { transform: rotate(-90deg); }
+        .sub2menu { display: block; }
+        .sub2menu.collapsed { display: none; }
+
+        /* 页面链接 */
+        .menu-link { display: flex; align-items: center; padding: 0 12px 0 38px; height: 32px; cursor: pointer; transition: all .2s; color: var(--text-secondary); font-size: 12px; text-decoration: none; }
+        .menu-link:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-link.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-link .link-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--text-muted); margin-right: 8px; flex-shrink: 0; }
+        .menu-link:hover .link-dot, .menu-link.active .link-dot { background: var(--primary); }
+        .menu-divider { padding: 4px 12px 4px 38px; font-size: 11px; color: var(--text-muted); border-bottom: 1px dashed #e0e0e0; margin: 2px 0; }
+
+        /* 右侧内容区 */
+        .main-wrap { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+        /* Tab 栏 */
+        .tab-bar { height: var(--tab-height); background: #fff; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; padding: 0 4px; flex-shrink: 0; overflow-x: auto; overflow-y: hidden; }
+        .tab-bar::-webkit-scrollbar { height: 2px; }
+        .tab-item { display: inline-flex; align-items: center; gap: 6px; padding: 0 12px; height: 30px; border-radius: 3px 3px 0 0; cursor: pointer; font-size: 12px; color: var(--text-secondary); border: 1px solid transparent; border-bottom: none; background: #f5f5f5; margin-right: 2px; white-space: nowrap; transition: all .2s; position: relative; top: 1px; }
+        .tab-item:hover { color: var(--primary); background: #e3f2fd; }
+        .tab-item.active { color: var(--primary); background: #fff; border-color: var(--border-color); border-bottom-color: #fff; font-weight: bold; }
+        .tab-item .tab-close { font-size: 14px; opacity: .4; width: 14px; height: 14px; display: flex; align-items: center; justify-content: center; border-radius: 2px; }
+        .tab-item .tab-close:hover { opacity: 1; color: var(--danger); background: #ffebee; }
+        .tab-item.home-tab { background: #e3f2fd; color: var(--primary); }
+        .tab-item.home-tab.active { background: #fff; }
+
+        /* iframe 内容区 */
+        .iframe-wrap { flex: 1; overflow: hidden; position: relative; background: var(--bg-body); }
+        .iframe-wrap iframe { width: 100%; height: 100%; border: none; display: none; }
+        .iframe-wrap iframe.active { display: block; }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system"><span class="brand-name">绿星链通</span><span class="brand-version">2.0</span></div>
+            <div class="brand-divider"></div>
+            <div class="logo-text"><span class="cn">中国铝业集团有限公司</span><span class="en">ALUMINUM CORPORATION OF CHINA</span></div>
+        </div>
+        <div class="header-center">
+            <div class="header-search"><input type="text" placeholder="请输入页面号"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg></div>
+        </div>
+        <div class="header-right"><span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span><div class="user-avatar">潘</div></div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar" id="sidebar">
+            <!-- 首页 -->
+            <div class="menu-group">
+                <div class="menu-link" onclick="openPage('首页/首页.html','首页')">
+                    <span class="link-dot"></span><span>&#127968; 首页</span>
+                </div>
+            </div>
+
+            <!-- 任务中心 -->
+            <div class="menu-group">
+                <div class="menu-header" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span>&#128188;</span><span>任务中心</span></div>
+                    <span class="arrow">&#9662;</span>
+                </div>
+                <div class="submenu">
+                    <a class="menu-link" onclick="openPage('任务中心/1.任务驾驶舱.html','任务驾驶舱')"><span class="link-dot"></span>任务驾驶舱</a>
+                    <a class="menu-link" onclick="openPage('任务中心/2.任务管理列表.html','任务管理列表')"><span class="link-dot"></span>任务管理列表</a>
+                    <a class="menu-link" onclick="openPage('任务中心/3.任务创建.html','任务创建')"><span class="link-dot"></span>任务创建</a>
+                    <a class="menu-link" onclick="openPage('任务中心/4.任务详情.html','任务详情')"><span class="link-dot"></span>任务详情</a>
+                    <a class="menu-link" onclick="openPage('任务中心/5.我的任务.html','我的任务')"><span class="link-dot"></span>我的任务</a>
+                    <a class="menu-link" onclick="openPage('任务中心/6.整改方案填报.html','整改方案填报')"><span class="link-dot"></span>整改方案填报</a>
+                    <a class="menu-link" onclick="openPage('任务中心/7.任务验收审核.html','任务验收审核')"><span class="link-dot"></span>任务验收审核</a>
+                    <a class="menu-link" onclick="openPage('任务中心/8.超期督办.html','超期督办')"><span class="link-dot"></span>超期督办</a>
+                    <div class="menu-divider">&#9472; 内嵌组件 &#9472;</div>
+                    <a class="menu-link" onclick="openPage('任务中心/内嵌-业务核实确认.html','业务核实确认')"><span class="link-dot"></span>业务核实确认</a>
+                    <a class="menu-link" onclick="openPage('任务中心/内嵌-跟踪验收.html','跟踪验收')"><span class="link-dot"></span>跟踪验收</a>
+                    <a class="menu-link" onclick="openPage('任务中心/内嵌-归档入库.html','归档入库')"><span class="link-dot"></span>归档入库</a>
+                </div>
+            </div>
+
+            <!-- 风险管理 -->
+            <div class="menu-group">
+                <div class="menu-header" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span>&#128200;</span><span>风险管理</span></div>
+                    <span class="arrow">&#9662;</span>
+                </div>
+                <div class="submenu">
+                    <!-- 风险驾驶舱 -->
+                    <div class="sub-group">
+                        <div class="sub-header" onclick="toggleSubMenu(this)">
+                            <span>风险驾驶舱</span><span class="arrow">&#9662;</span>
+                        </div>
+                        <div class="sub2menu">
+                            <a class="menu-link" onclick="openPage('风险管理/风险驾驶舱/1.风险驾驶舱.html','风险驾驶舱-看板')"><span class="link-dot"></span>风险总览看板</a>
+                            <a class="menu-link" onclick="openPage('风险管理/风险驾驶舱/2.统计报表.html','统计报表')"><span class="link-dot"></span>统计报表</a>
+                        </div>
+                    </div>
+                    <!-- 风险事件池 -->
+                    <div class="sub-group">
+                        <div class="sub-header" onclick="toggleSubMenu(this)">
+                            <span>风险事件池</span><span class="arrow">&#9662;</span>
+                        </div>
+                        <div class="sub2menu">
+                            <a class="menu-link" onclick="openPage('风险管理/风险事件池/8.工作台-风险管理清单.html','风险管理清单')"><span class="link-dot"></span>工作台-风险管理清单</a>
+                            <a class="menu-link" onclick="openPage('风险管理/风险事件池/9.风险登记录入.html','风险登记录入')"><span class="link-dot"></span>风险登记录入</a>
+                            <a class="menu-link" onclick="openPage('风险管理/风险事件池/10.等级调整审核.html','等级调整审核')"><span class="link-dot"></span>等级调整审核</a>
+                            <a class="menu-link" onclick="openPage('风险管理/风险事件池/风险事件详情.html','风险事件详情')"><span class="link-dot"></span>风险事件详情</a>
+                        </div>
+                    </div>
+                    <!-- 风险监督场景 -->
+                    <div class="sub-group">
+                        <div class="sub-header" onclick="toggleSubMenu(this)">
+                            <span>风险监督场景</span><span class="arrow">&#9662;</span>
+                        </div>
+                        <div class="sub2menu">
+                            <a class="menu-link" onclick="openPage('风险管理/风险监督场景/风险监督场景.html','风险监督场景')"><span class="link-dot"></span>风险监督场景</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 模型中心 -->
+            <div class="menu-group">
+                <div class="menu-header" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span>&#128736;</span><span>模型中心</span></div>
+                    <span class="arrow">&#9662;</span>
+                </div>
+                <div class="submenu">
+                    <!-- 模型列表（一级入口） -->
+                    <a class="menu-link" onclick="openPage('模型中心/模型列表.html','模型列表')"><span class="link-dot"></span>模型列表</a>
+                    <!-- 规则模型 -->
+                    <div class="sub-group">
+                        <div class="sub-header" onclick="toggleSubMenu(this)">
+                            <span>规则模型</span><span class="arrow">&#9662;</span>
+                        </div>
+                        <div class="sub2menu">
+                            <a class="menu-link" onclick="openPage('模型中心/规则引擎/规则配置管理.html','规则配置管理')"><span class="link-dot"></span>规则配置管理</a>
+                            <a class="menu-link" onclick="openPage('模型中心/规则引擎/规则配置编辑.html','规则配置编辑')"><span class="link-dot"></span>规则配置编辑</a>
+                            <a class="menu-link" onclick="openPage('模型中心/规则引擎/规则命中日志.html','规则命中日志')"><span class="link-dot"></span>规则命中日志</a>
+                        </div>
+                    </div>
+                    <!-- 指标模型 -->
+                    <div class="sub-group">
+                        <div class="sub-header" onclick="toggleSubMenu(this)">
+                            <span>指标模型</span><span class="arrow">&#9662;</span>
+                        </div>
+                        <div class="sub2menu">
+                            <a class="menu-link" onclick="openPage('模型中心/模型库/采购业务健康度.html','采购业务健康度')"><span class="link-dot"></span>采购业务健康度</a>
+                            <a class="menu-link" onclick="openPage('模型中心/模型库/采购业务健康度编辑.html','采购业务健康度编辑')"><span class="link-dot"></span>采购业务健康度编辑</a>
+                            <a class="menu-link" onclick="openPage('模型中心/模型库/采购业务健康度详情.html','采购业务健康度详情')"><span class="link-dot"></span>采购业务健康度详情</a>
+                            <a class="menu-link" onclick="openPage('模型中心/模型库/供应商评分卡.html','供应商评分卡')"><span class="link-dot"></span>供应商评分卡</a>
+                            <a class="menu-link" onclick="openPage('模型中心/模型库/供应商评分卡编辑.html','供应商评分卡编辑')"><span class="link-dot"></span>供应商评分卡编辑</a>
+                            <a class="menu-link" onclick="openPage('模型中心/模型库/评估结果查询.html','评估结果查询')"><span class="link-dot"></span>评估结果查询</a>
+                            <a class="menu-link" onclick="openPage('模型中心/模型库/评估结果详情.html','评估结果详情')"><span class="link-dot"></span>评估结果详情</a>
+                            <a class="menu-link" onclick="openPage('模型中心/模型库/指标管理.html','指标管理')"><span class="link-dot"></span>指标管理</a>
+                            <a class="menu-link" onclick="openPage('模型中心/模型库/指标新增.html','指标新增')"><span class="link-dot"></span>指标新增</a>
+                        </div>
+                    </div>
+                    <!-- 综合模型（预留） -->
+                    <div class="sub-group">
+                        <div class="sub-header" style="opacity:0.5;cursor:not-allowed;" title="后续开放">
+                            <span>综合模型</span><span class="arrow">&#9662;</span>
+                        </div>
+                        <div class="sub2menu collapsed">
+                            <a class="menu-link" style="opacity:0.5;cursor:not-allowed;"><span class="link-dot"></span>综合模型列表（后续）</a>
+                        </div>
+                    </div>
+                    <!-- 执行监控 -->
+                    <div class="sub-group">
+                        <div class="sub-header" onclick="toggleSubMenu(this)">
+                            <span>执行监控</span><span class="arrow">&#9662;</span>
+                        </div>
+                        <div class="sub2menu">
+                            <a class="menu-link" onclick="openPage('模型中心/执行监控/执行状态看板.html','执行状态看板')"><span class="link-dot"></span>执行状态看板</a>
+                            <a class="menu-link" onclick="openPage('模型中心/执行监控/执行结果查询.html','执行结果查询')"><span class="link-dot"></span>执行结果查询</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <div class="main-wrap">
+            <div class="tab-bar" id="tabBar"></div>
+            <div class="iframe-wrap" id="iframeWrap"></div>
+        </div>
+    </div>
+
+    <script>
+        const tabs = [];
+        let activeTabId = null;
+        let tabCounter = 0;
+
+        // 菜单收展（一级）
+        function toggleMenu(el) {
+            el.classList.toggle('collapsed');
+            el.nextElementSibling.classList.toggle('collapsed');
+        }
+
+        // 菜单收展（二级）
+        function toggleSubMenu(el) {
+            el.classList.toggle('collapsed');
+            el.nextElementSibling.classList.toggle('collapsed');
+        }
+
+        // 打开页面
+        function openPage(url, title) {
+            // 查找是否已存在
+            const existing = tabs.find(t => t.url === url);
+            if (existing) {
+                switchTab(existing.id);
+                return;
+            }
+
+            // 创建新 tab
+            tabCounter++;
+            const id = 'tab_' + tabCounter;
+            tabs.push({ id, url, title });
+
+            // 创建 iframe
+            const iframe = document.createElement('iframe');
+            iframe.id = 'iframe_' + id;
+            iframe.src = url;
+            document.getElementById('iframeWrap').appendChild(iframe);
+
+            // 创建 tab
+            renderTabs();
+            switchTab(id);
+        }
+
+        // 渲染 Tab 栏
+        function renderTabs() {
+            const bar = document.getElementById('tabBar');
+            bar.innerHTML = '';
+            tabs.forEach(t => {
+                const div = document.createElement('div');
+                div.className = 'tab-item' + (t.id === activeTabId ? ' active' : '');
+                div.innerHTML = '<span>' + escapeHtml(t.title) + '</span><span class="tab-close" onclick="event.stopPropagation();closeTab(\'' + t.id + '\')">&#10005;</span>';
+                div.onclick = () => switchTab(t.id);
+                bar.appendChild(div);
+            });
+        }
+
+        // 切换 Tab
+        function switchTab(id) {
+            activeTabId = id;
+            renderTabs();
+            document.querySelectorAll('.iframe-wrap iframe').forEach(f => f.classList.remove('active'));
+            const iframe = document.getElementById('iframe_' + id);
+            if (iframe) iframe.classList.add('active');
+
+            // 高亮菜单
+            document.querySelectorAll('.menu-link').forEach(l => l.classList.remove('active'));
+            const tab = tabs.find(t => t.id === id);
+            if (tab) {
+                document.querySelectorAll('.menu-link').forEach(l => {
+                    if (l.getAttribute('onclick') && l.getAttribute('onclick').includes("'" + tab.url + "'")) {
+                        l.classList.add('active');
+                    }
+                });
+            }
+        }
+
+        // 关闭 Tab
+        function closeTab(id) {
+            const idx = tabs.findIndex(t => t.id === id);
+            if (idx === -1) return;
+            tabs.splice(idx, 1);
+
+            const iframe = document.getElementById('iframe_' + id);
+            if (iframe) iframe.remove();
+
+            if (activeTabId === id) {
+                if (tabs.length > 0) {
+                    switchTab(tabs[Math.min(idx, tabs.length - 1)].id);
+                } else {
+                    activeTabId = null;
+                    renderTabs();
+                }
+            } else {
+                renderTabs();
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // 默认打开首页
+        openPage('首页/首页.html', '首页');
+    </script>
+</body>
+</html>

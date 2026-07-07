@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<!--
+  规格卡（转 Vue 的唯一真源）
+  编码：BMSP02    名称：供应商证照管理    类型：列表查询页
+  查询字段：供应商名称(输入,模糊搜索) / 证照状态(下拉:全部/有效/即将过期/已过期)
+  统计卡片：全部 / 有效 / 即将到期 / 已过期（联动 filter.status）
+  表格列：序号 / 供应商名称 / 证照名称 / 证照编号 / 发证日期 / 有效期至 / 状态(标签) / 操作
+  行操作：有效=编辑+删除 | 即将到期=编辑+删除+续期 | 已过期=编辑+删除+续期
+  顶部操作：新增证照(modal editForm)
+  弹窗 editForm：供应商名称(必填,下拉选择) / 证照名称(必填) / 证照编号(必填) / 发证日期(必填) / 有效期至(必填) / 上传附件
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../assets/app.css">
+<title>供应商证照管理</title>
+</head>
+<body class="page-body">
+
+<!-- ============ data-page 容器：转 Vue 时【只取这里面】============ -->
+<div id="page-content" data-page="BMSP02" class="prototype-page">
+
+  <div class="stat-row prototype-stat-row" id="statRow">
+    <div class="stat-card prototype-stat-card active" data-status="all"><div class="label">全部</div><div class="num">36</div></div>
+    <div class="stat-card prototype-stat-card" data-status="valid"><div class="label"><span class="dot" style="background:#2e7d32"></span>有效</div><div class="num">24</div></div>
+    <div class="stat-card prototype-stat-card" data-status="expiring"><div class="label"><span class="dot" style="background:#f9a825"></span>即将到期</div><div class="num">8</div></div>
+    <div class="stat-card prototype-stat-card" data-status="expired"><div class="label"><span class="dot" style="background:#c62828"></span>已过期</div><div class="num">4</div></div>
+  </div>
+
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title prototype-title"><span class="bar"></span>查询信息</div>
+      <div class="actions prototype-actions">
+        <button class="btn" data-action="reset">重置</button>
+        <button class="btn btn-primary" data-action="search">查询</button>
+        <button class="btn btn-primary" data-action="open-add" data-modal-target="editForm">＋ 新增证照</button>
+      </div>
+    </div>
+    <div class="query-grid prototype-query-grid">
+      <div class="form-item prototype-field"><label>供应商名称</label><input id="q_name" placeholder="请输入供应商名称"></div>
+      <div class="form-item prototype-field"><label>证照状态</label>
+        <select id="statusSelect" onchange="setStatus(this.value)">
+          <option value="all">全部</option>
+          <option value="valid">有效</option>
+          <option value="expiring">即将到期</option>
+          <option value="expired">已过期</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card list-card prototype-card" id="listCard">
+    <div class="list-toolbar prototype-list-toolbar">
+      <div class="title">供应商证照清单</div>
+      <div class="actions"></div>
+    </div>
+    <div class="status-tabs prototype-status-tabs" id="statusTabs">
+      <div class="status-tab prototype-status-tab active" data-status="all">全部 (36)</div>
+      <div class="status-tab prototype-status-tab" data-status="valid">有效 (24)</div>
+      <div class="status-tab prototype-status-tab" data-status="expiring">即将到期 (8)</div>
+      <div class="status-tab prototype-status-tab" data-status="expired">已过期 (4)</div>
+    </div>
+    <div class="table-wrap prototype-table-wrap">
+      <table>
+        <thead><tr>
+          <th>序号</th>
+          <th>供应商名称</th>
+          <th>证照名称</th>
+          <th>证照编号</th>
+          <th>发证日期</th>
+          <th>有效期至</th>
+          <th>证照状态</th>
+          <th>操作</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span class="total">共 <b id="total">36</b> 条</span>
+      <span class="pg active">1</span><span class="pg">2</span><span class="pg">›</span>
+    </div>
+  </div>
+
+</div><!-- /#page-content -->
+
+<!-- 弹窗：data-modal 容器，转 Vue 成 a-modal -->
+<div class="modal-mask" id="editFormMask" data-modal="editForm">
+  <div class="modal">
+    <div class="modal-title">登记证照</div>
+    <div class="modal-body prototype-modal-form">
+      <div class="form-item"><label>供应商名称<span class="req">*</span></label>
+        <select id="f_supplier">
+          <option value="">请选择供应商</option>
+          <option>华信电气设备有限公司</option>
+          <option>广西铝模科技有限公司</option>
+          <option>南方智能装备有限公司</option>
+          <option>中铝物流运输有限公司</option>
+          <option>桂海建筑工程有限公司</option>
+          <option>鼎盛矿业技术有限公司</option>
+          <option>云岭信息服务有限公司</option>
+          <option>恒通钢材贸易有限公司</option>
+        </select>
+      </div>
+      <div class="form-item"><label>证照名称<span class="req">*</span></label><input id="f_certName" placeholder="请输入证照名称"></div>
+      <div class="form-item"><label>证照编号<span class="req">*</span></label><input id="f_no" placeholder="请输入证照编号"></div>
+      <div class="form-item"><label>发证日期<span class="req">*</span></label><input type="date" id="f_issueDate"></div>
+      <div class="form-item"><label>有效期至<span class="req">*</span></label><input type="date" id="f_expire"></div>
+      <div class="form-item"><label>上传附件</label><div class="upload-hint"><button class="btn btn-sm" data-action="upload-file">选择文件</button><span class="hint-text">未选择文件</span></div></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-action="close-modal" data-modal-target="editForm">取消</button>
+      <button class="btn btn-primary" data-action="save" data-modal-target="editForm">确定</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+/* ====== 数据驱动（转 Vue → bmsp02Api.js 的 MOCK_DATA + a-table）====== */
+const STATUS={
+  valid:{c:'pass',t:'有效'},
+  expiring:{c:'pending',t:'即将到期'},
+  expired:{c:'reject',t:'已过期'}
+};
+const OPS={
+  valid:'<button class="op blue" data-action="open-edit" data-modal-target="editForm">编辑</button><button class="op red" data-action="delete-row">删除</button>',
+  expiring:'<button class="op blue" data-action="open-edit" data-modal-target="editForm">编辑</button><button class="op red" data-action="delete-row">删除</button><button class="op green" data-action="renew">续期</button>',
+  expired:'<button class="op blue" data-action="open-edit" data-modal-target="editForm">编辑</button><button class="op red" data-action="delete-row">删除</button><button class="op green" data-action="renew">续期</button>'
+};
+const suppliers=["华信电气设备","广西铝模科技","南方智能装备","中铝物流运输","桂海建筑工程","鼎盛矿业技术","云岭信息服务","恒通钢材贸易"];
+const certNames=["营业执照","食品经营许可证","危险化学品经营许可证","道路运输许可证","ISO 9001认证","排污许可证","安全生产许可证","特种设备使用登记证"];
+const DATA=[];
+const today=new Date('2024-06-15');
+for(let i=1;i<=36;i++){
+  const certName=certNames[i%certNames.length];
+  const daysOffset=[120,90,60,30,10,-5,-30][i%7];
+  const expire=new Date(today); expire.setDate(today.getDate()+daysOffset);
+  const expireStr=expire.toISOString().slice(0,10);
+  const issueDate=new Date(today); issueDate.setFullYear(issueDate.getFullYear()-1); issueDate.setDate(issueDate.getDate()+i*3);
+  const issueStr=issueDate.toISOString().slice(0,10);
+  let st='valid';
+  if(daysOffset<0) st='expired';
+  else if(daysOffset<=90) st='expiring';
+  DATA.push({
+    id:i,
+    name:suppliers[i%suppliers.length]+"有限公司",
+    certName:certName,
+    no:'ZZ'+String(100000+i),
+    issueDate:issueStr,
+    expire:expireStr,
+    status:st
+  });
+}
+
+let curStatus='all';
+function render(){
+  const filtered=DATA.filter(d=>curStatus==='all'||d.status===curStatus);
+  const list=filtered.slice(0,10);
+  document.getElementById('total').textContent=filtered.length;
+  document.getElementById('tbody').innerHTML=list.map((d,i)=>{
+    const m=STATUS[d.status];
+    return `<tr>
+      <td>${i+1}</td>
+      <td style="text-align:left">${d.name}</td>
+      <td>${d.certName}</td>
+      <td>${d.no}</td>
+      <td>${d.issueDate}</td>
+      <td>${d.expire}</td>
+      <td><span class="tag ${m.c}"><span class="td"></span>${m.t}</span></td>
+      <td>${OPS[d.status]}</td></tr>`;
+  }).join('');
+  PR.bindActions();
+}
+function setStatus(s){curStatus=s;
+  document.querySelectorAll('#statRow .stat-card,#statusTabs .status-tab').forEach(c=>c.classList.toggle('active',c.dataset.status===s));
+  document.getElementById('statusSelect').value=s; render();}
+document.querySelectorAll('#statRow .stat-card,#statusTabs .status-tab').forEach(el=>el.addEventListener('click',()=>setStatus(el.dataset.status)));
+
+/* ====== 本页动作注册 ====== */
+PR.on('search', ()=>{
+  const qName=document.getElementById('q_name').value.trim().toLowerCase();
+  if(qName){
+    const filtered=DATA.filter(d=>curStatus==='all'||d.status===curStatus).filter(d=>d.name.toLowerCase().includes(qName));
+    const list=filtered.slice(0,10);
+    document.getElementById('total').textContent=filtered.length;
+    document.getElementById('tbody').innerHTML=list.map((d,i)=>{
+      const m=STATUS[d.status];
+      return `<tr>
+        <td>${i+1}</td>
+        <td style="text-align:left">${d.name}</td>
+        <td>${d.certName}</td>
+        <td>${d.no}</td>
+        <td>${d.issueDate}</td>
+        <td>${d.expire}</td>
+        <td><span class="tag ${m.c}"><span class="td"></span>${m.t}</span></td>
+        <td>${OPS[d.status]}</td></tr>`;
+    }).join('');
+    PR.bindActions();
+  }else{render();}
+});
+PR.on('reset', ()=>{
+  document.getElementById('q_name').value='';
+  setStatus('all');
+});
+PR.on('renew', ()=>PR.toast('「续期」待实现'));
+PR.on('upload-file', ()=>PR.toast('文件上传待实现'));
+
+render();
+</script>
+</body>
+</html>

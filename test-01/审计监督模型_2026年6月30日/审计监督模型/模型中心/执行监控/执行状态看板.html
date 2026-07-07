@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>执行状态看板 - 审计监督</title>
+    <style>
+        :root { --primary: #1565c0; --primary-dark: #0d47a1; --primary-light: #e3f2fd; --success: #43a047; --warning: #fb8c00; --danger: #e53935; --info: #5e35b1; --text-primary: #333; --text-secondary: #666; --text-muted: #999; --border-color: #e0e0e0; --bg-body: #f0f2f5; --bg-card: #fff; --sidebar-width: 220px; --header-height: 56px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { font-family: "Microsoft YaHei","PingFang SC","Helvetica Neue",Arial,sans-serif; font-size: 13px; color: var(--text-primary); background: var(--bg-body); overflow: hidden; height: 100%; }
+        .top-header { height: var(--header-height); background: linear-gradient(90deg,#0d47a1 0%,#1976d2 60%,#42a5f5 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: #fff; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .menu-item .arrow { width: 12px; height: 12px; transition: transform .2s; opacity: .4; }
+        .menu-item.expanded .arrow { transform: rotate(90deg); }
+        .submenu { display: none; background: #fafafa; }
+        .submenu.open { display: block; }
+        .submenu .menu-item { padding-left: 38px; height: 36px; font-size: 12px; }
+        .submenu .submenu { background: #f5f5f5; }
+        .submenu .submenu .menu-item { padding-left: 56px; height: 34px; font-size: 12px; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px 0; }
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); cursor: pointer; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+        .page-title { font-size: 16px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .top-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .btn { height: 28px; padding: 0 14px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-sm { height: 24px; padding: 0 10px; font-size: 11px; }
+        .stat-cards { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 12px; flex-shrink: 0; }
+        .stat-card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 14px 12px; text-align: center; }
+        .stat-card .stat-value { font-size: 24px; font-weight: bold; color: var(--primary); }
+        .stat-card .stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+        .stat-card .stat-sub { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .stat-card.primary { border-left: 3px solid var(--primary); }
+        .stat-card.success { border-left: 3px solid var(--success); }
+        .stat-card.danger { border-left: 3px solid var(--danger); }
+        .stat-card.warning { border-left: 3px solid var(--warning); }
+        .stat-card.info { border-left: 3px solid var(--info); }
+        .stat-card.purple { border-left: 3px solid #7b1fa2; }
+        .stat-card .stat-value.green { color: var(--success); }
+        .stat-card .stat-value.red { color: var(--danger); }
+        .stat-card .stat-value.orange { color: var(--warning); }
+        .stat-card .stat-value.purple { color: var(--info); }
+        .query-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; flex-shrink: 0; }
+        .section-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: bold; color: var(--primary); }
+        .section-header .header-left-part { display: flex; align-items: center; gap: 8px; }
+        .section-header .section-icon { width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .section-actions { display: flex; align-items: center; gap: 8px; }
+        .query-form { padding: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 16px; }
+        .form-item { display: flex; align-items: center; gap: 8px; }
+        .form-item .form-label { width: 100px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+        .form-item .form-input, .form-item .form-select { flex: 1; height: 30px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; color: var(--text-primary); outline: none; min-width: 0; }
+        .form-item .form-input:focus, .form-item .form-select:focus { border-color: var(--primary); }
+        .list-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        .list-tabs { display: flex; align-items: center; gap: 2px; padding: 0 16px; border-bottom: 1px solid var(--border-color); background: #fafafa; flex-shrink: 0; }
+        .list-tab { padding: 8px 16px; cursor: pointer; font-size: 12px; color: var(--text-secondary); border-bottom: 2px solid transparent; transition: all .2s; white-space: nowrap; }
+        .list-tab:hover { color: var(--primary); }
+        .list-tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: bold; }
+        .list-tab .tab-count { font-size: 10px; padding: 1px 5px; border-radius: 8px; background: #e0e0e0; margin-left: 4px; }
+        .list-tab.active .tab-count { background: var(--primary); color: #fff; }
+        .data-table-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        .table-scroll-area { flex: 1; overflow: auto; min-height: 0; }
+        .table-scroll-area::-webkit-scrollbar { width: 6px; height: 6px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1100px; }
+        .data-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 10px 8px; text-align: center; border-bottom: 1px solid #bbdefb; white-space: nowrap; position: sticky; top: 0; z-index: 10; }
+        .data-table tbody td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .data-table tbody tr:hover { background: #f5f7fa; }
+        .data-table .col-link { color: var(--primary); cursor: pointer; }
+        .data-table .col-link:hover { text-decoration: underline; }
+        .cell-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 10px; font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .cell-tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+        .cell-success { background: #e8f5e9; color: #2e7d32; }
+        .cell-success::before { background: #66bb6a; }
+        .cell-fail { background: #ffebee; color: #c62828; }
+        .cell-fail::before { background: #ef5350; }
+        .cell-running { background: #e3f2fd; color: #1565c0; }
+        .cell-running::before { background: #42a5f5; }
+        .cell-warning { background: #fff3e0; color: #e65100; }
+        .cell-warning::before { background: #fb8c00; }
+        .model-tag { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 3px; font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .model-rule { background: #e3f2fd; color: #1565c0; }
+        .model-index { background: #f3e5f5; color: #6a1b9a; }
+        .model-composite { background: #fff3e0; color: #e65100; }
+        .op-btns { display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .op-btn { font-size: 12px; color: var(--primary); cursor: pointer; padding: 2px 6px; border-radius: 2px; transition: background .2s; border: none; background: transparent; }
+        .op-btn:hover { background: var(--primary-light); }
+        .op-btn.success { color: var(--success); }
+        .op-btn.success:hover { background: #e8f5e9; }
+        .pagination-bar { padding: 10px 16px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); background: #fff; flex-shrink: 0; }
+        .page-info { color: var(--text-secondary); font-size: 12px; }
+        .page-btn { min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); background: #fff; border-radius: 3px; cursor: pointer; font-size: 12px; color: var(--text-secondary); padding: 0 6px; }
+        .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .page-btn.disabled { opacity: .4; cursor: not-allowed; }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system"><span class="brand-name">绿星链通</span><span class="brand-version">2.0</span></div>
+            <div class="brand-divider"></div>
+            <div class="logo-text"><span class="cn">中国铝业集团有限公司</span><span class="en">ALUMINUM CORPORATION OF CHINA</span></div>
+        </div>
+        <div class="header-center"><div class="header-search"><input type="text" placeholder="请输入页面号"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg></div></div>
+        <div class="header-right"><span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span><div class="user-badge"><div class="user-avatar">潘</div></div></div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险驾驶舱</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128203;</span><span>风险事件池</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128188;</span><span>我的工作台</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务管理</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#9989;</span><span>验收审核</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128226;</span><span>超期督办</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>统计分析</span></div></div></div>
+            <div class="menu-group">
+                <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#9881;</span><span>模型中心</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="submenu open">
+                    <div class="menu-item" onclick="openModelList()">
+                        <div class="menu-left"><span>模型列表</span></div>
+                    </div>
+                    <div class="menu-item expanded" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>规则模型</span></div>
+                    </div>
+                    <div class="submenu">
+                        <div class="menu-item"><div class="menu-left"><span>规则配置管理</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>规则命中日志</span></div></div>
+                    </div>
+                    <div class="menu-item expanded" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>指标模型</span></div>
+                    </div>
+                    <div class="submenu">
+                        <div class="menu-item"><div class="menu-left"><span>供应商评分卡</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>采购业务健康度</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>评估结果查询</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>指标管理</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>指标新增</span></div></div>
+                    </div>
+                    <div class="menu-item" style="opacity:0.5;cursor:not-allowed;" title="后续开放">
+                        <div class="menu-left"><span>综合模型</span></div>
+                        <span style="font-size:10px;color:var(--text-muted);margin-left:auto;background:#f5f5f5;padding:1px 4px;border-radius:2px;">后续</span>
+                    </div>
+                    <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>执行监控</span></div>
+                    </div>
+                    <div class="submenu open">
+                        <div class="menu-item active"><div class="menu-left"><span>执行状态看板</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>执行结果查询</span></div></div>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a>模型中心</a><span class="sep">&gt;</span><a>执行监控</a><span class="sep">&gt;</span><span>执行状态看板</span>
+            </div>
+
+            <div class="page-header">
+                <div class="page-title"><span>执行状态看板</span></div>
+                <div class="top-actions">
+                    <button class="btn btn-success" onclick="batchExecute()">&#9654; 批量执行</button>
+                    <button class="btn btn-default">&#8635; 刷新</button>
+                </div>
+            </div>
+
+            <!-- 统计卡片 -->
+            <div class="stat-cards">
+                <div class="stat-card primary">
+                    <div class="stat-value">13</div>
+                    <div class="stat-label">模型总数</div>
+                    <div class="stat-sub">已上线 11 个</div>
+                </div>
+                <div class="stat-card success">
+                    <div class="stat-value green">1,286</div>
+                    <div class="stat-label">执行成功（今日）</div>
+                    <div class="stat-sub">较昨日 +5.2%</div>
+                </div>
+                <div class="stat-card danger">
+                    <div class="stat-value red">23</div>
+                    <div class="stat-label">执行失败（今日）</div>
+                    <div class="stat-sub">失败率 1.8%</div>
+                </div>
+                <div class="stat-card warning">
+                    <div class="stat-value orange">2</div>
+                    <div class="stat-label">运行中</div>
+                    <div class="stat-sub">预计 30s 内完成</div>
+                </div>
+                <div class="stat-card info">
+                    <div class="stat-value purple">5</div>
+                    <div class="stat-label">异常告警数</div>
+                    <div class="stat-sub">待处理 3 条</div>
+                </div>
+                <div class="stat-card purple">
+                    <div class="stat-value" style="font-size:20px;">3.2s</div>
+                    <div class="stat-label">平均执行耗时</div>
+                    <div class="stat-sub">较昨日 -0.4s</div>
+                </div>
+            </div>
+
+            <!-- 查询区 -->
+            <div class="query-section">
+                <div class="section-header">
+                    <div class="header-left-part"><span class="section-icon"></span><span>查询信息</span></div>
+                    <div class="section-actions">
+                        <button class="btn btn-default">&#8634; 重置</button>
+                        <button class="btn btn-primary">&#128269; 查询</button>
+                    </div>
+                </div>
+                <div class="query-form">
+                    <div class="form-item"><label class="form-label">模型名称</label><input type="text" class="form-input" placeholder="请输入模型名称"></div>
+                    <div class="form-item">
+                        <label class="form-label">模型类型</label>
+                        <select class="form-select"><option value="">全部</option><option>规则模型</option><option>指标模型</option><option>综合模型</option></select>
+                    </div>
+                    <div class="form-item">
+                        <label class="form-label">生命周期环节</label>
+                        <select class="form-select"><option value="">全部</option><option>准入</option><option>寻源</option><option>履约结算</option></select>
+                    </div>
+                    <div class="form-item">
+                        <label class="form-label">执行结果</label>
+                        <select class="form-select"><option value="">全部</option><option>成功</option><option>失败</option><option>运行中</option></select>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 列表 -->
+            <div class="list-section">
+                <div class="list-tabs">
+                    <div class="list-tab active" onclick="switchTab(this,'all')">全部 <span class="tab-count">13</span></div>
+                    <div class="list-tab" onclick="switchTab(this,'success')">成功 <span class="tab-count">10</span></div>
+                    <div class="list-tab" onclick="switchTab(this,'fail')">失败 <span class="tab-count">1</span></div>
+                    <div class="list-tab" onclick="switchTab(this,'running')">运行中 <span class="tab-count">2</span></div>
+                </div>
+                <div class="data-table-wrapper">
+                    <div class="table-scroll-area">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th>模型编号</th><th>模型名称</th><th>模型类型</th><th>调度表达式</th><th>上次执行时间</th><th>上次执行结果</th><th>执行耗时</th><th>命中风险数</th><th style="width:130px;">操作</th></tr>
+                            </thead>
+                            <tbody id="dataBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="pagination-bar">
+                    <span class="page-info">共 <span id="totalCount">13</span> 条</span>
+                    <div class="page-btns">
+                        <button class="page-btn disabled">&lt;</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn disabled">&gt;</button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        const models = [
+            { id:'M-01', name:'万能供应商识别', type:'规则模型', stage:'准入', cron:'0 0 2 * * ?', lastTime:'2026-06-29 02:00:12', result:'成功', cost:'1.2s', hits:1286 },
+            { id:'M-02', name:'供应商准入风险分析', type:'规则模型', stage:'准入', cron:'0 0 3 * * ?', lastTime:'2026-06-29 03:00:05', result:'成功', cost:'0.8s', hits:856 },
+            { id:'M-03', name:'单一来源合理性分析', type:'指标模型', stage:'寻源', cron:'0 30 2 * * ?', lastTime:'2026-06-29 02:30:18', result:'成功', cost:'3.5s', hits:523 },
+            { id:'M-04', name:'紧急采购合理性分析', type:'指标模型', stage:'寻源', cron:'0 0 4 * * ?', lastTime:'2026-06-29 04:00:22', result:'失败', cost:'—', hits:0 },
+            { id:'M-05', name:'采购协同性检查', type:'规则模型', stage:'寻源', cron:'0 0 2 * * ?', lastTime:'2026-06-29 02:00:08', result:'成功', cost:'0.6s', hits:342 },
+            { id:'M-06', name:'流废标情况分析', type:'指标模型', stage:'寻源', cron:'0 0 5 * * ?', lastTime:'2026-06-29 05:00:15', result:'成功', cost:'2.1s', hits:267 },
+            { id:'M-07', name:'应招未招线索核查', type:'规则模型', stage:'寻源', cron:'0 0 3 * * ?', lastTime:'2026-06-29 03:00:10', result:'成功', cost:'0.9s', hits:489 },
+            { id:'M-08', name:'涉嫌串通报价', type:'规则模型', stage:'寻源', cron:'0 0 2 * * ?', lastTime:'2026-06-29 02:00:14', result:'成功', cost:'1.8s', hits:756 },
+            { id:'M-09', name:'结算异常分析', type:'规则模型', stage:'履约结算', cron:'0 0 4 * * ?', lastTime:'2026-06-28 04:00:06', result:'成功', cost:'0.7s', hits:198 },
+            { id:'M-10', name:'供应商授信检查', type:'规则模型', stage:'履约结算', cron:'0 0 3 * * ?', lastTime:'2026-06-28 03:00:11', result:'成功', cost:'0.5s', hits:112 },
+            { id:'M-11', name:'合同标准模板使用分析', type:'指标模型', stage:'履约结算', cron:'0 0 5 * * ?', lastTime:'2026-06-28 05:00:20', result:'成功', cost:'1.5s', hits:89 },
+            { id:'M-12', name:'合同执行率分析', type:'规则模型', stage:'履约结算', cron:'0 0 2 * * ?', lastTime:'2026-06-29 02:00:03', result:'运行中', cost:'—', hits:0 },
+            { id:'M-13', name:'合同超期执行检查', type:'规则模型', stage:'履约结算', cron:'0 0 3 * * ?', lastTime:'2026-06-29 03:00:07', result:'运行中', cost:'—', hits:0 }
+        ];
+
+        function toggleMenu(el) {
+            const submenu = el.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                el.classList.toggle('expanded');
+                submenu.classList.toggle('open');
+            }
+        }
+
+        function openModelList() {
+            window.location.href = '../模型列表.html';
+        }
+
+        function renderTable(filter) {
+            const tbody = document.getElementById('dataBody');
+            tbody.innerHTML = '';
+            let filtered = models;
+            if (filter && filter !== 'all') {
+                filtered = models.filter(m => m.result === filter);
+            }
+            filtered.forEach(m => {
+                const resultClass = m.result === '成功' ? 'cell-success' : m.result === '失败' ? 'cell-fail' : 'cell-running';
+                const typeClass = m.type === '规则模型' ? 'model-rule' : m.type === '指标模型' ? 'model-index' : 'model-composite';
+                const hitsDisplay = m.hits > 0 ? `<span class="col-link" onclick="viewHits('${m.id}')">${m.hits}</span>` : m.hits;
+                tbody.innerHTML += `<tr>
+                    <td><span class="col-link" onclick="viewModel('${m.id}')">${m.id}</span></td>
+                    <td style="text-align:left;">${m.name}</td>
+                    <td><span class="model-tag ${typeClass}">${m.type}</span></td>
+                    <td style="font-size:11px;color:var(--text-muted);">${m.cron}</td>
+                    <td>${m.lastTime}</td>
+                    <td><span class="cell-tag ${resultClass}">${m.result}</span></td>
+                    <td>${m.cost}</td>
+                    <td>${hitsDisplay}</td>
+                    <td><div class="op-btns"><button class="op-btn success" onclick="executeModel('${m.id}')">&#9654; 执行</button><button class="op-btn" onclick="viewHistory('${m.id}')">查看历史</button></div></td>
+                </tr>`;
+            });
+            document.getElementById('totalCount').textContent = filtered.length;
+        }
+
+        function switchTab(el, filter) {
+            document.querySelectorAll('.list-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            renderTable(filter);
+        }
+
+        function viewModel(id) {
+            window.location.href = '../模型列表.html?model=' + id;
+        }
+
+        function viewHits(id) {
+            window.location.href = '执行结果查询.html?model=' + id;
+        }
+
+        function viewHistory(id) {
+            window.location.href = '执行结果查询.html?model=' + id;
+        }
+
+        function executeModel(id) {
+            alert('已触发模型 ' + id + ' 的手动执行，请稍后查看执行结果。');
+        }
+
+        function batchExecute() {
+            alert('已触发所有模型批量执行，请稍后查看执行结果。');
+        }
+
+        renderTable('all');
+    </script>
+</body>
+</html>

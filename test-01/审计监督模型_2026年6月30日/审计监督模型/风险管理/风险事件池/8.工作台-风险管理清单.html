@@ -1,0 +1,690 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>工作台 - 风险管理清单</title>
+    <style>
+        :root {
+            --primary: #1565c0;
+            --primary-dark: #0d47a1;
+            --primary-light: #e3f2fd;
+            --success: #43a047;
+            --warning: #fb8c00;
+            --danger: #e53935;
+            --info: #5e35b1;
+            --text-primary: #333;
+            --text-secondary: #666;
+            --text-muted: #999;
+            --border-color: #e0e0e0;
+            --bg-body: #f0f2f5;
+            --bg-card: #fff;
+            --sidebar-width: 220px;
+            --header-height: 56px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px;
+            color: var(--text-primary);
+            background: var(--bg-body);
+            overflow: hidden;
+            height: 100%;
+        }
+        .top-header {
+            height: var(--header-height);
+            background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            color: #fff;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; letter-spacing: 1px; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .menu-item .arrow { width: 12px; height: 12px; transition: transform .2s; opacity: .4; }
+        .menu-item.expanded .arrow { transform: rotate(90deg); }
+        .submenu { display: none; background: #fafafa; }
+        .submenu.open { display: block; }
+        .submenu .menu-item { padding-left: 38px; height: 36px; font-size: 12px; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px 0; }
+        .page-tabs { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 0 4px; flex-shrink: 0; }
+        .tab-list { display: flex; align-items: center; gap: 4px; }
+        .tab-item { padding: 10px 18px; cursor: pointer; color: var(--text-secondary); font-size: 13px; border-bottom: 2px solid transparent; transition: all .2s; position: relative; user-select: none; }
+        .tab-item:hover { color: var(--primary); }
+        .tab-item.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: bold; }
+        .tab-item .tab-close { margin-left: 6px; font-size: 14px; opacity: .4; display: inline-block; width: 14px; text-align: center; }
+        .tab-item .tab-close:hover { opacity: 1; color: var(--danger); }
+        .tab-extra { padding: 0 12px; }
+
+        .query-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; flex-shrink: 0; }
+        .section-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 14px; font-weight: bold; color: var(--primary); }
+        .section-header .header-left-part { display: flex; align-items: center; gap: 8px; }
+        .section-header .section-icon { width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .section-actions { display: flex; align-items: center; gap: 8px; }
+        .query-form { padding: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 16px; }
+        .form-item { display: flex; align-items: center; gap: 8px; }
+        .form-item .form-label { width: 100px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+        .form-item .form-input, .form-item .form-select { flex: 1; height: 30px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; color: var(--text-primary); outline: none; transition: border-color .2s; min-width: 0; }
+        .form-item .form-input:focus, .form-item .form-select:focus { border-color: var(--primary); }
+        .form-item .form-input::placeholder { color: #bbb; }
+        .form-item.date-range .form-input { width: calc(50% - 6px); }
+        .form-item.date-range .date-sep { color: var(--text-muted); padding: 0 2px; }
+        .btn { height: 28px; padding: 0 14px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+
+        .list-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        .status-tabs { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border-color); background: #fafafa; flex-shrink: 0; }
+        .status-tab { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 3px; cursor: pointer; font-size: 12px; color: var(--text-secondary); background: #fff; border: 1px solid var(--border-color); transition: all .2s; user-select: none; }
+        .status-tab:hover { border-color: var(--primary); color: var(--primary); }
+        .status-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: bold; }
+        .status-tab .st-count { font-size: 11px; padding: 1px 6px; border-radius: 10px; font-weight: bold; background: rgba(0,0,0,.08); }
+        .status-tab.active .st-count { background: rgba(255,255,255,.25); color: #fff; }
+        .status-tab .st-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .6; }
+
+        .list-toolbar { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .toolbar-left { display: flex; align-items: center; gap: 10px; }
+        .toolbar-right { display: flex; align-items: center; gap: 8px; }
+        .section-title { font-size: 14px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+        .section-title .title-badge { font-size: 11px; padding: 1px 6px; border-radius: 10px; background: var(--primary); color: #fff; font-weight: normal; }
+
+        .data-table-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        .table-scroll-area { flex: 1; overflow: auto; min-height: 0; }
+        .table-scroll-area::-webkit-scrollbar { width: 6px; height: 6px; }
+        .table-scroll-area::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1300px; }
+        .data-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 0; text-align: center; border-bottom: 1px solid #bbdefb; white-space: nowrap; position: sticky; top: 0; z-index: 10; }
+        .data-table thead th .th-content { display: flex; align-items: center; justify-content: center; gap: 4px; padding: 10px 8px; cursor: pointer; user-select: none; }
+        .data-table thead th .th-content:hover { background: #d4e9fd; }
+        .data-table tbody td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #f0f0f0; color: var(--text-primary); }
+        .data-table tbody tr:hover { background: #f5f7fa; }
+        .data-table .checkbox-col { width: 40px; }
+        .data-table .op-col { min-width: 160px; }
+        .data-table th.checkbox-col, .data-table th.op-col { position: sticky; z-index: 15; background: var(--primary-light); }
+        .data-table th.checkbox-col { left: 0; }
+        .data-table th.op-col { right: 0; }
+        .data-table td:first-child { position: sticky; left: 0; background: #fff; z-index: 5; }
+        .data-table td:last-child { position: sticky; right: 0; background: #fff; z-index: 5; }
+        .data-table tbody tr:hover td:first-child { background: #f5f7fa; }
+        .data-table tbody tr:hover td:last-child { background: #f5f7fa; }
+        .data-table .col-link { color: var(--primary); cursor: pointer; text-decoration: none; }
+        .data-table .col-link:hover { text-decoration: underline; }
+
+        .level-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 3px; font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .level-tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+        .level-red { background: #ffebee; color: #c62828; }
+        .level-red::before { background: #ef5350; }
+        .level-orange { background: #fff3e0; color: #e65100; }
+        .level-orange::before { background: #fb8c00; }
+        .level-yellow { background: #fffde7; color: #f57f17; }
+        .level-yellow::before { background: #fdd835; }
+        .level-blue { background: #e3f2fd; color: #1565c0; }
+        .level-blue::before { background: #42a5f5; }
+
+        .cell-status-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 3px; font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .cell-status-tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+        .st-wait { background: #e3f2fd; color: #1565c0; }
+        .st-wait::before { background: #42a5f5; }
+        .st-process { background: #f3e5f5; color: #6a1b9a; }
+        .st-process::before { background: #ab47bc; }
+        .st-check { background: #fff3e0; color: #e65100; }
+        .st-check::before { background: #fb8c00; }
+        .st-done { background: #e8f5e9; color: #2e7d32; }
+        .st-done::before { background: #66bb6a; }
+
+        .op-btns { display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .op-btn { font-size: 12px; color: var(--primary); cursor: pointer; padding: 2px 6px; border-radius: 2px; transition: background .2s; border: none; background: transparent; text-decoration: none; display: inline-block; }
+        .op-btn:hover { background: var(--primary-light); }
+        .op-btn.danger { color: var(--danger); }
+        .op-btn.danger:hover { background: #ffebee; }
+        .op-btn.success { color: var(--success); }
+        .op-btn.success:hover { background: #e8f5e9; }
+        .op-btn.warning { color: var(--warning); }
+        .op-btn.warning:hover { background: #fff3e0; }
+
+        .pagination-bar { padding: 10px 16px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); background: #fff; flex-shrink: 0; }
+        .pagination-bar .page-info { color: var(--text-secondary); font-size: 12px; }
+        .page-btns { display: flex; align-items: center; gap: 4px; }
+        .page-btn { min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); background: #fff; border-radius: 3px; cursor: pointer; font-size: 12px; color: var(--text-secondary); padding: 0 6px; }
+        .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .page-btn.disabled { opacity: .4; cursor: not-allowed; }
+        .page-size-select { height: 28px; border: 1px solid var(--border-color); border-radius: 3px; font-size: 12px; padding: 0 4px; outline: none; }
+        .page-jump { display: flex; align-items: center; gap: 4px; font-size: 12px; color: var(--text-secondary); }
+        .page-jump input { width: 40px; height: 28px; border: 1px solid var(--border-color); border-radius: 3px; text-align: center; font-size: 12px; outline: none; }
+
+        .batch-bar { padding: 8px 16px; background: #e3f2fd; border-bottom: 1px solid #bbdefb; display: none; align-items: center; gap: 12px; flex-shrink: 0; }
+        .batch-bar.show { display: flex; }
+        .batch-bar .batch-info { color: var(--primary); font-size: 12px; }
+
+        input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--primary); cursor: pointer; }
+
+        .empty-state { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; color: var(--text-muted); gap: 12px; }
+        .empty-state.show { display: flex; }
+        .empty-state-icon { font-size: 48px; opacity: .3; }
+        .empty-state-text { font-size: 14px; }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system">
+                <span class="brand-name">绿星链通</span>
+                <span class="brand-version">2.0</span>
+            </div>
+            <div class="brand-divider"></div>
+            <div class="logo-text">
+                <span class="cn">中国铝业集团有限公司</span>
+                <span class="en">ALUMINUM CORPORATION OF CHINA</span>
+            </div>
+        </div>
+        <div class="header-center">
+            <div class="header-search">
+                <input type="text" placeholder="请输入页面号">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <path d="M21 21l-4.35-4.35"></path>
+                </svg>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span>
+            <div class="user-badge">
+                <div class="user-avatar">潘</div>
+            </div>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group">
+                <div class="menu-item" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-item expanded" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险驾驶舱</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="submenu open">
+                    <div class="menu-item"><div class="menu-left"><span>风险总览</span></div></div>
+                    <div class="menu-item"><div class="menu-left"><span>部门排名</span></div></div>
+                    <div class="menu-item"><div class="menu-left"><span>趋势分析</span></div></div>
+                    <div class="menu-item"><div class="menu-left"><span>超期预警</span></div></div>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-item" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#128203;</span><span>风险事件池</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-item active">
+                    <div class="menu-left"><span class="menu-icon">&#128188;</span><span>我的工作台</span></div>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-item" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#9989;</span><span>验收审核</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-item" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#128226;</span><span>超期督办</span></div>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-item" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div>
+                </div>
+            </div>
+            <div class="menu-group">
+                <div class="menu-item" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#128202;</span><span>统计分析</span></div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-tabs">
+                <div class="tab-list">
+                    <div class="tab-item" onclick="switchTab(this)"><span>&#127968; 首页</span></div>
+                    <div class="tab-item active" onclick="switchTab(this)">
+                        <span>风险管理清单</span>
+                        <span class="tab-close" onclick="closeTab(event, this)">&#10005;</span>
+                    </div>
+                </div>
+                <div class="tab-extra"><a href="风险登记录入.html" class="btn btn-primary">+ 新增录入</a></div>
+            </div>
+
+            <div class="query-section">
+                <div class="section-header">
+                    <div class="header-left-part">
+                        <span class="section-icon"></span>
+                        <span>查询信息</span>
+                    </div>
+                    <div class="section-actions">
+                        <button class="btn btn-default" onclick="resetForm()">&#8634; 重置</button>
+                        <button class="btn btn-primary" onclick="doSearch()">&#128269; 查询</button>
+                    </div>
+                </div>
+                <div class="query-form">
+                    <div class="form-item"><label class="form-label">风险编号</label><input type="text" class="form-input" placeholder="请输入风险编号"></div>
+                    <div class="form-item"><label class="form-label">风险标题</label><input type="text" class="form-input" placeholder="请输入风险标题"></div>
+                    <div class="form-item">
+                        <label class="form-label">风险分类</label>
+                        <select class="form-select">
+                            <option value="">请选择</option>
+                            <option value="A">计划管理风险</option>
+                            <option value="B">供应商管理风险</option>
+                            <option value="C">招投标风险</option>
+                            <option value="D">合同管理风险</option>
+                            <option value="E">价格与结算风险</option>
+                            <option value="F">质量与库存风险</option>
+                            <option value="G">廉洁合规风险</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <label class="form-label">风险等级</label>
+                        <select class="form-select" id="levelFilter">
+                            <option value="">全部等级</option>
+                            <option value="red">红色-重大</option>
+                            <option value="orange">橙色-较大</option>
+                            <option value="yellow">黄色-一般</option>
+                            <option value="blue">蓝色-关注</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <label class="form-label">发现来源</label>
+                        <select class="form-select">
+                            <option value="">请选择</option>
+                            <option value="system">系统监测</option>
+                            <option value="audit">审计移送</option>
+                            <option value="business">业务报告</option>
+                            <option value="report">举报线索</option>
+                            <option value="external">外部舆情</option>
+                        </select>
+                    </div>
+                    <div class="form-item">
+                        <label class="form-label">责任部门</label>
+                        <select class="form-select">
+                            <option value="">请选择</option>
+                            <option value="purchase">采购部</option>
+                            <option value="finance">财务部</option>
+                            <option value="quality">质量管理部</option>
+                            <option value="legal">法务部</option>
+                            <option value="audit">审计部</option>
+                        </select>
+                    </div>
+                    <div class="form-item date-range">
+                        <label class="form-label">发现时间</label>
+                        <input type="date" class="form-input" value="2024-10-01"><span class="date-sep">至</span><input type="date" class="form-input" value="2024-12-31">
+                    </div>
+                    <div class="form-item">
+                        <label class="form-label">当前状态</label>
+                        <select class="form-select" id="statusFilter">
+                            <option value="">全部状态</option>
+                            <option value="wait">待签收</option>
+                            <option value="process">处置中</option>
+                            <option value="check">待验收</option>
+                            <option value="done">已办结</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="list-section">
+                <div class="list-toolbar">
+                    <div class="toolbar-left"><span class="section-title">&#9776; 风险管理清单 <span class="title-badge" id="totalBadge">128</span></span></div>
+                    <div class="toolbar-right">
+                        <button class="btn btn-default">&#128229; 批量导出</button>
+                        <button class="btn btn-success">&#10004; 批量签收</button>
+                    </div>
+                </div>
+
+                <div class="batch-bar" id="batchBar">
+                    <span class="batch-info">已选择 <strong id="batchCount">0</strong> 项</span>
+                    <button class="btn btn-primary" style="height:26px;padding:0 12px;font-size:11px;">批量签收</button>
+                    <button class="btn btn-danger" style="height:26px;padding:0 12px;font-size:11px;">批量派单</button>
+                </div>
+
+                <div class="data-table-wrapper">
+                    <div class="status-tabs">
+                        <div class="status-tab active" data-status="all" onclick="filterByStatusTab(this)"><span class="st-dot"></span><span>全部</span><span class="st-count">128</span></div>
+                        <div class="status-tab" data-status="wait" onclick="filterByStatusTab(this)"><span class="st-dot"></span><span>待签收</span><span class="st-count">15</span></div>
+                        <div class="status-tab" data-status="process" onclick="filterByStatusTab(this)"><span class="st-dot"></span><span>处置中</span><span class="st-count">42</span></div>
+                        <div class="status-tab" data-status="check" onclick="filterByStatusTab(this)"><span class="st-dot"></span><span>待验收</span><span class="st-count">28</span></div>
+                        <div class="status-tab" data-status="done" onclick="filterByStatusTab(this)"><span class="st-dot"></span><span>已办结</span><span class="st-count">43</span></div>
+                    </div>
+                    <div class="table-scroll-area">
+                        <table class="data-table" id="dataTable">
+                        <thead>
+                            <tr>
+                                <th class="checkbox-col"><input type="checkbox" id="checkAll" onchange="toggleCheckAll()"></th>
+                                <th><div class="th-content"><span>序号</span></div></th>
+                                <th><div class="th-content"><span>风险编号</span></div></th>
+                                <th><div class="th-content"><span>风险标题</span></div></th>
+                                <th><div class="th-content"><span>风险分类</span></div></th>
+                                <th><div class="th-content"><span>风险等级</span></div></th>
+                                <th><div class="th-content"><span>涉及金额(万元)</span></div></th>
+                                <th><div class="th-content"><span>责任部门</span></div></th>
+                                <th><div class="th-content"><span>责任人</span></div></th>
+                                <th><div class="th-content"><span>发现时间</span></div></th>
+                                <th><div class="th-content"><span>当前状态</span></div></th>
+                                <th class="op-col"><div class="th-content"><span>操作</span></div></th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody">
+                            <tr data-status="wait" data-level="red">
+                                <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+                                <td>1</td>
+                                <td><a href="#" class="col-link">FX20241201001</a></td>
+                                <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">某招标项目三家投标人MAC地址重合涉嫌围标</td>
+                                <td>招投标风险</td>
+                                <td><span class="level-tag level-red">红色-重大</span></td>
+                                <td>386.50</td>
+                                <td>招标办</td>
+                                <td>王建国</td>
+                                <td>2024-12-01 09:30</td>
+                                <td><span class="cell-status-tag st-wait">待签收</span></td>
+                                <td>
+                                    <div class="op-btns">
+                                        <a href="等级调整审核.html" class="op-btn">签收</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr data-status="wait" data-level="orange">
+                                <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+                                <td>2</td>
+                                <td><a href="#" class="col-link">FX20241201002</a></td>
+                                <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">供应商A与供应商B存在隐性关联关系未披露</td>
+                                <td>供应商管理风险</td>
+                                <td><span class="level-tag level-orange">橙色-较大</span></td>
+                                <td>125.00</td>
+                                <td>采购部</td>
+                                <td>李晓明</td>
+                                <td>2024-12-01 10:15</td>
+                                <td><span class="cell-status-tag st-wait">待签收</span></td>
+                                <td>
+                                    <div class="op-btns">
+                                        <a href="等级调整审核.html" class="op-btn">签收</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr data-status="process" data-level="red">
+                                <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+                                <td>3</td>
+                                <td><a href="#" class="col-link">FX20241128003</a></td>
+                                <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">某单一来源采购定价显著高于市场价15%</td>
+                                <td>价格与结算风险</td>
+                                <td><span class="level-tag level-red">红色-重大</span></td>
+                                <td>520.80</td>
+                                <td>财务部</td>
+                                <td>张丽娟</td>
+                                <td>2024-11-28 14:20</td>
+                                <td><span class="cell-status-tag st-process">处置中</span></td>
+                                <td>
+                                    <div class="op-btns">
+                                        <a href="#" class="op-btn warning">填报进度</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr data-status="process" data-level="yellow">
+                                <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+                                <td>4</td>
+                                <td><a href="#" class="col-link">FX20241125004</a></td>
+                                <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">合同变更未履行审批程序，金额超50万</td>
+                                <td>合同管理风险</td>
+                                <td><span class="level-tag level-yellow">黄色-一般</span></td>
+                                <td>68.50</td>
+                                <td>法务部</td>
+                                <td>赵志强</td>
+                                <td>2024-11-25 11:00</td>
+                                <td><span class="cell-status-tag st-process">处置中</span></td>
+                                <td>
+                                    <div class="op-btns">
+                                        <a href="#" class="op-btn warning">填报进度</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr data-status="check" data-level="orange">
+                                <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+                                <td>5</td>
+                                <td><a href="#" class="col-link">FX20241120005</a></td>
+                                <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">质检数据造假，不合格耐火材料流入生产环节</td>
+                                <td>质量与库存风险</td>
+                                <td><span class="level-tag level-orange">橙色-较大</span></td>
+                                <td>210.00</td>
+                                <td>质量管理部</td>
+                                <td>刘婷婷</td>
+                                <td>2024-11-20 16:45</td>
+                                <td><span class="cell-status-tag st-check">待验收</span></td>
+                                <td>
+                                    <div class="op-btns">
+                                        <a href="#" class="op-btn success">提交验收</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr data-status="check" data-level="blue">
+                                <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+                                <td>6</td>
+                                <td><a href="#" class="col-link">FX20241118006</a></td>
+                                <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">某物资库存周转异常，存在呆滞积压风险</td>
+                                <td>质量与库存风险</td>
+                                <td><span class="level-tag level-blue">蓝色-关注</span></td>
+                                <td>32.60</td>
+                                <td>仓储部</td>
+                                <td>陈大伟</td>
+                                <td>2024-11-18 09:10</td>
+                                <td><span class="cell-status-tag st-check">待验收</span></td>
+                                <td>
+                                    <div class="op-btns">
+                                        <a href="#" class="op-btn success">提交验收</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr data-status="done" data-level="red">
+                                <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+                                <td>7</td>
+                                <td><a href="#" class="col-link">FX20241110007</a></td>
+                                <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">围标串标专项调查：三家关联企业轮流中标</td>
+                                <td>招投标风险</td>
+                                <td><span class="level-tag level-red">红色-重大</span></td>
+                                <td>890.00</td>
+                                <td>审计部</td>
+                                <td>孙丽华</td>
+                                <td>2024-11-10 08:30</td>
+                                <td><span class="cell-status-tag st-done">已办结</span></td>
+                                <td>
+                                    <div class="op-btns">
+                                        <a href="#" class="op-btn">归档</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr data-status="done" data-level="yellow">
+                                <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+                                <td>8</td>
+                                <td><a href="#" class="col-link">FX20241105008</a></td>
+                                <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">紧急采购占比异常升高，存在拆分规避招标嫌疑</td>
+                                <td>计划管理风险</td>
+                                <td><span class="level-tag level-yellow">黄色-一般</span></td>
+                                <td>45.20</td>
+                                <td>采购部</td>
+                                <td>周建国</td>
+                                <td>2024-11-05 13:50</td>
+                                <td><span class="cell-status-tag st-done">已办结</span></td>
+                                <td>
+                                    <div class="op-btns">
+                                        <a href="#" class="op-btn">归档</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr data-status="process" data-level="orange">
+                                <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+                                <td>9</td>
+                                <td><a href="#" class="col-link">FX20241101009</a></td>
+                                <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">付款账期显著偏离合同约定，提前支付货款</td>
+                                <td>价格与结算风险</td>
+                                <td><span class="level-tag level-orange">橙色-较大</span></td>
+                                <td>156.80</td>
+                                <td>财务部</td>
+                                <td>吴海燕</td>
+                                <td>2024-11-01 10:25</td>
+                                <td><span class="cell-status-tag st-process">处置中</span></td>
+                                <td>
+                                    <div class="op-btns">
+                                        <a href="#" class="op-btn warning">填报进度</a>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr data-status="wait" data-level="blue">
+                                <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+                                <td>10</td>
+                                <td><a href="#" class="col-link">FX20241028010</a></td>
+                                <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">单一供应商年度采购额占比超60%，集中度过高</td>
+                                <td>供应商管理风险</td>
+                                <td><span class="level-tag level-blue">蓝色-关注</span></td>
+                                <td>--</td>
+                                <td>采购部</td>
+                                <td>郑伟明</td>
+                                <td>2024-10-28 15:40</td>
+                                <td><span class="cell-status-tag st-wait">待签收</span></td>
+                                <td>
+                                    <div class="op-btns">
+                                        <a href="等级调整审核.html" class="op-btn">签收</a>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                        </table>
+                        <div class="empty-state" id="emptyState">
+                            <div class="empty-state-icon">&#128196;</div>
+                            <div class="empty-state-text">暂无数据</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="pagination-bar">
+                    <span class="page-info">共 128 条</span>
+                    <select class="page-size-select">
+                        <option>10 条/页</option><option selected>20 条/页</option><option>50 条/页</option>
+                    </select>
+                    <div class="page-btns">
+                        <button class="page-btn disabled">&lt;&lt;</button>
+                        <button class="page-btn disabled">&lt;</button>
+                        <button class="page-btn active">1</button>
+                        <button class="page-btn">2</button>
+                        <button class="page-btn">3</button>
+                        <button class="page-btn">4</button>
+                        <button class="page-btn">5</button>
+                        <button class="page-btn">&gt;</button>
+                        <button class="page-btn">&gt;&gt;</button>
+                    </div>
+                    <div class="page-jump">前往 <input type="text" value="1"> 页</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleMenu(el) {
+            const submenu = el.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                el.classList.toggle('expanded');
+                submenu.classList.toggle('open');
+            }
+        }
+        function switchTab(el) {
+            document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+        }
+        function closeTab(e, closeBtn) {
+            e.stopPropagation();
+            const tab = closeBtn.closest('.tab-item');
+            if (tab.classList.contains('active')) {
+                const prev = tab.previousElementSibling;
+                if (prev) prev.classList.add('active');
+            }
+            tab.remove();
+        }
+        function toggleCheckAll() {
+            const checked = document.getElementById('checkAll').checked;
+            document.querySelectorAll('.row-check').forEach(cb => cb.checked = checked);
+            updateBatch();
+        }
+        function updateBatch() {
+            const checked = document.querySelectorAll('.row-check:checked');
+            document.getElementById('batchBar').classList.toggle('show', checked.length > 0);
+            document.getElementById('batchCount').textContent = checked.length;
+        }
+        function filterByStatusTab(tabEl) {
+            document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+            tabEl.classList.add('active');
+            const status = tabEl.dataset.status;
+            const rows = document.querySelectorAll('#tableBody tr');
+            let count = 0;
+            rows.forEach(row => {
+                const show = status === 'all' || row.dataset.status === status;
+                row.style.display = show ? '' : 'none';
+                if (show) { row.cells[1].textContent = ++count; }
+            });
+            document.getElementById('emptyState').classList.toggle('show', count === 0);
+            document.getElementById('totalBadge').textContent = count;
+        }
+        function resetForm() {
+            document.querySelectorAll('.query-form input, .query-form select').forEach(el => {
+                if (el.type === 'date') { el.value = el.getAttribute('value') || ''; }
+                else { el.value = ''; }
+            });
+            document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+            document.querySelector('.status-tab[data-status="all"]').classList.add('active');
+            document.querySelectorAll('#tableBody tr').forEach((row, idx) => {
+                row.style.display = '';
+                row.cells[1].textContent = idx + 1;
+            });
+            document.getElementById('totalBadge').textContent = '10';
+        }
+        function doSearch() { alert('查询中...'); }
+    </script>
+</body>
+</html>

@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>首页 - 我的工作台</title>
+    <style>
+        :root {
+            --primary: #1565c0; --primary-dark: #0d47a1; --primary-light: #e3f2fd;
+            --success: #43a047; --warning: #fb8c00; --danger: #e53935; --info: #5e35b1;
+            --text-primary: #333; --text-secondary: #666; --text-muted: #999;
+            --border-color: #e0e0e0; --bg-body: #f0f2f5; --bg-card: #fff;
+            --sidebar-width: 220px; --header-height: 56px;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif;
+            font-size: 13px; color: var(--text-primary); background: var(--bg-body);
+            overflow: hidden; height: 100%;
+        }
+
+        .top-header {
+            height: var(--header-height);
+            background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 20px; color: #fff; position: fixed;
+            top: 0; left: 0; right: 0; z-index: 1000;
+            box-shadow: 0 2px 8px rgba(0,0,0,.15);
+        }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+        .notice-icon { position: relative; cursor: pointer; font-size: 18px; }
+        .notice-badge { position: absolute; top: -6px; right: -6px; width: 16px; height: 16px; background: var(--danger); color: #fff; font-size: 10px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .sidebar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 2px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px 0; position: relative; }
+        .main-content::-webkit-scrollbar { width: 10px; }
+        .main-content::-webkit-scrollbar-track { background: #f0f2f5; border-radius: 5px; }
+        .main-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 5px; border: 2px solid #f0f2f5; }
+        .main-content::-webkit-scrollbar-thumb:hover { background: #999; }
+        .page-title { font-size: 16px; font-weight: bold; color: var(--text-primary); margin-bottom: 12px; flex-shrink: 0; }
+
+        .scroll-content { flex: 1; overflow-y: auto; padding-bottom: 20px; }
+        .scroll-content::-webkit-scrollbar { width: 10px; }
+        .scroll-content::-webkit-scrollbar-track { background: #f0f2f5; border-radius: 5px; }
+        .scroll-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 5px; border: 2px solid #f0f2f5; }
+        .scroll-content::-webkit-scrollbar-thumb:hover { background: #999; }
+
+        /* 统计卡片 */
+        .stat-row { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; margin-bottom: 12px; flex-shrink: 0; }
+        .stat-card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 14px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: all .2s; }
+        .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,.1); }
+        .stat-icon { width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+        .stat-icon.blue { background: var(--primary-light); color: var(--primary); }
+        .stat-icon.purple { background: #f3e5f5; color: var(--info); }
+        .stat-icon.green { background: #e8f5e9; color: var(--success); }
+        .stat-icon.red { background: #ffebee; color: var(--danger); }
+        .stat-icon.orange { background: #fff3e0; color: var(--warning); }
+        .stat-icon.gray { background: #f5f5f5; color: var(--text-muted); }
+        .stat-info { flex: 1; }
+        .stat-value { font-size: 22px; font-weight: bold; color: var(--text-primary); }
+        .stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+        .stat-change { font-size: 10px; margin-top: 2px; }
+        .stat-change.up { color: var(--danger); }
+        .stat-change.down { color: var(--success); }
+
+        /* 双栏 */
+        .two-col { display: grid; grid-template-columns: 50% 50%; gap: 12px; margin-bottom: 12px; }
+        .two-col > .card { height: 100%; display: flex; flex-direction: column; }
+        .two-col > .card > .card-body { flex: 1; }
+
+        /* 卡片通用 */
+        .card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); }
+        .card-header { padding: 12px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; color: var(--primary); display: flex; align-items: center; justify-content: space-between; }
+        .card-header .title-left { display: flex; align-items: center; gap: 8px; }
+        .card-header .title-left::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .card-header .title-right { font-size: 12px; color: var(--text-muted); font-weight: normal; }
+        .card-body { padding: 12px 16px; }
+
+        /* 流程可视化 */
+        .flow-track { display: flex; align-items: center; justify-content: space-between; padding: 16px; background: #fafafa; border-radius: 4px; margin-bottom: 12px; }
+        .flow-step { display: flex; flex-direction: column; align-items: center; gap: 6px; position: relative; flex: 1; }
+        .flow-step:not(:last-child)::after { content: ""; position: absolute; top: 14px; right: -50%; width: 100%; height: 2px; background: #e0e0e0; z-index: 0; }
+        .flow-step.active:not(:last-child)::after { background: var(--primary); }
+        .flow-dot { width: 28px; height: 28px; border-radius: 50%; background: #e0e0e0; color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: bold; z-index: 1; position: relative; }
+        .flow-step.active .flow-dot { background: var(--primary); }
+        .flow-step.current .flow-dot { background: var(--primary); box-shadow: 0 0 0 4px rgba(21,101,192,.2); }
+        .flow-step.done .flow-dot { background: var(--success); }
+        .flow-label { font-size: 11px; color: var(--text-muted); }
+        .flow-step.active .flow-label { color: var(--primary); font-weight: bold; }
+        .flow-step.current .flow-label { color: var(--primary-dark); font-weight: bold; }
+
+        /* 待办列表 */
+        .todo-list { }
+        .todo-item { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 1px solid #f5f5f5; cursor: pointer; transition: background .2s; }
+        .todo-item:last-child { border-bottom: none; }
+        .todo-item:hover { background: #f5f7fa; margin: 0 -16px; padding-left: 16px; padding-right: 16px; }
+        .todo-priority { width: 4px; height: 36px; border-radius: 2px; flex-shrink: 0; }
+        .todo-priority.red { background: var(--danger); }
+        .todo-priority.orange { background: var(--warning); }
+        .todo-priority.blue { background: var(--primary); }
+        .todo-info { flex: 1; min-width: 0; }
+        .todo-title { font-size: 13px; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .todo-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+        .todo-deadline { flex-shrink: 0; text-align: right; }
+        .todo-days { font-size: 12px; font-weight: bold; }
+        .todo-days.overdue { color: var(--danger); }
+        .todo-days.today { color: var(--warning); }
+        .todo-days.normal { color: var(--success); }
+        .todo-date { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+        .todo-action { flex-shrink: 0; }
+        .btn-xs { height: 22px; padding: 0 8px; font-size: 11px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; cursor: pointer; color: var(--text-secondary); }
+        .btn-xs:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-xs.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        /* 风险卡片 */
+        .risk-mini-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 12px; }
+        .risk-mini-card { background: #fafafa; border-radius: 4px; padding: 10px; text-align: center; border-left: 3px solid transparent; }
+        .risk-mini-card.high { border-left-color: var(--danger); }
+        .risk-mini-card.mid { border-left-color: var(--warning); }
+        .risk-mini-card.low { border-left-color: var(--success); }
+        .risk-mini-value { font-size: 20px; font-weight: bold; }
+        .risk-mini-value.high { color: var(--danger); }
+        .risk-mini-value.mid { color: var(--warning); }
+        .risk-mini-value.low { color: var(--success); }
+        .risk-mini-label { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+        /* 分层展示 */
+        .tier-section { margin-bottom: 12px; }
+        .tier-title { font-size: 12px; font-weight: bold; color: var(--text-secondary); margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .tier-title::before { content: ""; width: 3px; height: 12px; background: var(--primary); border-radius: 2px; }
+
+        /* 漏斗 */
+        .funnel-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+        .funnel-label { width: 80px; font-size: 11px; color: var(--text-secondary); text-align: right; }
+        .funnel-bar-wrap { flex: 1; height: 20px; background: #f5f5f5; border-radius: 3px; overflow: hidden; }
+        .funnel-bar { height: 100%; border-radius: 3px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; color: #fff; font-size: 11px; font-weight: bold; transition: width .3s; }
+        .funnel-bar.b1 { background: #bdbdbd; width: 100%; }
+        .funnel-bar.b2 { background: var(--info); width: 75%; }
+        .funnel-bar.b3 { background: var(--primary); width: 50%; }
+        .funnel-bar.b4 { background: var(--success); width: 30%; }
+
+        /* 场景分布迷你图 */
+        .scene-bar-row { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+        .scene-bar-label { width: 70px; font-size: 11px; color: var(--text-secondary); text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .scene-bar-track { flex: 1; height: 14px; background: #f5f5f5; border-radius: 3px; overflow: hidden; }
+        .scene-bar-fill { height: 100%; border-radius: 3px; }
+        .scene-bar-val { width: 28px; font-size: 11px; color: var(--text-muted); text-align: right; }
+
+        /* 快捷入口 */
+        .quick-bar { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); padding: 16px; display: flex; align-items: center; justify-content: center; gap: 40px; }
+        .quick-item { display: flex; flex-direction: column; align-items: center; gap: 6px; cursor: pointer; transition: all .2s; padding: 8px 16px; border-radius: 4px; }
+        .quick-item:hover { background: var(--primary-light); }
+        .quick-icon { width: 44px; height: 44px; border-radius: 50%; background: var(--primary-light); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .quick-label { font-size: 12px; color: var(--text-secondary); }
+
+        /* 查看更多 */
+        .view-more { text-align: center; padding: 8px; font-size: 12px; color: var(--primary); cursor: pointer; border-top: 1px solid #f5f5f5; }
+        .view-more:hover { text-decoration: underline; }
+
+        .level-tag { display: inline-flex; align-items: center; gap: 4px; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; }
+        .level-high { background: #ffebee; color: var(--danger); }
+        .level-mid { background: #fff3e0; color: var(--warning); }
+        .level-low { background: #e8f5e9; color: var(--success); }
+
+        .status-tag { display: inline-flex; align-items: center; gap: 4px; padding: 1px 6px; border-radius: 3px; font-size: 10px; font-weight: bold; }
+        .status-daichuli { background: #fff3e0; color: #e65100; }
+        .status-chulizhong { background: #e3f2fd; color: #1565c0; }
+
+        /* 当前任务跑马灯 */
+        .task-marquee-wrap {
+            overflow: hidden;
+            background: linear-gradient(90deg, #0d47a1 0%, #1976d2 50%, #42a5f5 100%);
+            border-radius: 3px;
+            padding: 6px 0;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        .task-marquee-wrap::before,
+        .task-marquee-wrap::after {
+            content: "";
+            position: absolute;
+            top: 0; bottom: 0;
+            width: 30px;
+            z-index: 2;
+            pointer-events: none;
+        }
+        .task-marquee-wrap::before { left: 0; background: linear-gradient(90deg, #0d47a1, transparent); }
+        .task-marquee-wrap::after { right: 0; background: linear-gradient(-90deg, #42a5f5, transparent); }
+        .task-marquee-track {
+            display: flex;
+            gap: 60px;
+            width: max-content;
+            animation: marquee-scroll 18s linear infinite;
+        }
+        .task-marquee-item {
+            font-size: 12px;
+            color: #fff;
+            white-space: nowrap;
+            text-shadow: 0 0 6px rgba(255,255,255,.6);
+            flex-shrink: 0;
+        }
+        .task-marquee-item strong { color: #fff; }
+        @keyframes marquee-scroll {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system"><span class="brand-name">绿星链通</span><span class="brand-version">2.0</span></div>
+            <div class="brand-divider"></div>
+            <div class="logo-text"><span class="cn">中国铝业集团有限公司</span><span class="en">ALUMINUM CORPORATION OF CHINA</span></div>
+        </div>
+        <div class="header-center">
+            <div class="header-search"><input type="text" placeholder="请输入页面号"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg></div>
+        </div>
+        <div class="header-right">
+            <div class="notice-icon">&#128276;<span class="notice-badge">5</span></div>
+            <span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span>
+            <div class="user-badge"><div class="user-avatar">潘</div></div>
+        </div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item active"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险管理</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务中心</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#9881;</span><span>模型中心</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>系统管理</span></div></div></div>
+        </aside>
+
+        <main class="main-content">
+            <div class="page-title">&#127968; 我的工作台</div>
+
+            <div class="scroll-content">
+                <!-- 统计卡片 -->
+                <div class="stat-row">
+                    <div class="stat-card">
+                        <div class="stat-icon blue">&#128203;</div>
+                        <div class="stat-info">
+                            <div class="stat-value">12</div>
+                            <div class="stat-label">我的待办</div>
+                            <div class="stat-change up">&#8593; 较昨日 +3</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple">&#128295;</div>
+                        <div class="stat-info">
+                            <div class="stat-value">8</div>
+                            <div class="stat-label">处理中</div>
+                            <div class="stat-change">占比 66.7%</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">&#9989;</div>
+                        <div class="stat-info">
+                            <div class="stat-value">5</div>
+                            <div class="stat-label">待验收</div>
+                            <div class="stat-change">待我审核</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon red">&#9888;</div>
+                        <div class="stat-info">
+                            <div class="stat-value">2</div>
+                            <div class="stat-label">超期任务</div>
+                            <div class="stat-change up">&#8593; 紧急</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">&#128200;</div>
+                        <div class="stat-info">
+                            <div class="stat-value">7</div>
+                            <div class="stat-label">我相关的风险</div>
+                            <div class="stat-change">高2 / 中3 / 低2</div>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon gray">&#128451;</div>
+                        <div class="stat-info">
+                            <div class="stat-value">18</div>
+                            <div class="stat-label">本月已闭环</div>
+                            <div class="stat-change down">&#8593; 较上月 +5</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 双栏：待办任务 + 风险总览 -->
+                <div class="two-col">
+                    <!-- 左侧：待办任务 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="title-left">待办任务跟踪</div>
+                            <div class="title-right">按截止时间排序</div>
+                        </div>
+                        <div class="card-body">
+                            <!-- 流程状态迷你卡 -->
+                            <div class="risk-mini-cards">
+                                <div class="risk-mini-card" style="border-left-color: #bdbdbd;">
+                                    <div class="risk-mini-value" style="color: #bdbdbd;">1</div>
+                                    <div class="risk-mini-label">待签收</div>
+                                </div>
+                                <div class="risk-mini-card" style="border-left-color: var(--primary);">
+                                    <div class="risk-mini-value" style="color: var(--primary);">3</div>
+                                    <div class="risk-mini-label">核实确认</div>
+                                </div>
+                                <div class="risk-mini-card" style="border-left-color: var(--warning);">
+                                    <div class="risk-mini-value" style="color: var(--warning);">4</div>
+                                    <div class="risk-mini-label">整改填报</div>
+                                </div>
+                                <div class="risk-mini-card" style="border-left-color: var(--success);">
+                                    <div class="risk-mini-value" style="color: var(--success);">2</div>
+                                    <div class="risk-mini-label">提交验收</div>
+                                </div>
+                                <div class="risk-mini-card" style="border-left-color: #43a047;">
+                                    <div class="risk-mini-value" style="color: #43a047;">5</div>
+                                    <div class="risk-mini-label">已闭环</div>
+                                </div>
+                            </div>
+                            <!-- 当前任务跑马灯 -->
+                            <div class="task-marquee-wrap">
+                                <div class="task-marquee-track">
+                                    <span class="task-marquee-item">🔥 <strong>围标串标专项核查</strong> 处于 <strong style="color:var(--primary)">核实确认</strong> 阶段，剩余 <strong style="color:var(--danger)">2天</strong></span>
+                                    <span class="task-marquee-item">⚡ <strong>供应商关联关系排查</strong> 处于 <strong style="color:var(--warning)">整改填报</strong> 阶段，剩余 <strong style="color:var(--danger)">1天</strong></span>
+                                    <span class="task-marquee-item">🎯 <strong>价格异常核查-铝锭采购</strong> 处于 <strong style="color:var(--primary)">待签收</strong> 阶段，剩余 <strong style="color:var(--success)">5天</strong></span>
+                                </div>
+                            </div>
+
+                            <!-- 待办列表 -->
+                            <div class="todo-list">
+                                <div class="todo-item">
+                                    <div class="todo-priority red"></div>
+                                    <div class="todo-info">
+                                        <div class="todo-title">围标串标专项核查 - 竞价单JJ-2024-0321</div>
+                                        <div class="todo-meta">违规准入分析 · 万能供应商分析 · 采购二部</div>
+                                    </div>
+                                    <div class="todo-deadline">
+                                        <div class="todo-days overdue">已超期1天</div>
+                                        <div class="todo-date">截止：2024-12-09</div>
+                                    </div>
+                                    <div class="todo-action"><button class="btn-xs primary">处理</button></div>
+                                </div>
+                                <div class="todo-item">
+                                    <div class="todo-priority red"></div>
+                                    <div class="todo-info">
+                                        <div class="todo-title">供应商关联关系排查 - 广西某铝业贸易</div>
+                                        <div class="todo-meta">采购寻源 · 供应商存在关联关系 · 采购二部</div>
+                                    </div>
+                                    <div class="todo-deadline">
+                                        <div class="todo-days today">今日到期</div>
+                                        <div class="todo-date">截止：2024-12-10</div>
+                                    </div>
+                                    <div class="todo-action"><button class="btn-xs primary">处理</button></div>
+                                </div>
+                                <div class="todo-item">
+                                    <div class="todo-priority orange"></div>
+                                    <div class="todo-info">
+                                        <div class="todo-title">价格异常核查-铝锭采购批次PO-2024-12901</div>
+                                        <div class="todo-meta">采购执行 · 质量不合格仍全额结算 · 质量管理部</div>
+                                    </div>
+                                    <div class="todo-deadline">
+                                        <div class="todo-days normal">剩余2天</div>
+                                        <div class="todo-date">截止：2024-12-12</div>
+                                    </div>
+                                    <div class="todo-action"><button class="btn-xs">查看</button></div>
+                                </div>
+                                <div class="todo-item">
+                                    <div class="todo-priority orange"></div>
+                                    <div class="todo-info">
+                                        <div class="todo-title">合同变更合规检查 - 合同C-2024-C00877</div>
+                                        <div class="todo-meta">采购结算 · 超合同数量执行 · 法务部</div>
+                                    </div>
+                                    <div class="todo-deadline">
+                                        <div class="todo-days normal">剩余3天</div>
+                                        <div class="todo-date">截止：2024-12-13</div>
+                                    </div>
+                                    <div class="todo-action"><button class="btn-xs">查看</button></div>
+                                </div>
+                                <div class="todo-item">
+                                    <div class="todo-priority blue"></div>
+                                    <div class="todo-info">
+                                        <div class="todo-title">紧急采购合理性复核 - 计划JH-2024-0891</div>
+                                        <div class="todo-meta">计划管理 · 紧急采购专业户 · 采购一部</div>
+                                    </div>
+                                    <div class="todo-deadline">
+                                        <div class="todo-days normal">剩余5天</div>
+                                        <div class="todo-date">截止：2024-12-15</div>
+                                    </div>
+                                    <div class="todo-action"><button class="btn-xs">查看</button></div>
+                                </div>
+                            </div>
+                            <div class="view-more">查看全部 12 条待办 &#8594;</div>
+                        </div>
+                    </div>
+
+                    <!-- 右侧：我相关的风险 -->
+                    <div class="card">
+                        <div class="card-header">
+                            <div class="title-left">我相关的风险</div>
+                            <div class="title-right">近7天新增 3 条</div>
+                        </div>
+                        <div class="card-body">
+                            <!-- 迷你数字卡片 -->
+                            <div class="risk-mini-cards">
+                                <div class="risk-mini-card high">
+                                    <div class="risk-mini-value high">2</div>
+                                    <div class="risk-mini-label">高风险</div>
+                                </div>
+                                <div class="risk-mini-card mid">
+                                    <div class="risk-mini-value mid">3</div>
+                                    <div class="risk-mini-label">中风险</div>
+                                </div>
+                                <div class="risk-mini-card low">
+                                    <div class="risk-mini-value low">2</div>
+                                    <div class="risk-mini-label">低风险</div>
+                                </div>
+                            </div>
+
+                            <!-- 分层：精确匹配 -->
+                            <div class="tier-section">
+                                <div class="tier-title">精确匹配（我是经办人/责任人）</div>
+                                <div class="todo-list">
+                                    <div class="todo-item" style="padding:8px 0;">
+                                        <div class="todo-priority red" style="height:28px;"></div>
+                                        <div class="todo-info">
+                                            <div class="todo-title" style="font-size:12px;">万能供应商分析 - 广西某铝业贸易</div>
+                                            <div class="todo-meta">违规准入分析 · 覆盖品类异常</div>
+                                        </div>
+                                        <div><span class="level-tag level-high">高风险</span></div>
+                                    </div>
+                                    <div class="todo-item" style="padding:8px 0;">
+                                        <div class="todo-priority orange" style="height:28px;"></div>
+                                        <div class="todo-info">
+                                            <div class="todo-title" style="font-size:12px;">紧急采购专业户 - 桂林某金属材料</div>
+                                            <div class="todo-meta">计划管理 · 紧急采购次数异常</div>
+                                        </div>
+                                        <div><span class="level-tag level-mid">中风险</span></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 分层：部门关联 -->
+                            <div class="tier-section">
+                                <div class="tier-title">部门关联（采购二部范围）</div>
+                                <div class="todo-list">
+                                    <div class="todo-item" style="padding:8px 0;">
+                                        <div class="todo-priority red" style="height:28px;"></div>
+                                        <div class="todo-info">
+                                            <div class="todo-title" style="font-size:12px;">供应商存在关联关系 - 北海某运输</div>
+                                            <div class="todo-meta">采购寻源 · 股权关系关联</div>
+                                        </div>
+                                        <div><span class="level-tag level-high">高风险</span></div>
+                                    </div>
+                                    <div class="todo-item" style="padding:8px 0;">
+                                        <div class="todo-priority orange" style="height:28px;"></div>
+                                        <div class="todo-info">
+                                            <div class="todo-title" style="font-size:12px;">应招未招 - 玉林某设备制造</div>
+                                            <div class="todo-meta">采购寻源 · 金额超阈值未招标</div>
+                                        </div>
+                                        <div><span class="level-tag level-mid">中风险</span></div>
+                                    </div>
+                                    <div class="todo-item" style="padding:8px 0;">
+                                        <div class="todo-priority blue" style="height:28px;background:var(--primary);"></div>
+                                        <div class="todo-info">
+                                            <div class="todo-title" style="font-size:12px;">流废标占比较高 - 贵港某能源科技</div>
+                                            <div class="todo-meta">采购寻源 · 流废标率超30%</div>
+                                        </div>
+                                        <div><span class="level-tag level-low">低风险</span></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 第二行：转化漏斗 + 场景分布 -->
+                <div class="two-col">
+                    <!-- 风险→任务转化漏斗 -->
+                    <div class="card">
+                        <div class="card-header"><div class="title-left">风险 → 任务转化</div></div>
+                        <div class="card-body">
+                            <div class="funnel-row">
+                                <div class="funnel-label">未处理风险</div>
+                                <div class="funnel-bar-wrap"><div class="funnel-bar b1">20</div></div>
+                            </div>
+                            <div class="funnel-row">
+                                <div class="funnel-label">已生成任务</div>
+                                <div class="funnel-bar-wrap"><div class="funnel-bar b2">15</div></div>
+                            </div>
+                            <div class="funnel-row">
+                                <div class="funnel-label">处理中</div>
+                                <div class="funnel-bar-wrap"><div class="funnel-bar b3">10</div></div>
+                            </div>
+                            <div class="funnel-row">
+                                <div class="funnel-label">已闭环</div>
+                                <div class="funnel-bar-wrap"><div class="funnel-bar b4">6</div></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 风险场景分布 -->
+                    <div class="card">
+                        <div class="card-header"><div class="title-left">风险场景分布（我相关）</div></div>
+                        <div class="card-body">
+                            <div class="scene-bar-row">
+                                <div class="scene-bar-label">采购寻源</div>
+                                <div class="scene-bar-track"><div class="scene-bar-fill" style="width:80%;background:var(--info);"></div></div>
+                                <div class="scene-bar-val">4</div>
+                            </div>
+                            <div class="scene-bar-row">
+                                <div class="scene-bar-label">采购执行</div>
+                                <div class="scene-bar-track"><div class="scene-bar-fill" style="width:60%;background:var(--primary);"></div></div>
+                                <div class="scene-bar-val">3</div>
+                            </div>
+                            <div class="scene-bar-row">
+                                <div class="scene-bar-label">供应商准入</div>
+                                <div class="scene-bar-track"><div class="scene-bar-fill" style="width:40%;background:var(--danger);"></div></div>
+                                <div class="scene-bar-val">2</div>
+                            </div>
+                            <div class="scene-bar-row">
+                                <div class="scene-bar-label">计划管理</div>
+                                <div class="scene-bar-track"><div class="scene-bar-fill" style="width:20%;background:var(--warning);"></div></div>
+                                <div class="scene-bar-val">1</div>
+                            </div>
+                            <div class="scene-bar-row">
+                                <div class="scene-bar-label">采购结算</div>
+                                <div class="scene-bar-track"><div class="scene-bar-fill" style="width:20%;background:var(--info);"></div></div>
+                                <div class="scene-bar-val">1</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 底部快捷入口 -->
+                <div class="quick-bar">
+                    <div class="quick-item">
+                        <div class="quick-icon">&#10133;</div>
+                        <div class="quick-label">快速录入风险</div>
+                    </div>
+                    <div class="quick-item">
+                        <div class="quick-icon">&#128203;</div>
+                        <div class="quick-label">生成监督任务</div>
+                    </div>
+                    <div class="quick-item">
+                        <div class="quick-icon">&#128200;</div>
+                        <div class="quick-label">查看驾驶舱</div>
+                    </div>
+                    <div class="quick-item">
+                        <div class="quick-icon">&#128218;</div>
+                        <div class="quick-label">知识库</div>
+                    </div>
+                    <div class="quick-item">
+                        <div class="quick-icon">&#128276;</div>
+                        <div class="quick-label">消息通知</div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../../assets/app.css">
+<link rel="stylesheet" href="../../../assets/theme.css">
+<title>指标管理</title>
+</head>
+<body class="page-body">
+<!--
+  编码：MXCK01    名称：指标管理    类型：列表查询页
+  查询字段：指标名称、指标编码、所属场景、数据类型、状态、创建时间
+  表格列：序号、指标编码、指标名称、所属场景、数据类型、计算逻辑、阈值规则、状态、操作
+  行操作：编辑、查看、启用/禁用
+  顶部操作：新增、批量导出、批量启用、批量禁用
+  跳转：新增/编辑 → MXCK02；查看 → 弹窗
+-->
+<div id="page-content" data-page="MXCK01" class="prototype-page">
+
+  <!-- 页头 -->
+  <div class="page-header">
+    <div class="page-title">指标管理</div>
+    <div class="actions">
+      <button class="btn btn-primary" data-action="open-add" data-nav="MXCK02">+ 新增指标</button>
+    </div>
+  </div>
+
+  <!-- 查询卡 -->
+  <div class="card prototype-card">
+    <div class="card-head prototype-card-head">
+      <div class="title"><span class="bar"></span>查询信息</div>
+      <div class="actions">
+        <button class="btn btn-default" data-action="reset">↺ 重置</button>
+        <button class="btn btn-primary" data-action="search">🔍 查询</button>
+      </div>
+    </div>
+    <div class="query-grid prototype-query-grid">
+      <div class="form-item prototype-field">
+        <label>指标名称</label>
+        <input id="qName" placeholder="请输入指标名称">
+      </div>
+      <div class="form-item prototype-field">
+        <label>指标编码</label>
+        <input id="qCode" placeholder="请输入指标编码">
+      </div>
+      <div class="form-item prototype-field">
+        <label>所属场景</label>
+        <select id="qScene">
+          <option value="">全部</option>
+          <option>采购寻源</option>
+          <option>采购执行</option>
+          <option>供应商准入</option>
+          <option>计划管理</option>
+          <option>采购结算</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>数据类型</label>
+        <select id="qType">
+          <option value="">全部</option>
+          <option>数值型</option>
+          <option>比率型</option>
+          <option>布尔型</option>
+          <option>枚举型</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>状态</label>
+        <select id="qStatus">
+          <option value="">全部</option>
+          <option value="enabled">启用</option>
+          <option value="disabled">禁用</option>
+        </select>
+      </div>
+      <div class="form-item prototype-field">
+        <label>创建时间</label>
+        <div class="date-range">
+          <input type="date" id="qDateFrom" value="2024-01-01">
+          <span class="sep">至</span>
+          <input type="date" id="qDateTo" value="2024-12-31">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 列表卡 -->
+  <div class="card list-card prototype-card" id="listCard">
+    <div class="list-toolbar prototype-list-toolbar">
+      <div class="title">☰ 指标列表 <span class="title-badge" id="totalCount">0</span></div>
+      <div class="actions">
+        <button class="btn btn-default" data-action="batch-export">⬇ 批量导出</button>
+        <button class="btn btn-primary" data-action="open-add" data-nav="MXCK02">+ 新增指标</button>
+      </div>
+    </div>
+    <div class="batch-bar prototype-batch-bar" id="batchBar">
+      <span>已选择 <b id="selCount">0</b> 项</span>
+      <button class="btn btn-sm btn-success" data-action="batch-enable">✔ 批量启用</button>
+      <button class="btn btn-sm btn-danger" data-action="batch-disable">✘ 批量禁用</button>
+    </div>
+    <div class="status-tabs prototype-status-tabs" id="statusTabs"></div>
+    <div class="table-wrap prototype-table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:40px"><input type="checkbox" id="ckAll"></th>
+            <th style="width:50px">序号</th>
+            <th style="width:100px">指标编码</th>
+            <th style="width:180px">指标名称</th>
+            <th style="width:100px">所属场景</th>
+            <th style="width:80px">数据类型</th>
+            <th style="width:220px">计算逻辑</th>
+            <th style="width:160px">阈值规则</th>
+            <th style="width:80px">状态</th>
+            <th style="min-width:180px">操作</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span class="total">共 <b id="total">0</b> 条</span>
+      <select class="pg-size"><option>10 条/页</option><option>20 条/页</option></select>
+      <span class="pg">«</span><span class="pg">‹</span>
+      <span class="pg active">1</span>
+      <span class="pg">›</span><span class="pg">»</span>
+      <span class="goto">前往 <input value="1"> 页</span>
+    </div>
+  </div>
+
+</div>
+
+<!-- 查看弹窗 -->
+<div class="modal-mask" data-modal="viewModal" id="viewModalMask">
+  <div class="modal">
+    <div class="modal-title">指标详情</div>
+    <div class="modal-body" id="viewBody"></div>
+    <div class="modal-footer">
+      <button class="btn btn-default" data-action="close-modal" data-modal-target="viewModal">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../../assets/page-runtime.js"></script>
+<script>
+/* ===== 数据与状态 ===== */
+const STATUS = {
+  enabled: { cls: 'pass', t: '启用' },
+  disabled: { cls: 'draft', t: '禁用' }
+};
+const SCENE_CLS = {
+  '采购寻源': 'type-rule',
+  '采购执行': 'type-indicator',
+  '供应商准入': 'type-comprehensive',
+  '计划管理': 'type-daily',
+  '采购结算': 'type-monthly'
+};
+const STATUS_TABS = [
+  { key: 'all', label: '全部' },
+  { key: 'enabled', label: '启用' },
+  { key: 'disabled', label: '禁用' }
+];
+
+let DATA = [
+  { code: 'RISK-001', name: '围标串标嫌疑度', scene: '采购寻源', type: '比率型', logic: '关联供应商报价相似度>80%', threshold: '≥0.7高/≥0.4中/<0.4低', status: 'enabled' },
+  { code: 'RISK-002', name: '紧急采购占比', scene: '计划管理', type: '比率型', logic: '紧急采购次数/总采购次数', threshold: '≥30%高/≥15%中/<15%低', status: 'enabled' },
+  { code: 'RISK-003', name: '供应商关联度', scene: '采购寻源', type: '布尔型', logic: '存在股权/人员/地址关联', threshold: '是/否', status: 'enabled' },
+  { code: 'RISK-004', name: '超合同执行率', scene: '采购执行', type: '比率型', logic: '超合同数量/合同总数量', threshold: '≥20%高/≥10%中/<10%低', status: 'disabled' },
+  { code: 'RISK-005', name: '流废标率', scene: '采购寻源', type: '比率型', logic: '流废标次数/总招标次数', threshold: '≥30%高/≥15%中/<15%低', status: 'enabled' },
+  { code: 'RISK-006', name: '单一来源采购占比', scene: '采购寻源', type: '比率型', logic: '单一来源金额/总金额', threshold: '≥40%高/≥20%中/<20%低', status: 'enabled' },
+  { code: 'RISK-007', name: '价格异常偏离度', scene: '采购执行', type: '数值型', logic: '(实际价-基准价)/基准价', threshold: '≥50%高/≥20%中/<20%低', status: 'enabled' },
+  { code: 'RISK-008', name: '应招未招金额占比', scene: '采购寻源', type: '比率型', logic: '应招未招金额/应招总金额', threshold: '≥10%高/≥5%中/<5%低', status: 'enabled' },
+  { code: 'RISK-009', name: '合同标准模板使用率', scene: '采购结算', type: '比率型', logic: '标准模板合同数/总合同数', threshold: '≥90%高/≥70%中/<70%低', status: 'enabled' },
+  { code: 'RISK-010', name: '供应商准入即签约', scene: '供应商准入', type: '布尔型', logic: '准入日期与签约日期差≤7天', threshold: '是/否', status: 'enabled' }
+];
+
+let activeStatus = 'all';
+let selectedCodes = new Set();
+
+/* ===== 渲染 ===== */
+function renderTabs() {
+  document.getElementById('statusTabs').innerHTML = STATUS_TABS.map(s => {
+    const count = s.key === 'all' ? DATA.length : DATA.filter(d => d.status === s.key).length;
+    return `<button class="status-tab prototype-status-tab ${s.key === activeStatus ? 'active' : ''}" data-action="filter-tab" data-status="${s.key}">${s.label} <span class="st-count">${count}</span></button>`;
+  }).join('');
+}
+
+function renderTable() {
+  const kwName = document.getElementById('qName').value.trim();
+  const kwCode = document.getElementById('qCode').value.trim().toLowerCase();
+  const scene = document.getElementById('qScene').value;
+  const type = document.getElementById('qType').value;
+  const status = document.getElementById('qStatus').value;
+
+  const list = DATA.filter(d => {
+    if (kwName && !d.name.includes(kwName)) return false;
+    if (kwCode && !d.code.toLowerCase().includes(kwCode)) return false;
+    if (scene && d.scene !== scene) return false;
+    if (type && d.type !== type) return false;
+    if (status && d.status !== status) return false;
+    if (activeStatus !== 'all' && d.status !== activeStatus) return false;
+    return true;
+  });
+
+  document.getElementById('totalCount').textContent = list.length;
+  document.getElementById('total').textContent = list.length;
+
+  document.getElementById('tbody').innerHTML = list.map((d, i) => {
+    const st = STATUS[d.status];
+    const sceneCls = SCENE_CLS[d.scene] || 'type-rule';
+    return `<tr data-code="${d.code}">
+      <td><input type="checkbox" class="row-ck" value="${d.code}" ${selectedCodes.has(d.code) ? 'checked' : ''}></td>
+      <td>${i + 1}</td>
+      <td><span class="link" data-action="open-view" data-code="${d.code}">${d.code}</span></td>
+      <td class="text-left">${d.name}</td>
+      <td><span class="type-tag ${sceneCls}">${d.scene}</span></td>
+      <td>${d.type}</td>
+      <td class="text-left text-muted">${d.logic}</td>
+      <td class="text-left text-muted">${d.threshold}</td>
+      <td><span class="tag ${st.cls}"><span class="td"></span>${st.t}</span></td>
+      <td>
+        <div class="op-btns">
+          <button class="op blue" data-action="go-edit" data-nav="MXCK02">编辑</button>
+          <button class="op blue" data-action="open-view" data-code="${d.code}">查看</button>
+          <button class="op ${d.status === 'enabled' ? 'red' : 'green'}" data-action="toggle-status" data-code="${d.code}">${d.status === 'enabled' ? '禁用' : '启用'}</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+
+  updateCkAll();
+  updateBatchBar();
+}
+
+function updateCkAll() {
+  const all = document.querySelectorAll('.row-ck');
+  const checked = document.querySelectorAll('.row-ck:checked');
+  document.getElementById('ckAll').checked = all.length > 0 && all.length === checked.length;
+}
+
+function updateBatchBar() {
+  const count = selectedCodes.size;
+  document.getElementById('selCount').textContent = count;
+  document.getElementById('listCard').classList.toggle('has-sel', count > 0);
+}
+
+/* ===== 动作注册 ===== */
+PR.on('search', renderTable);
+PR.on('reset', () => {
+  document.getElementById('qName').value = '';
+  document.getElementById('qCode').value = '';
+  document.getElementById('qScene').value = '';
+  document.getElementById('qType').value = '';
+  document.getElementById('qStatus').value = '';
+  document.getElementById('qDateFrom').value = '2024-01-01';
+  document.getElementById('qDateTo').value = '2024-12-31';
+  activeStatus = 'all';
+  selectedCodes.clear();
+  renderTabs();
+  renderTable();
+  PR.toast('查询条件已重置');
+});
+
+PR.on('filter-tab', (e) => {
+  activeStatus = e.target.closest('[data-status]').dataset.status;
+  renderTabs();
+  renderTable();
+});
+
+PR.on('batch-export', () => PR.toast('批量导出指标清单'));
+
+PR.on('batch-enable', () => {
+  if (selectedCodes.size === 0) { PR.toast('请先选择指标'); return; }
+  const n = selectedCodes.size;
+  selectedCodes.forEach(code => {
+    const d = DATA.find(x => x.code === code);
+    if (d) d.status = 'enabled';
+  });
+  selectedCodes.clear();
+  document.getElementById('ckAll').checked = false;
+  PR.toast('已批量启用 ' + n + ' 个指标');
+  renderTabs();
+  renderTable();
+});
+
+PR.on('batch-disable', () => {
+  if (selectedCodes.size === 0) { PR.toast('请先选择指标'); return; }
+  const n = selectedCodes.size;
+  selectedCodes.forEach(code => {
+    const d = DATA.find(x => x.code === code);
+    if (d) d.status = 'disabled';
+  });
+  selectedCodes.clear();
+  document.getElementById('ckAll').checked = false;
+  PR.toast('已批量禁用 ' + n + ' 个指标');
+  renderTabs();
+  renderTable();
+});
+
+PR.on('go-edit', (e) => {
+  PR.nav(e.target.closest('[data-nav]').dataset.nav);
+});
+
+PR.on('open-view', (e) => {
+  const code = e.target.closest('[data-code]').dataset.code;
+  const d = DATA.find(x => x.code === code);
+  if (!d) return;
+  document.getElementById('viewBody').innerHTML = `
+    <div class="form-item prototype-field"><label>指标编码</label><span>${d.code}</span></div>
+    <div class="form-item prototype-field"><label>指标名称</label><span>${d.name}</span></div>
+    <div class="form-item prototype-field"><label>所属场景</label><span>${d.scene}</span></div>
+    <div class="form-item prototype-field"><label>数据类型</label><span>${d.type}</span></div>
+    <div class="form-item prototype-field span-2 field-block"><label>计算逻辑</label><span>${d.logic}</span></div>
+    <div class="form-item prototype-field span-2 field-block"><label>阈值规则</label><span>${d.threshold}</span></div>
+  `;
+  PR.openModal('viewModal');
+});
+
+PR.on('toggle-status', (e) => {
+  const code = e.target.closest('[data-code]').dataset.code;
+  const d = DATA.find(x => x.code === code);
+  if (!d) return;
+  d.status = d.status === 'enabled' ? 'disabled' : 'enabled';
+  PR.toast('指标 ' + code + ' 已' + (d.status === 'enabled' ? '启用' : '禁用'));
+  renderTabs();
+  renderTable();
+});
+
+/* ===== DOM 事件 ===== */
+document.addEventListener('DOMContentLoaded', () => {
+  renderTabs();
+  renderTable();
+
+  document.getElementById('ckAll').addEventListener('change', (e) => {
+    document.querySelectorAll('.row-ck').forEach(cb => {
+      cb.checked = e.target.checked;
+      if (e.target.checked) selectedCodes.add(cb.value);
+      else selectedCodes.delete(cb.value);
+    });
+    updateBatchBar();
+  });
+
+  document.getElementById('tbody').addEventListener('change', (e) => {
+    if (e.target.classList.contains('row-ck')) {
+      if (e.target.checked) selectedCodes.add(e.target.value);
+      else selectedCodes.delete(e.target.value);
+      updateBatchBar();
+      updateCkAll();
+    }
+  });
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,29 @@
+{
+  "name": "prototype-vue3-framework",
+  "version": "0.1.0",
+  "private": true,
+  "description": "原型演示前端框架（Vue3）— 登录/动态路由/布局/多页签，Mock 自运行、零后端。由「原型框架Vue3 skill」生成，配「原型转Vue」产物使用。",
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "serve:mock": "vue-cli-service serve",
+    "build": "vue-cli-service build"
+  },
+  "dependencies": {
+    "@ant-design/icons-vue": "^7.0.1",
+    "ant-design-vue": "^4.2.6",
+    "core-js": "^3.36.0",
+    "dayjs": "^1.11.10",
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.0",
+    "vuex": "^4.1.0"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "~5.0.8",
+    "@vue/cli-plugin-router": "~5.0.8",
+    "@vue/cli-plugin-vuex": "~5.0.8",
+    "@vue/cli-service": "~5.0.8",
+    "@vue/compiler-sfc": "^3.4.21",
+    "sass": "^1.71.0",
+    "sass-loader": "^12.6.0"
+  }
+}

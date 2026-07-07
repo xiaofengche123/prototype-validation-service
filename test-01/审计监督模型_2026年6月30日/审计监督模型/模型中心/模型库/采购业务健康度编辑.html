@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>采购业务健康度编辑 - 审计监督</title>
+    <style>
+        :root { --primary: #1565c0; --primary-dark: #0d47a1; --primary-light: #e3f2fd; --success: #43a047; --warning: #fb8c00; --danger: #e53935; --info: #5e35b1; --text-primary: #333; --text-secondary: #666; --text-muted: #999; --border-color: #e0e0e0; --bg-body: #f0f2f5; --bg-card: #fff; --sidebar-width: 220px; --header-height: 56px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { font-family: "Microsoft YaHei", "PingFang SC", "Helvetica Neue", Arial, sans-serif; font-size: 13px; color: var(--text-primary); background: var(--bg-body); overflow: hidden; height: 100%; }
+        .top-header { height: var(--header-height); background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: #fff; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; box-shadow: 0 2px 8px rgba(0,0,0,.15); }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+        .brand-system .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; color: #fff; }
+        .brand-system .brand-version { font-size: 10px; opacity: .85; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; letter-spacing: 1px; }
+        .logo-text .en { font-size: 9px; opacity: .75; letter-spacing: .3px; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .header-right .company-info { font-size: 13px; opacity: .95; }
+        .user-badge { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+        .menu-item .arrow { width: 12px; height: 12px; transition: transform .2s; opacity: .4; }
+        .menu-item.expanded .arrow { transform: rotate(90deg); }
+        .submenu { display: none; background: #fafafa; }
+        .submenu.open { display: block; }
+        .submenu .menu-item { padding-left: 38px; height: 36px; font-size: 12px; }
+        .submenu .submenu { background: #f5f5f5; }
+        .submenu .submenu .menu-item { padding-left: 56px; height: 34px; font-size: 12px; }
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px; }
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); cursor: pointer; text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; flex-wrap: wrap; gap: 8px; }
+        .page-title { font-size: 16px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .page-title .title-badge { font-size: 11px; padding: 2px 8px; border-radius: 10px; background: var(--primary-light); color: var(--primary); font-weight: normal; }
+        .top-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .btn { height: 28px; padding: 0 12px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-ghost { background: transparent; border-color: transparent; color: var(--text-secondary); }
+        .btn-ghost:hover { background: #f5f5f5; }
+        .btn-sm { height: 24px; padding: 0 8px; font-size: 11px; }
+        .scroll-content { flex: 1; overflow-y: auto; min-height: 0; }
+        .scroll-content::-webkit-scrollbar { width: 6px; }
+        .scroll-content::-webkit-scrollbar-thumb { background: #bbb; border-radius: 3px; }
+        .form-card { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; }
+        .form-card-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; color: var(--primary); display: flex; align-items: center; gap: 8px; }
+        .form-card-header::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .form-card-header .header-actions { margin-left: auto; display: flex; gap: 6px; }
+        .form-card-body { padding: 14px 16px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px 16px; }
+        .form-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+        .form-row .form-label { width: 120px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; white-space: nowrap; }
+        .form-row .form-label.required::before { content: "*"; color: var(--danger); margin-right: 2px; }
+        .form-row .form-input, .form-row .form-select { flex: 1; min-width: 0; height: 28px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; color: var(--text-primary); outline: none; font-family: inherit; }
+        .form-row .form-input:focus, .form-row .form-select:focus { border-color: var(--primary); }
+        .form-row .form-input[readonly] { background: #f5f5f5; color: var(--text-muted); cursor: not-allowed; }
+        .form-row .form-textarea { flex: 1; min-width: 0; min-height: 60px; border: 1px solid var(--border-color); border-radius: 3px; padding: 6px 8px; font-size: 12px; outline: none; resize: vertical; font-family: inherit; }
+        .form-row.full-width { grid-column: span 2; }
+        .form-row.three-col { grid-column: span 3; }
+        .switch { position: relative; display: inline-block; width: 40px; height: 20px; flex-shrink: 0; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .3s; border-radius: 20px; }
+        .slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 2px; bottom: 2px; background-color: white; transition: .3s; border-radius: 50%; }
+        .switch input:checked + .slider { background-color: var(--success); }
+        .switch input:checked + .slider:before { transform: translateX(20px); }
+        .switch-label { font-size: 12px; color: var(--text-secondary); margin-left: 6px; }
+        .dynamic-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+        .dynamic-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 8px 6px; text-align: center; border-bottom: 1px solid #bbdefb; white-space: nowrap; }
+        .dynamic-table tbody td { padding: 6px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .dynamic-table tbody tr:hover { background: #f5f7fa; }
+        .dynamic-table .dt-input { width: 100%; height: 26px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 4px; font-size: 12px; outline: none; font-family: inherit; }
+        .dynamic-table .dt-select { width: 100%; height: 26px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 4px; font-size: 12px; outline: none; font-family: inherit; }
+        .dynamic-table .dt-btn { font-size: 11px; color: var(--danger); cursor: pointer; padding: 2px 6px; border: none; background: transparent; border-radius: 2px; }
+        .dynamic-table .dt-btn:hover { background: #ffebee; }
+        .score-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; display: none; }
+        .score-section.show { display: block; }
+        .score-section-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); font-size: 14px; font-weight: bold; color: var(--success); display: flex; align-items: center; gap: 8px; }
+        .score-section-header::before { content: ""; width: 4px; height: 16px; background: var(--success); border-radius: 2px; }
+        .score-section-body { padding: 14px 16px; }
+        .formula-box { background: #f8f9fa; border: 1px solid var(--border-color); border-radius: 4px; padding: 12px; font-family: "Consolas", "Monaco", monospace; font-size: 13px; min-height: 80px; color: var(--text-primary); margin-bottom: 10px; }
+        .formula-toolbar { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
+        .formula-toolbar .btn { height: 26px; padding: 0 8px; font-size: 12px; }
+        .data-item-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 3px; background: var(--primary-light); color: var(--primary); font-size: 11px; cursor: pointer; border: 1px solid #bbdefb; }
+        .data-item-tag:hover { background: #bbdefb; }
+        .data-items-list { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+        .trend-chart { width: 100%; height: 160px; position: relative; background: #fafafa; border-radius: 4px; border: 1px solid var(--border-color); }
+        .trend-chart svg { width: 100%; height: 100%; }
+        .score-result { text-align: center; padding: 16px; background: var(--primary-light); border-radius: 4px; margin-bottom: 12px; }
+        .score-result .score-num { font-size: 36px; font-weight: bold; color: var(--primary); }
+        .score-result .score-level { font-size: 14px; font-weight: bold; color: var(--success); margin-top: 4px; }
+        .bottom-actions { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 12px 16px; background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-top: 12px; flex-shrink: 0; }
+        .tip-box { background: #fff3e0; border: 1px solid #ffe0b2; border-radius: 4px; padding: 10px 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; font-size: 12px; color: #e65100; }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system"><span class="brand-name">绿星链通</span><span class="brand-version">2.0</span></div>
+            <div class="brand-divider"></div>
+            <div class="logo-text"><span class="cn">中国铝业集团有限公司</span><span class="en">ALUMINUM CORPORATION OF CHINA</span></div>
+        </div>
+        <div class="header-center"><div class="header-search"><input type="text" placeholder="请输入页面号"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg></div></div>
+        <div class="header-right"><span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span><div class="user-badge"><div class="user-avatar">潘</div></div></div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险驾驶舱</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128203;</span><span>风险事件池</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128188;</span><span>我的工作台</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务管理</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#9989;</span><span>验收审核</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128226;</span><span>超期督办</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>统计分析</span></div></div></div>
+            <div class="menu-group">
+                <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                    <div class="menu-left"><span class="menu-icon">&#9881;</span><span>模型中心</span></div>
+                    <svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                </div>
+                <div class="submenu open">
+                    <div class="menu-item expanded" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>规则模型</span></div>
+                    </div>
+                    <div class="submenu">
+                        <div class="menu-item"><div class="menu-left"><span>规则配置管理</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>规则命中日志</span></div></div>
+                    </div>
+                    <div class="menu-item expanded active" onclick="toggleMenu(this)">
+                        <div class="menu-left"><svg class="arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg><span>指标模型</span></div>
+                    </div>
+                    <div class="submenu open">
+                        <div class="menu-item"><div class="menu-left"><span>供应商评分卡</span></div></div>
+                        <div class="menu-item active"><div class="menu-left"><span>采购业务健康度</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>知识库管理</span></div></div>
+                        <div class="menu-item"><div class="menu-left"><span>评估结果查询</span></div></div>
+                    </div>
+                    <div class="menu-item" style="opacity:0.5;cursor:not-allowed;" title="阶段三开放">
+                        <div class="menu-left"><span>算法模型</span></div>
+                        <span style="font-size:10px;color:var(--text-muted);margin-left:auto;background:#f5f5f5;padding:1px 4px;border-radius:2px;">后续</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a onclick="goBack()">模型中心</a><span class="sep">&gt;</span><a onclick="goBack()">指标模型</a><span class="sep">&gt;</span><a onclick="goBack()">采购业务健康度</a><span class="sep">&gt;</span><span>编辑</span>
+            </div>
+
+            <div class="page-header">
+                <div class="page-title">
+                    <span>采购业务健康度编辑</span>
+                    <span class="title-badge">草稿</span>
+                </div>
+                <div class="top-actions">
+                    <button class="btn btn-success" onclick="saveItem()">&#128190; 保存</button>
+                    <button class="btn btn-primary" onclick="publishItem()">&#127760; 发布</button>
+                    <button class="btn btn-default" onclick="copyItem()">&#128203; 复制</button>
+                    <button class="btn btn-default" onclick="goBack()">&#10094; 返回</button>
+                </div>
+            </div>
+
+            <div class="scroll-content">
+                <!-- 基本信息 -->
+                <div class="form-card">
+                    <div class="form-card-header"><span>基本信息</span></div>
+                    <div class="form-card-body">
+                        <div class="form-row"><label class="form-label required">指标编码</label><input type="text" class="form-input" value="H001" placeholder="如 H001"></div>
+                        <div class="form-row"><label class="form-label required">指标名称</label><input type="text" class="form-input" value="采购计划准确率" placeholder="请输入指标名称"></div>
+                        <div class="form-row">
+                            <label class="form-label required">适用对象</label>
+                            <select class="form-select"><option>采购部门</option><option>采购项目</option><option>采购业务线</option></select>
+                        </div>
+                        <div class="form-row">
+                            <label class="form-label required">数据类型</label>
+                            <select class="form-select"><option>百分比</option><option>数值型</option><option>金额（万元）</option><option>天数</option></select>
+                        </div>
+                        <div class="form-row"><label class="form-label">单位</label><input type="text" class="form-input" value="%" placeholder="如 %、天、万元"></div>
+                        <div class="form-row"><label class="form-label">版本</label><input type="text" class="form-input" value="V2.0" readonly></div>
+                        <div class="form-row">
+                            <label class="form-label">状态</label>
+                            <div style="display:flex;align-items:center;">
+                                <label class="switch"><input type="checkbox" checked><span class="slider"></span></label>
+                                <span class="switch-label">已启用</span>
+                            </div>
+                        </div>
+                        <div class="form-row three-col"><label class="form-label">指标说明</label><textarea class="form-textarea" placeholder="请输入指标的业务含义、计算口径等说明">衡量采购计划与实际执行的吻合程度，反映采购需求预测的准确性。计算口径：实际采购金额与计划金额的比率。</textarea></div>
+                    </div>
+                </div>
+
+                <!-- 计算公式 -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <span>计算公式</span>
+                        <div class="header-actions">
+                            <button class="btn btn-default btn-sm" onclick="clearFormula()">清空</button>
+                            <button class="btn btn-success btn-sm" onclick="validateFormula()">校验公式</button>
+                        </div>
+                    </div>
+                    <div class="form-card-body" style="grid-template-columns:1fr;">
+                        <div class="form-row three-col">
+                            <label class="form-label">可用数据项</label>
+                            <div style="flex:1;">
+                                <div class="data-items-list">
+                                    <span class="data-item-tag" onclick="insertFormula('[计划金额]')">计划金额</span>
+                                    <span class="data-item-tag" onclick="insertFormula('[实际采购金额]')">实际采购金额</span>
+                                    <span class="data-item-tag" onclick="insertFormula('[招标项目数]')">招标项目数</span>
+                                    <span class="data-item-tag" onclick="insertFormula('[总项目数]')">总项目数</span>
+                                    <span class="data-item-tag" onclick="insertFormula('[按期到货批次]')">按期到货批次</span>
+                                    <span class="data-item-tag" onclick="insertFormula('[总到货批次]')">总到货批次</span>
+                                    <span class="data-item-tag" onclick="insertFormula('[结算金额]')">结算金额</span>
+                                    <span class="data-item-tag" onclick="insertFormula('[合同金额]')">合同金额</span>
+                                    <span class="data-item-tag" onclick="insertFormula('[合规项目数]')">合规项目数</span>
+                                </div>
+                                <div class="formula-toolbar">
+                                    <button class="btn btn-default" onclick="insertFormula('+')">+</button>
+                                    <button class="btn btn-default" onclick="insertFormula('-')">-</button>
+                                    <button class="btn btn-default" onclick="insertFormula('*')">×</button>
+                                    <button class="btn btn-default" onclick="insertFormula('/')">÷</button>
+                                    <button class="btn btn-default" onclick="insertFormula('(')">(</button>
+                                    <button class="btn btn-default" onclick="insertFormula(')')">)</button>
+                                    <button class="btn btn-default" onclick="insertFormula('100')">100</button>
+                                    <button class="btn btn-default" onclick="insertFormula('ABS(')">ABS</button>
+                                    <button class="btn btn-default" onclick="insertFormula('MIN(')">MIN</button>
+                                    <button class="btn btn-default" onclick="insertFormula('MAX(')">MAX</button>
+                                </div>
+                                <div class="formula-box" id="formulaBox" contenteditable="true">([实际采购金额] / [计划金额]) × 100%</div>
+                                <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">提示：点击上方数据项或运算符插入到公式中，支持拖拽调整顺序</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 阈值配置 -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <span>阈值配置</span>
+                        <div class="header-actions">
+                            <button class="btn btn-success btn-sm" onclick="addThreshold()">+ 添加区间</button>
+                        </div>
+                    </div>
+                    <div class="form-card-body" style="grid-template-columns:1fr;padding:0 16px 14px;">
+                        <table class="dynamic-table">
+                            <thead>
+                                <tr><th style="width:50px;">序号</th><th style="width:80px;">下限</th><th style="width:80px;">上限</th><th>健康等级</th><th style="width:100px;">颜色标识</th><th>触发动作</th><th style="width:60px;">操作</th></tr>
+                            </thead>
+                            <tbody id="thresholdBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- 测试评分 -->
+                <div class="form-card">
+                    <div class="form-card-header">
+                        <span>测试评分</span>
+                        <div class="header-actions">
+                            <button class="btn btn-default btn-sm" onclick="toggleScoreSection()">展开/折叠</button>
+                        </div>
+                    </div>
+                    <div id="scoreSection">
+                        <div class="form-card-body" style="grid-template-columns:1fr;">
+                            <div class="form-row three-col">
+                                <label class="form-label">测试对象</label>
+                                <div style="flex:1;display:flex;gap:8px;">
+                                    <input type="text" class="form-input" id="testDept" placeholder="请输入采购部门编码，如 BM001" style="max-width:240px;">
+                                    <button class="btn btn-primary" onclick="runTest()">&#128640; 执行计算</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="scoreResult" style="display:none;padding:0 16px 14px;">
+                            <div class="score-result">
+                                <div class="score-num" id="scoreNum">92.5</div>
+                                <div class="score-level" id="scoreLevel">健康等级：健康</div>
+                            </div>
+                            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                                <div>
+                                    <div style="font-size:12px;font-weight:bold;color:var(--text-secondary);margin-bottom:8px;">近12个月趋势</div>
+                                    <div class="trend-chart">
+                                        <svg viewBox="0 0 400 160">
+                                            <g stroke="#e0e0e0" stroke-width="1">
+                                                <line x1="40" y1="20" x2="40" y2="130"/>
+                                                <line x1="40" y1="130" x2="390" y2="130"/>
+                                                <line x1="40" y1="85" x2="390" y2="85" stroke-dasharray="3,3"/>
+                                                <line x1="40" y1="40" x2="390" y2="40" stroke-dasharray="3,3"/>
+                                            </g>
+                                            <g fill="#666" font-size="10">
+                                                <text x="10" y="25">100</text>
+                                                <text x="15" y="90">60</text>
+                                                <text x="15" y="135">0</text>
+                                            </g>
+                                            <polyline fill="none" stroke="#1565c0" stroke-width="2" points="40,105 70,95 100,85 130,75 160,65 190,55 220,50 250,45 280,42 310,38 340,35 370,32"></polyline>
+                                            <g fill="#1565c0">
+                                                <circle cx="40" cy="105" r="3"/>
+                                                <circle cx="70" cy="95" r="3"/>
+                                                <circle cx="100" cy="85" r="3"/>
+                                                <circle cx="130" cy="75" r="3"/>
+                                                <circle cx="160" cy="65" r="3"/>
+                                                <circle cx="190" cy="55" r="3"/>
+                                                <circle cx="220" cy="50" r="3"/>
+                                                <circle cx="250" cy="45" r="3"/>
+                                                <circle cx="280" cy="42" r="3"/>
+                                                <circle cx="310" cy="38" r="3"/>
+                                                <circle cx="340" cy="35" r="3"/>
+                                                <circle cx="370" cy="32" r="3"/>
+                                            </g>
+                                            <g fill="#999" font-size="9" text-anchor="middle">
+                                                <text x="40" y="148">1月</text>
+                                                <text x="100" y="148">3月</text>
+                                                <text x="190" y="148">6月</text>
+                                                <text x="280" y="148">9月</text>
+                                                <text x="370" y="148">12月</text>
+                                            </g>
+                                        </svg>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div style="font-size:12px;font-weight:bold;color:var(--text-secondary);margin-bottom:8px;">指标明细</div>
+                                    <div style="background:#f5f7fa;border-radius:4px;padding:12px;font-size:12px;">
+                                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e0e0e0;"><span>计划金额</span><span style="font-weight:bold;">2,580 万元</span></div>
+                                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e0e0e0;"><span>实际采购金额</span><span style="font-weight:bold;">2,386 万元</span></div>
+                                        <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #e0e0e0;"><span>偏差金额</span><span style="font-weight:bold;color:var(--warning);">-194 万元</span></div>
+                                        <div style="display:flex;justify-content:space-between;padding:6px 0;"><span>偏差率</span><span style="font-weight:bold;color:var(--success);">-7.5%</span></div>
+                                    </div>
+                                    <div style="margin-top:10px;font-size:11px;color:var(--text-muted);">
+                                        计算过程：(2,386 / 2,580) × 100% = 92.5%
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bottom-actions">
+                <button class="btn btn-success" onclick="saveItem()">&#128190; 保存</button>
+                <button class="btn btn-primary" onclick="publishItem()">&#127760; 发布</button>
+                <button class="btn btn-default" onclick="goBack()">取消</button>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleMenu(el) {
+            const submenu = el.nextElementSibling;
+            if (submenu && submenu.classList.contains('submenu')) {
+                el.classList.toggle('expanded');
+                submenu.classList.toggle('open');
+            }
+        }
+
+        // ========== 阈值配置 ==========
+        let thresholds = [
+            { lower: 90, upper: 100, level: '健康', color: '绿色', action: '维持现状，纳入标杆案例' },
+            { lower: 80, upper: 90, level: '低风险', color: '黄色', action: '关注趋势，预警提示' },
+            { lower: 60, upper: 80, level: '中风险', color: '橙色', action: '专项分析，限期改进' },
+            { lower: 0, upper: 60, level: '高风险', color: '红色', action: '列入重点监管，推送审计部' }
+        ];
+        function renderThresholds() {
+            const tbody = document.getElementById('thresholdBody');
+            tbody.innerHTML = thresholds.map((t, i) => `
+                <tr><td>${i+1}</td><td><input type="number" class="dt-input" value="${t.lower}" style="width:60px;"></td><td><input type="number" class="dt-input" value="${t.upper}" style="width:60px;"></td><td><input type="text" class="dt-input" value="${t.level}"></td><td><input type="text" class="dt-input" value="${t.color}"></td><td><input type="text" class="dt-input" value="${t.action}"></td><td><button class="dt-btn" onclick="removeThreshold(${i})">删除</button></td></tr>
+            `).join('');
+        }
+        function addThreshold() { thresholds.push({ lower: 0, upper: 100, level: '', color: '', action: '' }); renderThresholds(); }
+        function removeThreshold(i) { thresholds.splice(i, 1); renderThresholds(); }
+
+        // ========== 公式编辑 ==========
+        function insertFormula(text) {
+            const box = document.getElementById('formulaBox');
+            box.innerHTML += text;
+        }
+        function clearFormula() { document.getElementById('formulaBox').innerHTML = ''; }
+        function validateFormula() { alert('公式校验通过！'); }
+
+        // ========== 测试评分 ==========
+        function toggleScoreSection() {
+            const sec = document.getElementById('scoreSection');
+            sec.style.display = sec.style.display === 'none' ? 'block' : 'none';
+        }
+        function runTest() {
+            document.getElementById('scoreResult').style.display = 'block';
+        }
+
+        // ========== 操作 ==========
+        function saveItem() { alert('指标保存成功！'); goBack(); }
+        function publishItem() { alert('指标发布成功！'); goBack(); }
+        function copyItem() { alert('已复制指标配置'); }
+        function goBack() { window.location.href = '采购业务健康度.html'; }
+
+        // 初始化
+        renderThresholds();
+    </script>
+</body>
+</html>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<!--
+  规格卡（转 Vue 的唯一真源）
+  编码：RWJSC01    名称：任务驾驶舱    类型：仪表盘页
+  统计卡片：任务总数 / 待派发 / 处理中 / 待验收 / 已办结 / 超期任务（联动 filter.status）
+  图表：任务趋势（近6个月柱状图） / 任务状态分布（环形饼图）
+  底部双栏：部门任务处理排名表 / 超期任务预警表
+  顶部操作：进入任务列表（data-nav 跳 RWGL01）
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../assets/app.css">
+<link rel="stylesheet" href="../../assets/theme.css">
+<title>任务驾驶舱</title>
+</head>
+<body class="page-body">
+
+<div id="page-content" data-page="RWJSC01" class="prototype-page">
+
+  <!-- 页头 -->
+  <div class="page-header">
+    <div class="page-title">任务驾驶舱</div>
+    <div class="actions">
+      <button class="btn btn-primary" data-nav="RWGL01">进入任务列表</button>
+    </div>
+  </div>
+
+  <!-- 统计卡片行 -->
+  <div class="stat-row prototype-stat-row" id="statRow">
+    <div class="stat-card rich prototype-stat-card" data-status="all">
+      <div class="ico ico-blue">📋</div>
+      <div class="stat-info">
+        <div class="num" id="numTotal">186</div>
+        <div class="label">任务总数</div>
+        <span class="trend trend-up">↑ 较上月 +12</span>
+      </div>
+    </div>
+    <div class="stat-card rich prototype-stat-card" data-status="pending">
+      <div class="ico ico-orange">📣</div>
+      <div class="stat-info">
+        <div class="num num-warning" id="numPending">23</div>
+        <div class="label">待派发</div>
+        <span class="trend">占比 12.4%</span>
+      </div>
+    </div>
+    <div class="stat-card rich prototype-stat-card" data-status="processing">
+      <div class="ico ico-purple">🔧</div>
+      <div class="stat-info">
+        <div class="num num-purple" id="numProcessing">89</div>
+        <div class="label">处理中</div>
+        <span class="trend">占比 47.8%</span>
+      </div>
+    </div>
+    <div class="stat-card rich prototype-stat-card" data-status="review">
+      <div class="ico ico-green">✅</div>
+      <div class="stat-info">
+        <div class="num num-success" id="numReview">52</div>
+        <div class="label">待验收</div>
+        <span class="trend">占比 28.0%</span>
+      </div>
+    </div>
+    <div class="stat-card rich prototype-stat-card" data-status="done">
+      <div class="ico ico-gray">📑</div>
+      <div class="stat-info">
+        <div class="num num-muted" id="numDone">22</div>
+        <div class="label">已办结</div>
+        <span class="trend trend-down">↓ 较上月 -5</span>
+      </div>
+    </div>
+    <div class="stat-card rich prototype-stat-card" data-status="overdue">
+      <div class="ico ico-red">⚠</div>
+      <div class="stat-info">
+        <div class="num num-danger" id="numOverdue">8</div>
+        <div class="label">超期任务</div>
+        <span class="trend trend-up">↑ 较上周 +3</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 图表行 -->
+  <div class="two-col-grid">
+    <div class="card prototype-card">
+      <div class="card-head prototype-card-head"><div class="title prototype-title"><span class="bar"></span>任务趋势（近6个月）</div></div>
+      <div class="chart-wrap prototype-chart-wrap" id="trendChart"></div>
+    </div>
+    <div class="card prototype-card">
+      <div class="card-head prototype-card-head"><div class="title prototype-title"><span class="bar"></span>任务状态分布</div></div>
+      <div class="chart-wrap prototype-chart-wrap" id="pieChart"></div>
+    </div>
+  </div>
+
+  <!-- 底部双栏 -->
+  <div class="two-col-grid">
+    <div class="card prototype-card">
+      <div class="card-head prototype-card-head"><div class="title prototype-title"><span class="bar"></span>部门任务处理排名（本月）</div></div>
+      <div class="table-wrap prototype-table-wrap" style="min-width:0;">
+        <table style="min-width:0;">
+          <thead><tr><th style="width:50px;">排名</th><th>部门</th><th>任务数</th><th>已办结</th><th>超期率</th><th style="width:120px;">完成进度</th></tr></thead>
+          <tbody id="rankBody"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card prototype-card">
+      <div class="card-head prototype-card-head"><div class="title prototype-title"><span class="bar"></span>超期任务预警</div></div>
+      <div class="table-wrap prototype-table-wrap" style="min-width:0;">
+        <table style="min-width:0;">
+          <thead><tr><th>任务编号</th><th>任务标题</th><th>负责人</th><th>截止日</th><th>超期天数</th><th>预警等级</th></tr></thead>
+          <tbody id="warnBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /#page-content -->
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+/* ====== 趋势柱状图数据 ====== */
+const TREND = [
+  { month:'7月', h:60,  highlight:false },
+  { month:'8月', h:45,  highlight:false },
+  { month:'9月', h:80,  highlight:false },
+  { month:'10月',h:100, highlight:true  },
+  { month:'11月',h:75,  highlight:false },
+  { month:'12月',h:55,  highlight:false }
+];
+
+/* ====== 状态分布数据 ====== */
+const STATUS_PARTS = [
+  { label:'待派发', pct:12.4, color:'#fb8c00' },
+  { label:'处理中', pct:47.8, color:'#5e35b1' },
+  { label:'待验收', pct:28.0, color:'#43a047' },
+  { label:'已办结', pct:11.8, color:'#999'   }
+];
+
+/* ====== 部门排名数据 ====== */
+const RANK_DATA = [
+  { rank:1, dept:'采购部',     total:45, done:38, overdue:'2.1%',  pct:84, cls:'blue'   },
+  { rank:2, dept:'财务部',     total:32, done:24, overdue:'6.3%',  pct:75, cls:'blue'   },
+  { rank:3, dept:'质量管理部',  total:28, done:19, overdue:'3.6%',  pct:68, cls:'blue'   },
+  { rank:4, dept:'法务部',     total:18, done:11, overdue:'11.1%', pct:61, cls:'orange' },
+  { rank:5, dept:'仓储部',     total:15, done:8,  overdue:'13.3%', pct:53, cls:'red'    }
+];
+
+/* ====== 预警数据 ====== */
+const WARN_DATA = [
+  { no:'RW20241101005', title:'围标串标专项核查',     person:'王建国', due:'2024-11-30', days:'+5天',    lvl:'warn-red'    },
+  { no:'RW20241108012', title:'供应商关联关系排查',    person:'李晓明', due:'2024-12-01', days:'+4天',    lvl:'warn-red'    },
+  { no:'RW20241115008', title:'价格异常核查-铝锭采购',  person:'张丽娟', due:'2024-12-03', days:'+2天',    lvl:'warn-orange' },
+  { no:'RW20241120003', title:'合同变更合规检查',      person:'赵志强', due:'2024-12-05', days:'今日到期', lvl:'warn-yellow' },
+  { no:'RW20241125006', title:'质检数据造假核查',      person:'刘婷婷', due:'2024-12-06', days:'即将到期', lvl:'warn-yellow' }
+];
+
+function renderTrends() {
+  var el = document.getElementById('trendChart');
+  if (!el) return;
+  el.innerHTML =
+    '<div style="display:flex;align-items:flex-end;justify-content:space-around;height:180px;gap:8px;">' +
+    TREND.map(function(t){
+      return '<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;">' +
+        '<div style="width:100%;background:'+(t.highlight?'var(--primary)':'var(--primary-light)')+';border-radius:3px 3px 0 0;height:'+t.h+'%;transition:height .3s;"></div>' +
+        '<span style="font-size:11px;color:var(--text-muted,#999);">'+t.month+'</span></div>';
+    }).join('') + '</div>';
+}
+
+function renderPie() {
+  var el = document.getElementById('pieChart');
+  if (!el) return;
+  var grad = STATUS_PARTS.reduce(function(s,p,i){
+    var start = STATUS_PARTS.slice(0,i).reduce(function(a,x){return a+x.pct;},0);
+    return s + p.color + ' ' + start + '% ' + (start+p.pct) + '%' + (i<STATUS_PARTS.length-1?',':'');
+  },'');
+  el.innerHTML =
+    '<div style="display:flex;align-items:center;justify-content:center;height:180px;gap:36px;">' +
+    '<div style="position:relative;width:120px;height:120px;border-radius:50%;background:conic-gradient('+grad+');display:flex;align-items:center;justify-content:center;">' +
+    '<div style="width:80px;height:80px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:bold;">186</div></div>' +
+    '<div style="display:flex;flex-direction:column;gap:8px;">' +
+    STATUS_PARTS.map(function(p){
+      return '<div style="display:flex;align-items:center;gap:6px;font-size:12px;"><span style="width:10px;height:10px;background:'+p.color+';border-radius:2px;"></span><span>'+p.label+' '+p.pct+'%</span></div>';
+    }).join('') + '</div></div>';
+}
+
+function renderRank() {
+  var el = document.getElementById('rankBody');
+  if (!el) return;
+  el.innerHTML = RANK_DATA.map(function(r){
+    var oc = r.overdue.indexOf('1')===0 ? 'color:var(--danger);' : (r.overdue.indexOf('6')===0 ? 'color:var(--warning);' : 'color:var(--success);');
+    return '<tr>' +
+      '<td><span class="rank-num '+(r.rank<=3?'top3':'other')+'">'+r.rank+'</span></td>' +
+      '<td>'+r.dept+'</td><td>'+r.total+'</td><td>'+r.done+'</td>' +
+      '<td style="'+oc+'">'+r.overdue+'</td>' +
+      '<td><div class="progress-track"><div class="progress-fill '+r.cls+'" style="width:'+r.pct+'%;"></div></div></td></tr>';
+  }).join('');
+}
+
+function renderWarn() {
+  var el = document.getElementById('warnBody');
+  if (!el) return;
+  el.innerHTML = WARN_DATA.map(function(w){
+    var dc = w.days.indexOf('+')===0 ? 'color:var(--danger);font-weight:bold;' : 'color:var(--warning);';
+    return '<tr><td>'+w.no+'</td><td>'+w.title+'</td><td>'+w.person+'</td><td>'+w.due+'</td>' +
+      '<td style="'+dc+'">'+w.days+'</td>' +
+      '<td><span class="warn-tag '+w.lvl+'">'+ (w.lvl==='warn-red'?'红色':(w.lvl==='warn-orange'?'橙色':'黄色')) +'</span></td></tr>';
+  }).join('');
+}
+
+function render() {
+  renderTrends();
+  renderPie();
+  renderRank();
+  renderWarn();
+  PR.bindActions();
+}
+
+render();
+</script>
+</body>
+</html>

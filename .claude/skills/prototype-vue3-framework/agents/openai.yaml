@@ -1,0 +1,4 @@
+interface:
+  display_name: "Prototype Vue3 Framework"
+  short_description: "Create a runnable Vue3 (Ant Design Vue 4) demo framework for prototypes."
+  default_prompt: "Use this skill to initialize or repair the Vue3 mock framework used by converted prototype pages."

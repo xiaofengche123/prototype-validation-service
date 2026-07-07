@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>超期督办 - 审计监督</title>
+    <style>
+        :root { --primary: #1565c0; --primary-dark: #0d47a1; --primary-light: #e3f2fd; --success: #43a047; --warning: #fb8c00; --danger: #e53935; --info: #5e35b1; --text-primary: #333; --text-secondary: #666; --text-muted: #999; --border-color: #e0e0e0; --bg-body: #f0f2f5; --bg-card: #fff; --sidebar-width: 220px; --header-height: 56px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif; font-size: 13px; color: var(--text-primary); background: var(--bg-body); overflow: hidden; height: 100%; }
+
+        .top-header { height: var(--header-height); background: linear-gradient(90deg, #0d47a1 0%, #1976d2 60%, #42a5f5 100%); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; color: #fff; position: fixed; top: 0; left: 0; right: 0; z-index: 1000; }
+        .header-left { display: flex; align-items: center; gap: 14px; }
+        .brand-system { display: flex; flex-direction: column; gap: 2px; }
+        .brand-name { font-size: 18px; font-weight: bold; letter-spacing: 3px; }
+        .brand-version { font-size: 10px; opacity: .85; background: rgba(255,255,255,.2); padding: 1px 6px; border-radius: 3px; }
+        .brand-divider { width: 1px; height: 32px; background: rgba(255,255,255,.3); }
+        .logo-text { display: flex; flex-direction: column; gap: 2px; }
+        .logo-text .cn { font-size: 14px; font-weight: bold; }
+        .logo-text .en { font-size: 9px; opacity: .75; }
+        .header-center { flex: 1; display: flex; justify-content: center; }
+        .header-search { position: relative; width: 320px; }
+        .header-search input { width: 100%; height: 32px; border-radius: 16px; border: none; padding: 0 36px 0 14px; font-size: 13px; background: rgba(255,255,255,.18); color: #fff; outline: none; }
+        .header-search input::placeholder { color: rgba(255,255,255,.6); }
+        .header-search .search-icon { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); width: 16px; height: 16px; opacity: .7; }
+        .header-right { display: flex; align-items: center; gap: 16px; }
+        .company-info { font-size: 13px; opacity: .95; }
+        .user-avatar { width: 32px; height: 32px; border-radius: 50%; background: #fff; display: flex; align-items: center; justify-content: center; color: #0d47a1; font-weight: bold; font-size: 14px; }
+
+        .layout { display: flex; padding-top: var(--header-height); height: 100vh; overflow: hidden; }
+        .sidebar { width: var(--sidebar-width); background: #fff; border-right: 1px solid var(--border-color); overflow-y: auto; flex-shrink: 0; }
+        .sidebar::-webkit-scrollbar { width: 4px; }
+        .menu-group { border-bottom: 1px solid #f0f0f0; }
+        .menu-item { display: flex; align-items: center; justify-content: space-between; padding: 0 14px; height: 40px; cursor: pointer; transition: all .2s; color: var(--text-secondary); }
+        .menu-item:hover { background: var(--primary-light); color: var(--primary); }
+        .menu-item.active { background: var(--primary-light); color: var(--primary); border-right: 3px solid var(--primary); }
+        .menu-item .menu-left { display: flex; align-items: center; gap: 10px; }
+        .menu-item .menu-icon { width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; opacity: .7; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; padding: 12px 16px 0; }
+        .breadcrumb { font-size: 12px; color: var(--text-secondary); margin-bottom: 8px; flex-shrink: 0; }
+        .breadcrumb a { color: var(--primary); text-decoration: none; }
+        .breadcrumb a:hover { text-decoration: underline; }
+        .breadcrumb .sep { margin: 0 4px; color: var(--text-muted); }
+
+        .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-shrink: 0; }
+        .page-title { font-size: 16px; font-weight: bold; }
+        .top-actions { display: flex; gap: 6px; }
+
+        .btn { height: 28px; padding: 0 14px; border-radius: 3px; border: 1px solid var(--border-color); background: #fff; font-size: 12px; cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: 4px; text-decoration: none; }
+        .btn:hover { opacity: .85; }
+        .btn-primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .btn-success { background: var(--success); color: #fff; border-color: var(--success); }
+        .btn-warning { background: var(--warning); color: #fff; border-color: var(--warning); }
+        .btn-danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+        .btn-info { background: var(--info); color: #fff; border-color: var(--info); }
+        .btn-default { color: var(--text-secondary); }
+        .btn-default:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-ghost { background: transparent; border-color: transparent; color: var(--text-secondary); }
+
+        /* 预警统计卡 */
+        .alert-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 12px; flex-shrink: 0; }
+        .alert-card { border-radius: 6px; padding: 16px 20px; display: flex; align-items: center; gap: 14px; color: #fff; }
+        .alert-card.red { background: linear-gradient(135deg, #c62828 0%, #e53935 100%); }
+        .alert-card.orange { background: linear-gradient(135deg, #ef6c00 0%, #fb8c00 100%); }
+        .alert-card.yellow { background: linear-gradient(135deg, #f9a825 0%, #fbc02d 100%); color: #333; }
+        .alert-icon { width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,.2); display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .alert-card.yellow .alert-icon { background: rgba(0,0,0,.1); }
+        .alert-body { flex: 1; }
+        .alert-label { font-size: 13px; opacity: .9; margin-bottom: 4px; }
+        .alert-num { font-size: 26px; font-weight: bold; line-height: 1; }
+        .alert-unit { font-size: 12px; opacity: .8; margin-left: 2px; }
+
+        /* 查询区 */
+        .query-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); margin-bottom: 12px; flex-shrink: 0; }
+        .section-header { padding: 10px 16px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: bold; color: var(--primary); }
+        .section-header .header-left-part { display: flex; align-items: center; gap: 8px; }
+        .section-icon { width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .section-actions { display: flex; align-items: center; gap: 8px; }
+        .query-form { padding: 16px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px 16px; }
+        .form-item { display: flex; align-items: center; gap: 8px; }
+        .form-item .form-label { width: 90px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; }
+        .form-item .form-input, .form-item .form-select { flex: 1; height: 30px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; outline: none; transition: border-color .2s; }
+        .form-item .form-input:focus, .form-item .form-select:focus { border-color: var(--primary); }
+
+        /* 列表区 */
+        .list-section { background: #fff; border-radius: 4px; box-shadow: 0 1px 3px rgba(0,0,0,.06); flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        .status-tabs { display: flex; align-items: center; gap: 6px; padding: 10px 16px; border-bottom: 1px solid var(--border-color); background: #fafafa; flex-shrink: 0; }
+        .status-tab { display: inline-flex; align-items: center; gap: 6px; padding: 5px 14px; border-radius: 3px; cursor: pointer; font-size: 12px; color: var(--text-secondary); background: #fff; border: 1px solid var(--border-color); transition: all .2s; }
+        .status-tab:hover { border-color: var(--primary); color: var(--primary); }
+        .status-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: bold; }
+        .status-tab .st-count { font-size: 11px; padding: 1px 6px; border-radius: 10px; font-weight: bold; background: rgba(0,0,0,.08); }
+        .status-tab.active .st-count { background: rgba(255,255,255,.25); color: #fff; }
+        .status-tab .st-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; opacity: .6; }
+
+        .list-toolbar { padding: 10px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-color); flex-shrink: 0; }
+        .toolbar-left { display: flex; align-items: center; gap: 10px; }
+        .toolbar-right { display: flex; align-items: center; gap: 8px; }
+        .section-title { font-size: 14px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 6px; }
+        .title-badge { font-size: 11px; padding: 1px 6px; border-radius: 10px; background: var(--primary); color: #fff; font-weight: normal; }
+
+        .data-table-wrapper { flex: 1; display: flex; flex-direction: column; overflow: hidden; min-height: 0; }
+        .table-scroll-area { flex: 1; overflow: auto; min-height: 0; }
+        .table-scroll-area::-webkit-scrollbar { width: 6px; height: 6px; }
+        .data-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 1300px; }
+        .data-table thead th { background: var(--primary-light); color: var(--primary-dark); font-weight: bold; padding: 10px 8px; text-align: center; border-bottom: 1px solid #bbdefb; white-space: nowrap; position: sticky; top: 0; z-index: 10; }
+        .data-table tbody td { padding: 10px 8px; text-align: center; border-bottom: 1px solid #f0f0f0; }
+        .data-table tbody tr:hover { background: #f5f7fa; }
+        .data-table .checkbox-col { width: 40px; }
+        .data-table .op-col { min-width: 200px; }
+        .col-link { color: var(--primary); cursor: pointer; text-decoration: none; }
+        .col-link:hover { text-decoration: underline; }
+
+        /* 预警等级标签 */
+        .warn-tag { display: inline-flex; align-items: center; gap: 4px; padding: 2px 10px; border-radius: 3px; font-size: 11px; font-weight: bold; white-space: nowrap; }
+        .warn-tag::before { content: ""; width: 6px; height: 6px; border-radius: 50%; }
+        .warn-red { background: #ffebee; color: #c62828; }
+        .warn-red::before { background: #e53935; }
+        .warn-orange { background: #fff3e0; color: #e65100; }
+        .warn-orange::before { background: #fb8c00; }
+        .warn-yellow { background: #fffde7; color: #f9a825; }
+        .warn-yellow::before { background: #fbc02d; }
+
+        /* 超期天数 */
+        .overdue-days { font-size: 13px; font-weight: bold; }
+        .overdue-days.red { color: var(--danger); }
+        .overdue-days.orange { color: var(--warning); }
+
+        .op-btns { display: flex; align-items: center; justify-content: center; gap: 4px; }
+        .op-btn { font-size: 11px; color: var(--primary); cursor: pointer; padding: 2px 6px; border-radius: 2px; transition: background .2s; border: none; background: transparent; text-decoration: none; display: inline-block; }
+        .op-btn:hover { background: var(--primary-light); }
+        .op-btn.warning { color: var(--warning); }
+        .op-btn.warning:hover { background: #fff3e0; }
+        .op-btn.danger { color: var(--danger); }
+        .op-btn.danger:hover { background: #ffebee; }
+        .op-btn.info { color: var(--info); }
+        .op-btn.info:hover { background: #ede7f6; }
+
+        .pagination-bar { padding: 10px 16px; display: flex; align-items: center; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border-color); background: #fff; flex-shrink: 0; }
+        .page-info { color: var(--text-secondary); font-size: 12px; }
+        .page-btns { display: flex; align-items: center; gap: 4px; }
+        .page-btn { min-width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--border-color); background: #fff; border-radius: 3px; cursor: pointer; font-size: 12px; color: var(--text-secondary); padding: 0 6px; }
+        .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+        .page-btn.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+        .page-btn.disabled { opacity: .4; cursor: not-allowed; }
+
+        input[type="checkbox"] { width: 14px; height: 14px; accent-color: var(--primary); cursor: pointer; }
+        .empty-state { display: none; flex-direction: column; align-items: center; justify-content: center; padding: 60px 20px; color: var(--text-muted); gap: 12px; }
+        .empty-state.show { display: flex; }
+
+        /* 弹窗 */
+        .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,.45); z-index: 2000; display: none; align-items: center; justify-content: center; }
+        .modal-overlay.show { display: flex; }
+        .modal-box { background: #fff; border-radius: 6px; box-shadow: 0 8px 32px rgba(0,0,0,.2); width: 560px; max-width: 90vw; max-height: 85vh; display: flex; flex-direction: column; }
+        .modal-header { padding: 14px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; justify-content: space-between; }
+        .modal-title { font-size: 15px; font-weight: bold; color: var(--text-primary); display: flex; align-items: center; gap: 8px; }
+        .modal-title::before { content: ""; width: 4px; height: 16px; background: var(--primary); border-radius: 2px; }
+        .modal-close { width: 28px; height: 28px; border-radius: 50%; border: none; background: #f5f5f5; color: var(--text-secondary); cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; }
+        .modal-close:hover { background: #e0e0e0; color: var(--danger); }
+        .modal-body { padding: 16px 20px; overflow-y: auto; flex: 1; }
+        .modal-footer { padding: 12px 20px; border-top: 1px solid var(--border-color); display: flex; align-items: center; justify-content: flex-end; gap: 10px; }
+
+        .modal-form { display: flex; flex-direction: column; gap: 14px; }
+        .mf-row { display: flex; align-items: flex-start; gap: 8px; }
+        .mf-row .mf-label { width: 90px; text-align: right; color: var(--text-secondary); font-size: 12px; flex-shrink: 0; padding-top: 7px; }
+        .mf-row .mf-label.required::before { content: "*"; color: var(--danger); margin-right: 3px; }
+        .mf-row .mf-input, .mf-row .mf-select { flex: 1; height: 30px; border: 1px solid var(--border-color); border-radius: 3px; padding: 0 8px; font-size: 12px; outline: none; font-family: inherit; }
+        .mf-row .mf-input:focus, .mf-row .mf-select:focus { border-color: var(--primary); }
+        .mf-row .mf-textarea { flex: 1; min-height: 70px; border: 1px solid var(--border-color); border-radius: 3px; padding: 6px 8px; font-size: 12px; outline: none; resize: vertical; font-family: inherit; }
+        .mf-row .mf-textarea:focus { border-color: var(--primary); }
+
+        /* 抄送人标签 */
+        .cc-tags { display: flex; flex-wrap: wrap; gap: 6px; flex: 1; }
+        .cc-tag { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 3px; font-size: 11px; background: var(--primary-light); color: var(--primary); }
+        .cc-tag .cc-del { cursor: pointer; font-size: 12px; }
+        .cc-tag .cc-del:hover { color: var(--danger); }
+        .cc-add { padding: 3px 10px; border-radius: 3px; font-size: 11px; background: #f5f5f5; color: var(--text-secondary); cursor: pointer; border: 1px dashed var(--border-color); }
+        .cc-add:hover { border-color: var(--primary); color: var(--primary); }
+    </style>
+<script>if(window.self!==window.top){var s=document.createElement("style");s.textContent=".top-header,.sidebar,.page-tabs{display:none!important}.layout{padding-top:0!important;height:auto!important}body{overflow:auto!important}.main-content{padding:12px 16px!important}";document.head.appendChild(s)}</script></head>
+<body>
+    <header class="top-header">
+        <div class="header-left">
+            <div class="brand-system"><span class="brand-name">绿星链通</span><span class="brand-version">2.0</span></div>
+            <div class="brand-divider"></div>
+            <div class="logo-text"><span class="cn">中国铝业集团有限公司</span><span class="en">ALUMINUM CORPORATION OF CHINA</span></div>
+        </div>
+        <div class="header-center">
+            <div class="header-search"><input type="text" placeholder="请输入页面号"><svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><path d="M21 21l-4.35-4.35"></path></svg></div>
+        </div>
+        <div class="header-right"><span class="company-info">8300-中国铝业股份有限公司广西分公司 | 潘冬妮-100132899</span><div class="user-avatar">潘</div></div>
+    </header>
+
+    <div class="layout">
+        <aside class="sidebar">
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#127968;</span><span>首页</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128200;</span><span>风险驾驶舱</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128203;</span><span>风险事件池</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128188;</span><span>我的工作台</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128640;</span><span>任务管理</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#9989;</span><span>验收审核</span></div></div></div>
+            <div class="menu-group"><div class="menu-item active"><div class="menu-left"><span class="menu-icon">&#128226;</span><span>超期督办</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128218;</span><span>知识库</span></div></div></div>
+            <div class="menu-group"><div class="menu-item"><div class="menu-left"><span class="menu-icon">&#128202;</span><span>统计分析</span></div></div></div>
+        </aside>
+
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a href="2.任务管理列表.html">任务管理</a><span class="sep">&gt;</span><span>超期督办</span>
+            </div>
+
+            <div class="page-header">
+                <div class="page-title">超期督办</div>
+                <div class="top-actions">
+                    <a href="2.任务管理列表.html" class="btn btn-default">返回任务列表</a>
+                </div>
+            </div>
+
+            <!-- 预警统计卡 -->
+            <div class="alert-cards">
+                <div class="alert-card red">
+                    <div class="alert-icon">&#128680;</div>
+                    <div class="alert-body">
+                        <div class="alert-label">已超期</div>
+                        <div><span class="alert-num">12</span><span class="alert-unit">个任务</span></div>
+                    </div>
+                </div>
+                <div class="alert-card orange">
+                    <div class="alert-icon">&#9200;</div>
+                    <div class="alert-body">
+                        <div class="alert-label">今日到期</div>
+                        <div><span class="alert-num">5</span><span class="alert-unit">个任务</span></div>
+                    </div>
+                </div>
+                <div class="alert-card yellow">
+                    <div class="alert-icon">&#9888;</div>
+                    <div class="alert-body">
+                        <div class="alert-label">3日内到期</div>
+                        <div><span class="alert-num">8</span><span class="alert-unit">个任务</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 查询区 -->
+            <div class="query-section">
+                <div class="section-header">
+                    <div class="header-left-part"><span class="section-icon"></span><span>查询信息</span></div>
+                    <div class="section-actions">
+                        <button class="btn btn-default">&#8634; 重置</button>
+                        <button class="btn btn-primary">&#128269; 查询</button>
+                    </div>
+                </div>
+                <div class="query-form">
+                    <div class="form-item"><label class="form-label">任务编号</label><input type="text" class="form-input" placeholder="请输入任务编号"></div>
+                    <div class="form-item"><label class="form-label">任务标题</label><input type="text" class="form-input" placeholder="请输入任务标题"></div>
+                    <div class="form-item"><label class="form-label">责任人</label><input type="text" class="form-input" placeholder="请输入责任人"></div>
+                    <div class="form-item">
+                        <label class="form-label">责任部门</label>
+                        <select class="form-select"><option value="">请选择</option><option>采购部</option><option>财务部</option><option>质量管理部</option><option>法务部</option><option>审计部</option><option>仓储部</option></select>
+                    </div>
+                    <div class="form-item">
+                        <label class="form-label">超期天数起</label>
+                        <input type="number" class="form-input" placeholder="天">
+                    </div>
+                    <div class="form-item">
+                        <label class="form-label">超期天数止</label>
+                        <input type="number" class="form-input" placeholder="天">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 列表区 -->
+            <div class="list-section">
+                <div class="list-toolbar">
+                    <div class="toolbar-left"><span class="section-title">&#9776; 超期任务列表 <span class="title-badge">25</span></span></div>
+                    <div class="toolbar-right">
+                        <button class="btn btn-default">&#128229; 批量导出</button>
+                        <button class="btn btn-warning">&#128227; 批量催办</button>
+                    </div>
+                </div>
+                <div class="data-table-wrapper">
+                    <div class="status-tabs">
+                        <div class="status-tab active" data-status="all" onclick="filterStatus('all',this)"><span class="st-dot"></span><span>全部</span><span class="st-count">25</span></div>
+                        <div class="status-tab" data-status="overdue" onclick="filterStatus('overdue',this)"><span class="st-dot"></span><span>已超期</span><span class="st-count">12</span></div>
+                        <div class="status-tab" data-status="today" onclick="filterStatus('today',this)"><span class="st-dot"></span><span>今日到期</span><span class="st-count">5</span></div>
+                        <div class="status-tab" data-status="d3" onclick="filterStatus('d3',this)"><span class="st-dot"></span><span>3日内到期</span><span class="st-count">5</span></div>
+                        <div class="status-tab" data-status="d7" onclick="filterStatus('d7',this)"><span class="st-dot"></span><span>7日内到期</span><span class="st-count">3</span></div>
+                    </div>
+                    <div class="table-scroll-area">
+                        <table class="data-table">
+                            <thead>
+                                <tr><th class="checkbox-col"><input type="checkbox"></th><th>序号</th><th>任务编号</th><th>任务标题</th><th>责任人</th><th>责任部门</th><th>计划截止</th><th>超期天数</th><th>预警等级</th><th>催办次数</th><th>当前状态</th><th class="op-col">操作</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr data-status="overdue">
+                                    <td><input type="checkbox"></td><td>1</td>
+                                    <td><a href="4.任务详情.html" class="col-link">RW20241201001</a></td>
+                                    <td style="text-align:left;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">某招标项目三家投标人MAC地址重合涉嫌围标</td>
+                                    <td>王建国</td><td>招标办</td><td>2024-12-20</td>
+                                    <td><span class="overdue-days red">+5天</span></td>
+                                    <td><span class="warn-tag warn-red">红色预警</span></td>
+                                    <td>2</td><td>处理中</td>
+                                    <td><div class="op-btns"><button class="op-btn warning" onclick="urgeTask('RW20241201001')">催办</button><button class="op-btn" onclick="openUpdate('RW20241201001')">更新</button><button class="op-btn info" onclick="openTransfer('RW20241201001')">切换责任人</button><a href="4.任务详情.html" class="op-btn">查看</a></div></td>
+                                </tr>
+                                <tr data-status="overdue">
+                                    <td><input type="checkbox"></td><td>2</td>
+                                    <td><a href="4.任务详情.html" class="col-link">RW20241128002</a></td>
+                                    <td style="text-align:left;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">某单一来源采购定价显著高于市场价专项调查</td>
+                                    <td>张丽娟</td><td>财务部</td><td>2024-12-25</td>
+                                    <td><span class="overdue-days red">+3天</span></td>
+                                    <td><span class="warn-tag warn-red">红色预警</span></td>
+                                    <td>1</td><td>处理中</td>
+                                    <td><div class="op-btns"><button class="op-btn warning" onclick="urgeTask('RW20241128002')">催办</button><button class="op-btn" onclick="openUpdate('RW20241128002')">更新</button><button class="op-btn info" onclick="openTransfer('RW20241128002')">切换责任人</button><a href="4.任务详情.html" class="op-btn">查看</a></div></td>
+                                </tr>
+                                <tr data-status="overdue">
+                                    <td><input type="checkbox"></td><td>3</td>
+                                    <td><a href="4.任务详情.html" class="col-link">RW20241125003</a></td>
+                                    <td style="text-align:left;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">合同变更未履行审批程序合规检查</td>
+                                    <td>赵志强</td><td>法务部</td><td>2024-12-08</td>
+                                    <td><span class="overdue-days red">+17天</span></td>
+                                    <td><span class="warn-tag warn-red">红色预警</span></td>
+                                    <td>3</td><td>处理中</td>
+                                    <td><div class="op-btns"><button class="op-btn warning" onclick="urgeTask('RW20241125003')">催办</button><button class="op-btn" onclick="openUpdate('RW20241125003')">更新</button><button class="op-btn info" onclick="openTransfer('RW20241125003')">切换责任人</button><a href="4.任务详情.html" class="op-btn">查看</a></div></td>
+                                </tr>
+                                <tr data-status="today">
+                                    <td><input type="checkbox"></td><td>4</td>
+                                    <td><a href="4.任务详情.html" class="col-link">RW20241205004</a></td>
+                                    <td style="text-align:left;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">质检数据造假，不合格耐火材料流入生产环节</td>
+                                    <td>刘婷婷</td><td>质量管理部</td><td>2024-12-15</td>
+                                    <td><span class="overdue-days orange">今日到期</span></td>
+                                    <td><span class="warn-tag warn-orange">橙色预警</span></td>
+                                    <td>0</td><td>待验收</td>
+                                    <td><div class="op-btns"><button class="op-btn warning" onclick="urgeTask('RW20241205004')">催办</button><button class="op-btn" onclick="openUpdate('RW20241205004')">更新</button><button class="op-btn info" onclick="openTransfer('RW20241205004')">切换责任人</button><a href="4.任务详情.html" class="op-btn">查看</a></div></td>
+                                </tr>
+                                <tr data-status="today">
+                                    <td><input type="checkbox"></td><td>5</td>
+                                    <td><a href="4.任务详情.html" class="col-link">RW20241205005</a></td>
+                                    <td style="text-align:left;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">某物资库存周转异常，呆滞积压风险排查</td>
+                                    <td>陈大伟</td><td>仓储部</td><td>2024-12-15</td>
+                                    <td><span class="overdue-days orange">今日到期</span></td>
+                                    <td><span class="warn-tag warn-orange">橙色预警</span></td>
+                                    <td>0</td><td>处理中</td>
+                                    <td><div class="op-btns"><button class="op-btn warning" onclick="urgeTask('RW20241205005')">催办</button><button class="op-btn" onclick="openUpdate('RW20241205005')">更新</button><button class="op-btn info" onclick="openTransfer('RW20241205005')">切换责任人</button><a href="4.任务详情.html" class="op-btn">查看</a></div></td>
+                                </tr>
+                                <tr data-status="d3">
+                                    <td><input type="checkbox"></td><td>6</td>
+                                    <td><a href="4.任务详情.html" class="col-link">RW20241206006</a></td>
+                                    <td style="text-align:left;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">付款账期显著偏离合同约定，提前支付核查</td>
+                                    <td>吴海燕</td><td>财务部</td><td>2024-12-18</td>
+                                    <td><span class="overdue-days orange">剩3天</span></td>
+                                    <td><span class="warn-tag warn-yellow">黄色预警</span></td>
+                                    <td>0</td><td>处理中</td>
+                                    <td><div class="op-btns"><button class="op-btn warning" onclick="urgeTask('RW20241206006')">催办</button><button class="op-btn" onclick="openUpdate('RW20241206006')">更新</button><button class="op-btn info" onclick="openTransfer('RW20241206006')">切换责任人</button><a href="4.任务详情.html" class="op-btn">查看</a></div></td>
+                                </tr>
+                                <tr data-status="d3">
+                                    <td><input type="checkbox"></td><td>7</td>
+                                    <td><a href="4.任务详情.html" class="col-link">RW20241206007</a></td>
+                                    <td style="text-align:left;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">单一供应商年度采购额占比超60%集中度整改</td>
+                                    <td>李晓明</td><td>采购部</td><td>2024-12-17</td>
+                                    <td><span class="overdue-days orange">剩2天</span></td>
+                                    <td><span class="warn-tag warn-yellow">黄色预警</span></td>
+                                    <td>0</td><td>处理中</td>
+                                    <td><div class="op-btns"><button class="op-btn warning" onclick="urgeTask('RW20241206007')">催办</button><button class="op-btn" onclick="openUpdate('RW20241206007')">更新</button><button class="op-btn info" onclick="openTransfer('RW20241206007')">切换责任人</button><a href="4.任务详情.html" class="op-btn">查看</a></div></td>
+                                </tr>
+                                <tr data-status="d7">
+                                    <td><input type="checkbox"></td><td>8</td>
+                                    <td><a href="4.任务详情.html" class="col-link">RW20241208008</a></td>
+                                    <td style="text-align:left;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">紧急采购占比异常升高，拆分规避招标核查</td>
+                                    <td>周建国</td><td>采购部</td><td>2024-12-22</td>
+                                    <td><span class="overdue-days">剩7天</span></td>
+                                    <td><span class="warn-tag warn-yellow">黄色预警</span></td>
+                                    <td>0</td><td>处理中</td>
+                                    <td><div class="op-btns"><button class="op-btn warning" onclick="urgeTask('RW20241208008')">催办</button><button class="op-btn" onclick="openUpdate('RW20241208008')">更新</button><button class="op-btn info" onclick="openTransfer('RW20241208008')">切换责任人</button><a href="4.任务详情.html" class="op-btn">查看</a></div></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="empty-state" id="emptyState"><div style="font-size:48px;opacity:.3;">&#128196;</div><div style="font-size:14px;">暂无数据</div></div>
+                    </div>
+                </div>
+                <div class="pagination-bar">
+                    <span class="page-info">共 25 条</span>
+                    <div class="page-btns">
+                        <button class="page-btn disabled">&lt;&lt;</button><button class="page-btn disabled">&lt;</button><button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">3</button><button class="page-btn">&gt;</button><button class="page-btn">&gt;&gt;</button>
+                    </div>
+                    <div class="page-jump" style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary);">前往 <input type="text" value="1" style="width:40px;height:28px;border:1px solid var(--border-color);border-radius:3px;text-align:center;font-size:12px;"> 页</div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 弹窗：更新任务 -->
+    <div class="modal-overlay" id="modalUpdate">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">更新任务</div>
+                <button class="modal-close" onclick="closeModal('modalUpdate')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <div class="mf-row"><span class="mf-label">任务编号</span><input type="text" class="mf-input" value="RW20241201001" readonly style="background:#f5f5f5;"></div>
+                    <div class="mf-row"><span class="mf-label">任务标题</span><input type="text" class="mf-input" value="某招标项目三家投标人MAC地址重合涉嫌围标" readonly style="background:#f5f5f5;"></div>
+                    <div class="mf-row">
+                        <span class="mf-label required">截止日期</span>
+                        <input type="date" class="mf-input" value="2024-12-25">
+                    </div>
+                    <div class="mf-row">
+                        <span class="mf-label required">优先级</span>
+                        <select class="mf-select">
+                            <option>紧急</option>
+                            <option selected>高</option>
+                            <option>中</option>
+                            <option>低</option>
+                        </select>
+                    </div>
+                    <div class="mf-row">
+                        <span class="mf-label">任务描述</span>
+                        <textarea class="mf-textarea">系统监测发现某招标项目三家投标人的投标文件上传IP及MAC地址高度重合，疑似围标串标。请核查三家投标人是否存在关联关系，核实投标文件制作痕迹，形成专项调查报告。</textarea>
+                    </div>
+                    <div class="mf-row">
+                        <span class="mf-label required">更新说明</span>
+                        <textarea class="mf-textarea" placeholder="请说明本次更新的原因..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('modalUpdate')">取消</button>
+                <button class="btn btn-primary" onclick="saveUpdate()">保存更新</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 弹窗：切换责任人 -->
+    <div class="modal-overlay" id="modalTransfer">
+        <div class="modal-box">
+            <div class="modal-header">
+                <div class="modal-title">切换责任人</div>
+                <button class="modal-close" onclick="closeModal('modalTransfer')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="modal-form">
+                    <div class="mf-row"><span class="mf-label">任务编号</span><input type="text" class="mf-input" value="RW20241201001" readonly style="background:#f5f5f5;"></div>
+                    <div class="mf-row"><span class="mf-label">原责任人</span><input type="text" class="mf-input" value="王建国 / 招标办" readonly style="background:#f5f5f5;"></div>
+                    <div class="mf-row">
+                        <span class="mf-label required">新责任人</span>
+                        <select class="mf-select">
+                            <option>请选择</option>
+                            <option>张丽娟 / 财务部</option>
+                            <option>赵志强 / 法务部</option>
+                            <option selected>李晓明 / 采购部</option>
+                            <option>刘婷婷 / 质量管理部</option>
+                            <option>陈大伟 / 仓储部</option>
+                        </select>
+                    </div>
+                    <div class="mf-row">
+                        <span class="mf-label">抄送人</span>
+                        <div class="cc-tags">
+                            <span class="cc-tag">张丽 <span class="cc-del" onclick="this.parentElement.remove()">&times;</span></span>
+                            <span class="cc-tag">审计部-李强 <span class="cc-del" onclick="this.parentElement.remove()">&times;</span></span>
+                            <span class="cc-add" onclick="addCc()">+ 添加抄送人</span>
+                        </div>
+                    </div>
+                    <div class="mf-row">
+                        <span class="mf-label required">交接说明</span>
+                        <textarea class="mf-textarea" placeholder="请说明切换责任人的原因及交接事项..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" onclick="closeModal('modalTransfer')">取消</button>
+                <button class="btn btn-primary" onclick="saveTransfer()">确认切换</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 状态标签过滤
+        function filterStatus(status, el) {
+            document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            const rows = document.querySelectorAll('.data-table tbody tr');
+            let visibleCount = 0;
+            rows.forEach(row => {
+                const rowStatus = row.getAttribute('data-status');
+                const show = status === 'all' || rowStatus === status;
+                row.style.display = show ? '' : 'none';
+                if (show) visibleCount++;
+            });
+            document.getElementById('emptyState').classList.toggle('show', visibleCount === 0);
+        }
+
+        // 催办
+        function urgeTask(taskId) {
+            if (confirm('确定对任务 ' + taskId + ' 发起催办吗？')) {
+                alert('催办通知已发送！系统已记录催办次数+1。\n\n催办内容：\n• 任务编号：' + taskId + '\n• 催办人：潘冬妮\n• 催办时间：' + new Date().toLocaleString());
+            }
+        }
+
+        // 弹窗控制
+        function openUpdate(taskId) {
+            document.getElementById('modalUpdate').classList.add('show');
+        }
+        function openTransfer(taskId) {
+            document.getElementById('modalTransfer').classList.add('show');
+        }
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('show');
+        }
+
+        // 保存更新
+        function saveUpdate() {
+            alert('任务更新已保存！系统已记录更新履历。');
+            closeModal('modalUpdate');
+        }
+
+        // 保存切换责任人
+        function saveTransfer() {
+            alert('责任人切换已生效！系统已发送通知给新责任人及抄送人。\n\n操作履历：\n• 操作人：潘冬妮\n• 操作时间：' + new Date().toLocaleString() + '\n• 操作类型：切换责任人\n• 原责任人：王建国\n• 新责任人：李晓明');
+            closeModal('modalTransfer');
+        }
+
+        // 添加抄送人
+        function addCc() {
+            const names = ['审计部-张丽', '法务部-赵志强', '采购部-李晓明', '质量管理部-刘婷婷'];
+            const name = names[Math.floor(Math.random() * names.length)];
+            const tag = document.createElement('span');
+            tag.className = 'cc-tag';
+            tag.innerHTML = name + ' <span class="cc-del" onclick="this.parentElement.remove()">&times;</span>';
+            const addBtn = document.querySelector('.cc-add');
+            addBtn.parentElement.insertBefore(tag, addBtn);
+        }
+    </script>
+</body>
+</html>
