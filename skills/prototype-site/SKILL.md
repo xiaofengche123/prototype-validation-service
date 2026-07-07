@@ -59,6 +59,12 @@ Create high-fidelity PSM "绿星链通" static prototype pages inside a shared-s
     >  **需要你确认**：[等一个明确选择]"
   - 用户表态后立刻执行。用户说"全做"就直接照做，不反复劝说。
 
+**1.5 批量状态检查（新增，仅批量模式）**
+  - 检查目标目录是否存在 `handoff.md` / `progress.md` / `prompts/*.md`
+  - 存在 → **进入恢复流程**：读取 handoff.md 获取进度，从待办页面继续，不得重新拆分
+  - 不存在 → 继续正常流程（拆分 → 生成）
+  - **核心原则**：文件是唯一的可信状态源，对话记忆不可靠
+
 **2. 执行生成（以下为原有步骤）**
 2.1 Ensure the target site exists. If `index.html` is missing, copy everything from `assets/framework/` into the target directory. If the site exists, only fill missing framework files and do not overwrite `menu.config.js` or `pages/*`.
 2.2 Determine page code, group Chinese name, page Chinese name, page type, query fields, table columns, statuses, actions, modals, and navigation targets. Fill missing business details conservatively and mark them as `【补位】` in the page spec card.
@@ -67,6 +73,22 @@ Create high-fidelity PSM "绿星链通" static prototype pages inside a shared-s
 2.5 Check horizontal overflow while designing each page: if any section needs more width than the viewport, constrain it to a card/table/chart wrapper with local `overflow-x:auto`; do not allow the whole business page or shell iframe to scroll horizontally.
 2.6 If the page has bottom workflow actions, place them in `.fixed-bottom-bar` and add enough root padding via `has-fixed-actions` so the last content section is not covered.
 2.7 Run the self-check before delivery.
+
+**2.8 生成后强制自检（新增，批量模式）**
+  - 每页生成后，对比 `prompts/<编码>-<页面名>.md` 检查：
+    - `data-page` 编码是否与提示词一致
+    - 表格列数、列名是否与提示词一致
+    - 查询条件数、类型是否与提示词一致
+    - 操作按钮数、文案是否与提示词一致
+    - 跳转目标编码是否在 menu.config.js 中已注册（或已标记占位）
+  - 不一致 → 记录到 `progress.md` 偏差清单，标记是否需要重做
+  - 关键项（编码、表格列、跳转目标）不一致 → **强制重做**：删除产物、回滚 menu.config.js、重新生成
+
+**3. 批次结束动作（新增，批量模式）**
+  - 更新 `handoff.md`：已完成清单、待办清单、踩坑记录、下一批建议
+  - 更新 `progress.md`：本批执行日志、累计问题、中断恢复点
+  - 执行 6.4 的折中方案：重读 SKILL.md / flow.md 关键规则
+  - 问 PM：是否继续 / 是否新会话
 
 ## Self-Check
 
@@ -85,3 +107,4 @@ Create high-fidelity PSM "绿星链通" static prototype pages inside a shared-s
 - Bottom workflow operation bars remain fixed at the bottom of the business viewport while the page scrolls vertically, and the last content section can still scroll fully above the bar.
 - If this page completes a batch (batch mode), the handoff document (`handoff-template.md`) has been updated with the completed page, any style fixes discovered, and workspace change overview.
 - If the target site has `assets/theme.css`, it must not contain layout rules (`display` / `grid` / `position` / `width` — skin-only overrides such as colors, fonts, border-radius, shadows are allowed).
+- **（新增，批量模式）** 本页产物与 `prompts/<编码>-<页面名>.md` 的提示词一致：编码、表格列、查询条件、操作按钮、跳转目标均已核对。
