@@ -1,0 +1,4 @@
+interface:
+  display_name: "Template Wizard"
+  short_description: "Guided, question-driven front end for template-distill and template-calibrate."
+  default_prompt: "Use this skill to guide the user through the style-pack journey with one small question at a time — it detects the current stage, composes engine prompts itself, and stops at executor gates."

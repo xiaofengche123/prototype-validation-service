@@ -1,0 +1,701 @@
+<!-- 剥壳后的业务内容：风险监督场景 -->
+<!-- 来源：原型/风险管理/风险监督场景/风险监督场景.html -->
+<!-- 外壳已剥离：移除 top-header / sidebar / layout 外壳 -->
+
+<div id="page-content" data-page="FXSJ01">
+  <!-- 规格卡 · FXSJ01-风险监督场景 -->
+  <!-- 状态key: high/mid/low(风险等级) daichuli/chulizhong/yibiguan(处理状态) all/zhunru/jihua-danyi/jihua-jinji/xunyuan-weichuan/xunyuan-yingzhao/xunyuan-xietong/zhixing/jiesuan/guazhang/shouxin(业务场景) -->
+  <!-- 确认项: 11张统计卡 / 8个查询字段 / 8组25个风险点标签 / 12列表格11行 / 分页器 / 详情抽屉 -->
+  <!-- 补位项: 统计卡片折叠逻辑 / 级联数据一致性 / 筛选后序号重算 / 分页联动 / 详情抽屉动态内容 -->
+
+  <!-- 页头 -->
+  <div class="page-header">
+    <div class="page-title">风险监督场景</div>
+    <div class="actions">
+      <button class="btn btn-primary">+ 手动录入风险</button>
+      <button class="btn btn-default">&#128229; 导出</button>
+    </div>
+  </div>
+
+  <!-- 统计卡片区 -->
+  <div class="stat-section" style="position:relative;margin-bottom:12px;flex-shrink:0;">
+    <div class="stat-row expanded" id="statRow" style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;transition:max-height .3s ease;overflow:hidden;">
+      <div class="stat-card active" data-scene="all" onclick="selectScene(this,'all')" style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px 12px;display:flex;flex-direction:column;cursor:pointer;transition:all .2s;border:2px solid transparent;position:relative;">
+        <div class="scene-stage" style="font-size:10px;color:var(--text-muted);margin-bottom:8px;background:#f5f5f5;padding:1px 6px;border-radius:3px;display:inline-block;align-self:flex-start;">全部场景</div>
+        <div class="scene-name" style="font-size:13px;font-weight:bold;color:var(--text-primary);margin-bottom:6px;">全部风险</div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:auto;">
+          <div style="font-size:24px;font-weight:bold;color:var(--primary);">160</div>
+          <div style="font-size:11px;color:var(--text-muted);">100%</div>
+        </div>
+      </div>
+      <div class="stat-card" data-scene="zhunru" onclick="selectScene(this,'zhunru')" style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px 12px;display:flex;flex-direction:column;cursor:pointer;transition:all .2s;border:2px solid transparent;position:relative;">
+        <div class="scene-stage" style="font-size:10px;color:var(--danger);margin-bottom:8px;background:#f5f5f5;padding:1px 6px;border-radius:3px;display:inline-block;align-self:flex-start;">供应商准入</div>
+        <div class="scene-name" style="font-size:13px;font-weight:bold;color:var(--text-primary);margin-bottom:6px;">违规准入分析</div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:auto;">
+          <div style="font-size:24px;font-weight:bold;color:var(--primary);">23</div>
+          <div style="font-size:11px;color:var(--text-muted);">14.4%</div>
+        </div>
+      </div>
+      <div class="stat-card" data-scene="jihua-danyi" onclick="selectScene(this,'jihua-danyi')" style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px 12px;display:flex;flex-direction:column;cursor:pointer;transition:all .2s;border:2px solid transparent;position:relative;">
+        <div class="scene-stage" style="font-size:10px;color:var(--warning);margin-bottom:8px;background:#f5f5f5;padding:1px 6px;border-radius:3px;display:inline-block;align-self:flex-start;">计划管理</div>
+        <div class="scene-name" style="font-size:13px;font-weight:bold;color:var(--text-primary);margin-bottom:6px;">单一来源合理性</div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:auto;">
+          <div style="font-size:24px;font-weight:bold;color:var(--primary);">15</div>
+          <div style="font-size:11px;color:var(--text-muted);">9.4%</div>
+        </div>
+      </div>
+      <div class="stat-card" data-scene="jihua-jinji" onclick="selectScene(this,'jihua-jinji')" style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px 12px;display:flex;flex-direction:column;cursor:pointer;transition:all .2s;border:2px solid transparent;position:relative;">
+        <div class="scene-stage" style="font-size:10px;color:var(--warning);margin-bottom:8px;background:#f5f5f5;padding:1px 6px;border-radius:3px;display:inline-block;align-self:flex-start;">计划管理</div>
+        <div class="scene-name" style="font-size:13px;font-weight:bold;color:var(--text-primary);margin-bottom:6px;">紧急采购合理性</div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:auto;">
+          <div style="font-size:24px;font-weight:bold;color:var(--primary);">18</div>
+          <div style="font-size:11px;color:var(--text-muted);">11.3%</div>
+        </div>
+      </div>
+      <div class="stat-card" data-scene="xunyuan-weichuan" onclick="selectScene(this,'xunyuan-weichuan')" style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px 12px;display:flex;flex-direction:column;cursor:pointer;transition:all .2s;border:2px solid transparent;position:relative;">
+        <div class="scene-stage" style="font-size:10px;color:var(--info);margin-bottom:8px;background:#f5f5f5;padding:1px 6px;border-radius:3px;display:inline-block;align-self:flex-start;">采购寻源</div>
+        <div class="scene-name" style="font-size:13px;font-weight:bold;color:var(--text-primary);margin-bottom:6px;">围串标识别分析</div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:auto;">
+          <div style="font-size:24px;font-weight:bold;color:var(--primary);">31</div>
+          <div style="font-size:11px;color:var(--text-muted);">19.4%</div>
+        </div>
+      </div>
+      <div class="stat-card" data-scene="xunyuan-yingzhao" onclick="selectScene(this,'xunyuan-yingzhao')" style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px 12px;display:flex;flex-direction:column;cursor:pointer;transition:all .2s;border:2px solid transparent;position:relative;">
+        <div class="scene-stage" style="font-size:10px;color:var(--info);margin-bottom:8px;background:#f5f5f5;padding:1px 6px;border-radius:3px;display:inline-block;align-self:flex-start;">采购寻源</div>
+        <div class="scene-name" style="font-size:13px;font-weight:bold;color:var(--text-primary);margin-bottom:6px;">应招未招识别</div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:auto;">
+          <div style="font-size:24px;font-weight:bold;color:var(--primary);">12</div>
+          <div style="font-size:11px;color:var(--text-muted);">7.5%</div>
+        </div>
+      </div>
+      <div class="stat-card" data-scene="xunyuan-xietong" onclick="selectScene(this,'xunyuan-xietong')" style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px 12px;display:flex;flex-direction:column;cursor:pointer;transition:all .2s;border:2px solid transparent;position:relative;">
+        <div class="scene-stage" style="font-size:10px;color:var(--info);margin-bottom:8px;background:#f5f5f5;padding:1px 6px;border-radius:3px;display:inline-block;align-self:flex-start;">采购寻源</div>
+        <div class="scene-name" style="font-size:13px;font-weight:bold;color:var(--text-primary);margin-bottom:6px;">采购协同性检查</div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:auto;">
+          <div style="font-size:24px;font-weight:bold;color:var(--primary);">9</div>
+          <div style="font-size:11px;color:var(--text-muted);">5.6%</div>
+        </div>
+      </div>
+      <div class="stat-card" data-scene="zhixing" onclick="selectScene(this,'zhixing')" style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px 12px;display:flex;flex-direction:column;cursor:pointer;transition:all .2s;border:2px solid transparent;position:relative;">
+        <div class="scene-stage" style="font-size:10px;color:var(--success);margin-bottom:8px;background:#f5f5f5;padding:1px 6px;border-radius:3px;display:inline-block;align-self:flex-start;">采购执行</div>
+        <div class="scene-name" style="font-size:13px;font-weight:bold;color:var(--text-primary);margin-bottom:6px;">采购执行管理</div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:auto;">
+          <div style="font-size:24px;font-weight:bold;color:var(--primary);">27</div>
+          <div style="font-size:11px;color:var(--text-muted);">16.9%</div>
+        </div>
+      </div>
+      <div class="stat-card" data-scene="jiesuan" onclick="selectScene(this,'jiesuan')" style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px 12px;display:flex;flex-direction:column;cursor:pointer;transition:all .2s;border:2px solid transparent;position:relative;">
+        <div class="scene-stage" style="font-size:10px;color:#00838f;margin-bottom:8px;background:#f5f5f5;padding:1px 6px;border-radius:3px;display:inline-block;align-self:flex-start;">采购结算</div>
+        <div class="scene-name" style="font-size:13px;font-weight:bold;color:var(--text-primary);margin-bottom:6px;">采购结算管理</div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:auto;">
+          <div style="font-size:24px;font-weight:bold;color:var(--primary);">14</div>
+          <div style="font-size:11px;color:var(--text-muted);">8.8%</div>
+        </div>
+      </div>
+      <div class="stat-card" data-scene="guazhang" onclick="selectScene(this,'guazhang')" style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px 12px;display:flex;flex-direction:column;cursor:pointer;transition:all .2s;border:2px solid transparent;position:relative;">
+        <div class="scene-stage" style="font-size:10px;color:#6d4c41;margin-bottom:8px;background:#f5f5f5;padding:1px 6px;border-radius:3px;display:inline-block;align-self:flex-start;">挂账付款</div>
+        <div class="scene-name" style="font-size:13px;font-weight:bold;color:var(--text-primary);margin-bottom:6px;">挂账付款监督</div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:auto;">
+          <div style="font-size:24px;font-weight:bold;color:var(--primary);">8</div>
+          <div style="font-size:11px;color:var(--text-muted);">5.0%</div>
+        </div>
+      </div>
+      <div class="stat-card" data-scene="shouxin" onclick="selectScene(this,'shouxin')" style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);padding:14px 12px;display:flex;flex-direction:column;cursor:pointer;transition:all .2s;border:2px solid transparent;position:relative;">
+        <div class="scene-stage" style="font-size:10px;color:#455a64;margin-bottom:8px;background:#f5f5f5;padding:1px 6px;border-radius:3px;display:inline-block;align-self:flex-start;">授信管理</div>
+        <div class="scene-name" style="font-size:13px;font-weight:bold;color:var(--text-primary);margin-bottom:6px;">授信管理监督</div>
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-top:auto;">
+          <div style="font-size:24px;font-weight:bold;color:var(--primary);">3</div>
+          <div style="font-size:11px;color:var(--text-muted);">1.9%</div>
+        </div>
+      </div>
+    </div>
+    <div class="expand-toggle" id="expandToggle" onclick="toggleExpand()" title="收起" style="position:absolute;right:0;bottom:-8px;width:28px;height:28px;border-radius:50%;background:#fff;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.1);z-index:10;font-size:12px;color:var(--text-secondary);transition:all .2s;">&#9650;</div>
+  </div>
+
+  <!-- 查询区 -->
+  <div class="query-section" style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:12px;flex-shrink:0;">
+    <div class="section-header" style="padding:10px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:14px;font-weight:bold;color:var(--primary);">
+      <div class="header-left-part" style="display:flex;align-items:center;gap:8px;">
+        <span style="width:4px;height:16px;background:var(--primary);border-radius:2px;"></span>
+        <span>查询信息</span>
+      </div>
+      <div class="section-actions" style="display:flex;align-items:center;gap:8px;">
+        <button class="btn btn-default" onclick="resetAll()">&#8634; 重置</button>
+        <button class="btn btn-primary">&#128269; 查询</button>
+      </div>
+    </div>
+    <div class="query-form" style="padding:16px;display:grid;grid-template-columns:repeat(4,1fr);gap:14px 16px;">
+      <div class="form-item" style="display:flex;align-items:center;gap:8px;">
+        <label class="form-label" style="width:90px;text-align:right;color:var(--text-secondary);font-size:12px;flex-shrink:0;">业务场景</label>
+        <select class="form-select" id="sceneSelect" onchange="onSceneChange(this.value)" style="flex:1;height:30px;border:1px solid var(--border);border-radius:3px;padding:0 8px;font-size:12px;color:var(--text-primary);outline:none;transition:border-color .2s;min-width:0;">
+          <option value="all">全部场景</option>
+          <option value="zhunru">违规准入分析</option>
+          <option value="jihua-danyi">单一来源合理性</option>
+          <option value="jihua-jinji">紧急采购合理性</option>
+          <option value="xunyuan-weichuan">围串标识别分析</option>
+          <option value="xunyuan-yingzhao">应招未招识别</option>
+          <option value="xunyuan-xietong">采购协同性检查</option>
+          <option value="zhixing">采购执行管理</option>
+          <option value="jiesuan">采购结算管理</option>
+          <option value="guazhang">挂账付款监督</option>
+          <option value="shouxin">授信管理监督</option>
+        </select>
+      </div>
+      <div class="form-item" style="display:flex;align-items:center;gap:8px;">
+        <label class="form-label" style="width:90px;text-align:right;color:var(--text-secondary);font-size:12px;flex-shrink:0;">风险点</label>
+        <select class="form-select" id="riskPointSelect" style="flex:1;height:30px;border:1px solid var(--border);border-radius:3px;padding:0 8px;font-size:12px;color:var(--text-primary);outline:none;transition:border-color .2s;min-width:0;">
+          <option value="all">全部风险点</option>
+        </select>
+      </div>
+      <div class="form-item" style="display:flex;align-items:center;gap:8px;">
+        <label class="form-label" style="width:90px;text-align:right;color:var(--text-secondary);font-size:12px;flex-shrink:0;">供应商名称</label>
+        <input type="text" class="form-input" placeholder="请输入供应商名称" style="flex:1;height:30px;border:1px solid var(--border);border-radius:3px;padding:0 8px;font-size:12px;color:var(--text-primary);outline:none;transition:border-color .2s;min-width:0;">
+      </div>
+      <div class="form-item" style="display:flex;align-items:center;gap:8px;">
+        <label class="form-label" style="width:90px;text-align:right;color:var(--text-secondary);font-size:12px;flex-shrink:0;">风险等级</label>
+        <select class="form-select" style="flex:1;height:30px;border:1px solid var(--border);border-radius:3px;padding:0 8px;font-size:12px;color:var(--text-primary);outline:none;transition:border-color .2s;min-width:0;">
+          <option>全部</option>
+          <option>高风险</option>
+          <option>中风险</option>
+          <option>低风险</option>
+        </select>
+      </div>
+      <div class="form-item" style="display:flex;align-items:center;gap:8px;">
+        <label class="form-label" style="width:90px;text-align:right;color:var(--text-secondary);font-size:12px;flex-shrink:0;">发现时间-起</label>
+        <input type="date" class="form-input" style="flex:1;height:30px;border:1px solid var(--border);border-radius:3px;padding:0 8px;font-size:12px;color:var(--text-primary);outline:none;transition:border-color .2s;min-width:0;">
+      </div>
+      <div class="form-item" style="display:flex;align-items:center;gap:8px;">
+        <label class="form-label" style="width:90px;text-align:right;color:var(--text-secondary);font-size:12px;flex-shrink:0;">发现时间-止</label>
+        <input type="date" class="form-input" style="flex:1;height:30px;border:1px solid var(--border);border-radius:3px;padding:0 8px;font-size:12px;color:var(--text-primary);outline:none;transition:border-color .2s;min-width:0;">
+      </div>
+      <div class="form-item" style="display:flex;align-items:center;gap:8px;">
+        <label class="form-label" style="width:90px;text-align:right;color:var(--text-secondary);font-size:12px;flex-shrink:0;">处理状态</label>
+        <select class="form-select" style="flex:1;height:30px;border:1px solid var(--border);border-radius:3px;padding:0 8px;font-size:12px;color:var(--text-primary);outline:none;transition:border-color .2s;min-width:0;">
+          <option>全部</option>
+          <option>待处理</option>
+          <option>处理中</option>
+          <option>已闭环</option>
+        </select>
+      </div>
+      <div class="form-item" style="display:flex;align-items:center;gap:8px;">
+        <label class="form-label" style="width:90px;text-align:right;color:var(--text-secondary);font-size:12px;flex-shrink:0;">关联单据</label>
+        <input type="text" class="form-input" placeholder="准入单/合同/订单号" style="flex:1;height:30px;border:1px solid var(--border);border-radius:3px;padding:0 8px;font-size:12px;color:var(--text-primary);outline:none;transition:border-color .2s;min-width:0;">
+      </div>
+    </div>
+  </div>
+
+  <!-- 风险点标签区 -->
+  <div class="risk-tag-section" id="riskTagSection" style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);margin-bottom:12px;flex-shrink:0;padding:12px 16px;max-height:200px;overflow-y:auto;">
+    <div class="tag-group" data-scene="zhunru">
+      <div class="tag-group-title" style="font-size:11px;font-weight:bold;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;">供应商准入 · 违规准入分析</div>
+      <div class="risk-tags" style="display:flex;flex-wrap:wrap;gap:6px;">
+        <div class="risk-tag active" data-risk="万能供应商分析" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">万能供应商分析<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">8</span></div>
+        <div class="risk-tag active" data-risk="准入即签约" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">准入即签约<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">6</span></div>
+        <div class="risk-tag active" data-risk="供应商带病准入" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">供应商带病准入<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">9</span></div>
+      </div>
+    </div>
+    <div class="tag-group" data-scene="jihua-danyi">
+      <div class="tag-group-title" style="font-size:11px;font-weight:bold;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;">计划管理 · 单一来源合理性</div>
+      <div class="risk-tags" style="display:flex;flex-wrap:wrap;gap:6px;">
+        <div class="risk-tag active" data-risk="单一来源计划最多品类" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">单一来源计划最多品类<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">5</span></div>
+        <div class="risk-tag active" data-risk="单一来源专业户" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">单一来源专业户<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">4</span></div>
+        <div class="risk-tag active" data-risk="违规采取单一来源线索识别" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">违规采取单一来源线索识别<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">6</span></div>
+      </div>
+    </div>
+    <div class="tag-group" data-scene="jihua-jinji">
+      <div class="tag-group-title" style="font-size:11px;font-weight:bold;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;">计划管理 · 紧急采购合理性</div>
+      <div class="risk-tags" style="display:flex;flex-wrap:wrap;gap:6px;">
+        <div class="risk-tag active" data-risk="紧急计划提报总监" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">紧急计划提报总监<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">3</span></div>
+        <div class="risk-tag active" data-risk="紧急采购专业户" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">紧急采购专业户<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">7</span></div>
+        <div class="risk-tag active" data-risk="紧急计划要货期过长" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">紧急计划要货期过长<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">5</span></div>
+        <div class="risk-tag active" data-risk="要货期间隔长" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">要货期间隔长<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">3</span></div>
+      </div>
+    </div>
+    <div class="tag-group" data-scene="xunyuan-weichuan">
+      <div class="tag-group-title" style="font-size:11px;font-weight:bold;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;">采购寻源 · 围串标识别分析</div>
+      <div class="risk-tags" style="display:flex;flex-wrap:wrap;gap:6px;">
+        <div class="risk-tag active" data-risk="涉嫌串标" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">涉嫌串标<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">4</span></div>
+        <div class="risk-tag active" data-risk="供应商IP地址相同" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">供应商IP地址相同<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">6</span></div>
+        <div class="risk-tag active" data-risk="供应商存在关联关系" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">供应商存在关联关系<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">8</span></div>
+        <div class="risk-tag active" data-risk="报价文件作者/修改者相同" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">报价文件作者/修改者相同<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">5</span></div>
+        <div class="risk-tag active" data-risk="逢投必中&只陪不中" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">逢投必中&只陪不中<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">8</span></div>
+      </div>
+    </div>
+    <div class="tag-group" data-scene="xunyuan-yingzhao">
+      <div class="tag-group-title" style="font-size:11px;font-weight:bold;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;">采购寻源 · 应招未招识别</div>
+      <div class="risk-tags" style="display:flex;flex-wrap:wrap;gap:6px;">
+        <div class="risk-tag active" data-risk="应招未招" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">应招未招<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">7</span></div>
+        <div class="risk-tag active" data-risk="分拆规避招标" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">分拆规避招标<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">5</span></div>
+      </div>
+    </div>
+    <div class="tag-group" data-scene="xunyuan-xietong">
+      <div class="tag-group-title" style="font-size:11px;font-weight:bold;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;">采购寻源 · 采购协同性检查</div>
+      <div class="risk-tags" style="display:flex;flex-wrap:wrap;gap:6px;">
+        <div class="risk-tag active" data-risk="采购方式选择错误" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">采购方式选择错误<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">3</span></div>
+        <div class="risk-tag active" data-risk="采购协同不足检查" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">采购协同不足检查<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">4</span></div>
+        <div class="risk-tag active" data-risk="流废标占比较高" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">流废标占比较高<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">2</span></div>
+      </div>
+    </div>
+    <div class="tag-group" data-scene="zhixing">
+      <div class="tag-group-title" style="font-size:11px;font-weight:bold;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;">采购执行 · 采购执行管理</div>
+      <div class="risk-tags" style="display:flex;flex-wrap:wrap;gap:6px;">
+        <div class="risk-tag active" data-risk="企业应结算未结算" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">企业应结算未结算<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">9</span></div>
+        <div class="risk-tag active" data-risk="质量不合格仍全额结算" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">质量不合格仍全额结算<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">12</span></div>
+        <div class="risk-tag active" data-risk="企业应付款未付款" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">企业应付款未付款<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">6</span></div>
+      </div>
+    </div>
+    <div class="tag-group" data-scene="jiesuan">
+      <div class="tag-group-title" style="font-size:11px;font-weight:bold;color:var(--text-muted);margin-bottom:6px;display:flex;align-items:center;gap:6px;">履约结算</div>
+      <div class="risk-tags" style="display:flex;flex-wrap:wrap;gap:6px;">
+        <div class="risk-tag active" data-risk="超合同数量执行" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">超合同数量执行<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">8</span></div>
+        <div class="risk-tag active" data-risk="合同超过交货截止日仍未执行" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">合同超过交货截止日仍未执行<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">6</span></div>
+        <div class="risk-tag active" data-risk="供应商预付款长期未核销" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">供应商预付款长期未核销<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">5</span></div>
+        <div class="risk-tag active" data-risk="合同标准模版使用率较低" onclick="selectRiskTag(this)" style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:3px;font-size:11px;color:var(--text-secondary);background:#f5f5f5;border:1px solid transparent;cursor:pointer;transition:all .2s;user-select:none;">合同标准模版使用率较低<span class="tag-count" style="font-size:10px;padding:0 5px;border-radius:8px;background:rgba(0,0,0,.08);font-weight:bold;">3</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 列表区 -->
+  <div class="list-section" style="background:#fff;border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.06);flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;">
+    <div class="list-toolbar" style="padding:10px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div class="toolbar-left" style="display:flex;align-items:center;gap:10px;">
+        <span style="font-size:14px;font-weight:bold;color:var(--text-primary);display:flex;align-items:center;gap:6px;">&#9776; 风险监督结果清单 <span class="title-badge" id="listCount">160</span></span>
+      </div>
+      <div class="toolbar-right" style="display:flex;align-items:center;gap:8px;">
+        <button class="btn btn-success btn-sm">&#128227; 批量生成任务</button>
+        <button class="btn btn-default btn-sm">&#128229; 批量导出</button>
+      </div>
+    </div>
+
+    <div class="data-table-wrapper" style="flex:1;display:flex;flex-direction:column;overflow:hidden;min-height:0;">
+      <div class="table-scroll-area" style="flex:1;overflow:auto;min-height:0;">
+        <table class="data-table" style="width:100%;border-collapse:collapse;font-size:12px;min-width:1300px;">
+          <thead>
+            <tr>
+              <th style="background:var(--primary-light);color:var(--primary-dark);font-weight:bold;padding:10px 8px;text-align:center;border-bottom:1px solid #bbdefb;white-space:nowrap;position:sticky;top:0;z-index:10;"><input type="checkbox"></th>
+              <th style="background:var(--primary-light);color:var(--primary-dark);font-weight:bold;padding:10px 8px;text-align:center;border-bottom:1px solid #bbdefb;white-space:nowrap;position:sticky;top:0;z-index:10;">序号</th>
+              <th style="background:var(--primary-light);color:var(--primary-dark);font-weight:bold;padding:10px 8px;text-align:center;border-bottom:1px solid #bbdefb;white-space:nowrap;position:sticky;top:0;z-index:10;">业务场景</th>
+              <th style="background:var(--primary-light);color:var(--primary-dark);font-weight:bold;padding:10px 8px;text-align:center;border-bottom:1px solid #bbdefb;white-space:nowrap;position:sticky;top:0;z-index:10;">风险点</th>
+              <th style="background:var(--primary-light);color:var(--primary-dark);font-weight:bold;padding:10px 8px;text-align:center;border-bottom:1px solid #bbdefb;white-space:nowrap;position:sticky;top:0;z-index:10;">供应商名称</th>
+              <th style="background:var(--primary-light);color:var(--primary-dark);font-weight:bold;padding:10px 8px;text-align:center;border-bottom:1px solid #bbdefb;white-space:nowrap;position:sticky;top:0;z-index:10;">统一社会信用代码</th>
+              <th style="background:var(--primary-light);color:var(--primary-dark);font-weight:bold;padding:10px 8px;text-align:center;border-bottom:1px solid #bbdefb;white-space:nowrap;position:sticky;top:0;z-index:10;">风险等级</th>
+              <th style="background:var(--primary-light);color:var(--primary-dark);font-weight:bold;padding:10px 8px;text-align:center;border-bottom:1px solid #bbdefb;white-space:nowrap;position:sticky;top:0;z-index:10;">触发规则</th>
+              <th style="background:var(--primary-light);color:var(--primary-dark);font-weight:bold;padding:10px 8px;text-align:center;border-bottom:1px solid #bbdefb;white-space:nowrap;position:sticky;top:0;z-index:10;">关联业务单据</th>
+              <th style="background:var(--primary-light);color:var(--primary-dark);font-weight:bold;padding:10px 8px;text-align:center;border-bottom:1px solid #bbdefb;white-space:nowrap;position:sticky;top:0;z-index:10;">发现时间</th>
+              <th style="background:var(--primary-light);color:var(--primary-dark);font-weight:bold;padding:10px 8px;text-align:center;border-bottom:1px solid #bbdefb;white-space:nowrap;position:sticky;top:0;z-index:10;">处理状态</th>
+              <th style="background:var(--primary-light);color:var(--primary-dark);font-weight:bold;padding:10px 8px;text-align:center;border-bottom:1px solid #bbdefb;white-space:nowrap;position:sticky;top:0;z-index:10;">操作</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr data-scene="zhunru" data-risk="万能供应商分析">
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);position:sticky;left:0;background:#fff;z-index:5;"><input type="checkbox"></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">1</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:bold;white-space:nowrap;background:#ffebee;color:#c62828;">违规准入分析</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">万能供应商分析</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">广西某铝业贸易有限公司</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">91450100MA5KEXXXXX</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:bold;background:#ffebee;color:var(--danger);">高风险</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">覆盖品类异常</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">准入单-2024-00125</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">2024-11-15</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="color:var(--warning)">待处理</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><div style="display:flex;align-items:center;justify-content:center;gap:6px;"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+            </tr>
+            <tr data-scene="zhunru" data-risk="准入即签约">
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);position:sticky;left:0;background:#fff;z-index:5;"><input type="checkbox"></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">2</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:bold;white-space:nowrap;background:#ffebee;color:#c62828;">违规准入分析</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">准入即签约</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">南宁某物资供应有限公司</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">91450100MA5KBXXXXX</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:bold;background:#fff3e0;color:var(--warning);">中风险</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">准入流程未完成</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">合同-2024-C00892</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">2024-11-18</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="color:var(--warning)">待处理</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><div style="display:flex;align-items:center;justify-content:center;gap:6px;"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+            </tr>
+            <tr data-scene="zhunru" data-risk="供应商带病准入">
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);position:sticky;left:0;background:#fff;z-index:5;"><input type="checkbox"></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">3</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:bold;white-space:nowrap;background:#ffebee;color:#c62828;">违规准入分析</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">供应商带病准入</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">柳州某化工原料有限公司</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">91450200MA5K9XXXXX</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:bold;background:#ffebee;color:var(--danger);">高风险</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">历史质量不合格</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">准入单-2024-00131</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">2024-11-20</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="color:var(--primary)">处理中</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><div style="display:flex;align-items:center;justify-content:center;gap:6px;"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+            </tr>
+            <tr data-scene="jihua-danyi" data-risk="单一来源专业户">
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);position:sticky;left:0;background:#fff;z-index:5;"><input type="checkbox"></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">4</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:bold;white-space:nowrap;background:#fff3e0;color:#e65100;">单一来源合理性</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">单一来源专业户</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">桂林某金属材料有限公司</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">91450300MA5K8XXXXX</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:bold;background:#fff3e0;color:var(--warning);">中风险</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">单一来源次数异常</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">采购计划-2024-JH0892</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">2024-11-20</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="color:var(--primary)">处理中</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><div style="display:flex;align-items:center;justify-content:center;gap:6px;"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+            </tr>
+            <tr data-scene="jihua-jinji" data-risk="紧急采购专业户">
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);position:sticky;left:0;background:#fff;z-index:5;"><input type="checkbox"></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">5</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:bold;white-space:nowrap;background:#ffe0b2;color:#ef6c00;">紧急采购合理性</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">紧急采购专业户</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">桂林某金属材料有限公司</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">91450300MA5K8XXXXX</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:bold;background:#ffebee;color:var(--danger);">高风险</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">紧急采购次数异常</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">采购计划-2024-JH0901</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">2024-11-22</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="color:var(--warning)">待处理</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><div style="display:flex;align-items:center;justify-content:center;gap:6px;"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+            </tr>
+            <tr data-scene="xunyuan-weichuan" data-risk="供应商存在关联关系">
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);position:sticky;left:0;background:#fff;z-index:5;"><input type="checkbox"></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">6</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:bold;white-space:nowrap;background:#f3e5f5;color:#6a1b9a;">围串标识别分析</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">供应商存在关联关系</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">北海某运输服务有限公司</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">91450500MA5K7XXXXX</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:bold;background:#ffebee;color:var(--danger);">高风险</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">股权关系关联</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">竞价单-2024-JJ0321</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">2024-11-25</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="color:var(--warning)">待处理</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><div style="display:flex;align-items:center;justify-content:center;gap:6px;"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+            </tr>
+            <tr data-scene="xunyuan-yingzhao" data-risk="应招未招">
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);position:sticky;left:0;background:#fff;z-index:5;"><input type="checkbox"></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">7</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:bold;white-space:nowrap;background:#e1bee7;color:#7b1fa2;">应招未招识别</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">应招未招</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">玉林某设备制造有限公司</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">91450900MA5K6XXXXX</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:bold;background:#fff3e0;color:var(--warning);">中风险</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">金额超阈值未招标</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">采购计划-2024-JH0915</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">2024-11-28</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="color:var(--success)">已闭环</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><div style="display:flex;align-items:center;justify-content:center;gap:6px;"><button class="op-btn" onclick="openDetail()">查看详情</button></div></td>
+            </tr>
+            <tr data-scene="xunyuan-xietong" data-risk="流废标占比较高">
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);position:sticky;left:0;background:#fff;z-index:5;"><input type="checkbox"></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">8</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:bold;white-space:nowrap;background:#d1c4e9;color:#5e35b1;">采购协同性检查</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">流废标占比较高</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">贵港某能源科技有限公司</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">91450800MA5K5XXXXX</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:bold;background:#e3f2fd;color:#1565c0;">低风险</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">流废标率超30%</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">竞价单-2024-JJ0338</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">2024-12-01</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="color:var(--success)">已闭环</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><div style="display:flex;align-items:center;justify-content:center;gap:6px;"><button class="op-btn" onclick="openDetail()">查看详情</button></div></td>
+            </tr>
+            <tr data-scene="zhixing" data-risk="质量不合格仍全额结算">
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);position:sticky;left:0;background:#fff;z-index:5;"><input type="checkbox"></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">9</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:bold;white-space:nowrap;background:#e3f2fd;color:#1565c0;">采购执行管理</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">质量不合格仍全额结算</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">钦州某物流有限公司</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">91450700MA5K4XXXXX</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:bold;background:#ffebee;color:var(--danger);">高风险</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">质检不合格仍结算</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">结算单-2024-JS0562</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">2024-12-03</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="color:var(--primary)">处理中</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><div style="display:flex;align-items:center;justify-content:center;gap:6px;"><button class="op-btn" onclick="openDetail()">查看详情</button></div></td>
+            </tr>
+            <tr data-scene="jiesuan" data-risk="超合同数量执行">
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);position:sticky;left:0;background:#fff;z-index:5;"><input type="checkbox"></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">10</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:bold;white-space:nowrap;background:#e0f2f1;color:#00695c;">采购结算管理</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">超合同数量执行</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">百色某建材有限公司</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">91451000MA5K3XXXXX</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:bold;background:#fff3e0;color:var(--warning);">中风险</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">执行量超合同110%</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">采购订单-2024-PO1178</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">2024-12-05</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="color:var(--warning)">待处理</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><div style="display:flex;align-items:center;justify-content:center;gap:6px;"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+            </tr>
+            <tr data-scene="guazhang" data-risk="供应商预付款长期未核销">
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);position:sticky;left:0;background:#fff;z-index:5;"><input type="checkbox"></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">11</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:3px;font-size:11px;font-weight:bold;white-space:nowrap;background:#fff8e1;color:#f57f17;">挂账付款监督</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">供应商预付款长期未核销</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">贺州某贸易有限责任公司</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">91451100MA5K2XXXXX</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="display:inline-flex;align-items:center;gap:4px;padding:2px 10px;border-radius:3px;font-size:11px;font-weight:bold;background:#fff3e0;color:var(--warning);">中风险</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">预付账龄超180天</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span class="link">付款单-2024-FK0345</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);">2024-12-08</td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><span style="color:var(--warning)">待处理</span></td>
+              <td style="padding:10px 8px;text-align:center;border-bottom:1px solid #f0f0f0;color:var(--text-primary);"><div style="display:flex;align-items:center;justify-content:center;gap:6px;"><button class="op-btn" onclick="openDetail()">查看详情</button><button class="op-btn">生成任务</button></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="pagination-bar" style="padding:10px 16px;display:flex;align-items:center;justify-content:flex-end;gap:10px;border-top:1px solid var(--border);background:#fff;flex-shrink:0;">
+      <span style="color:var(--text-secondary);font-size:12px;">共 160 条</span>
+      <select style="height:28px;border:1px solid var(--border);border-radius:3px;font-size:12px;"><option>10 条/页</option><option selected>20 条/页</option><option>50 条/页</option></select>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <button class="page-btn disabled" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:#fff;border-radius:3px;cursor:pointer;font-size:12px;color:var(--text-secondary);padding:0 6px;opacity:.4;cursor:not-allowed;">&lt;&lt;</button>
+        <button class="page-btn disabled" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:#fff;border-radius:3px;cursor:pointer;font-size:12px;color:var(--text-secondary);padding:0 6px;opacity:.4;cursor:not-allowed;">&lt;</button>
+        <button class="page-btn active" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:var(--primary);color:#fff;border-radius:3px;cursor:pointer;font-size:12px;padding:0 6px;">1</button>
+        <button class="page-btn" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:#fff;border-radius:3px;cursor:pointer;font-size:12px;color:var(--text-secondary);padding:0 6px;">2</button>
+        <button class="page-btn" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:#fff;border-radius:3px;cursor:pointer;font-size:12px;color:var(--text-secondary);padding:0 6px;">3</button>
+        <button class="page-btn" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:#fff;border-radius:3px;cursor:pointer;font-size:12px;color:var(--text-secondary);padding:0 6px;">4</button>
+        <button class="page-btn" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:#fff;border-radius:3px;cursor:pointer;font-size:12px;color:var(--text-secondary);padding:0 6px;">5</button>
+        <button class="page-btn" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:#fff;border-radius:3px;cursor:pointer;font-size:12px;color:var(--text-secondary);padding:0 6px;">&gt;</button>
+        <button class="page-btn" style="min-width:28px;height:28px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);background:#fff;border-radius:3px;cursor:pointer;font-size:12px;color:var(--text-secondary);padding:0 6px;">&gt;&gt;</button>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;font-size:12px;color:var(--text-secondary);">前往 <input type="text" value="1" style="width:40px;height:28px;border:1px solid var(--border);border-radius:3px;text-align:center;font-size:12px;outline:none;"> 页</div>
+    </div>
+  </div>
+</div>
+
+<!-- 详情抽屉 -->
+<div class="overlay" id="overlay" onclick="closeDetail()" style="position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.3);z-index:1999;display:none;"></div>
+<div class="detail-drawer" id="detailDrawer" style="position:fixed;top:0;right:-600px;width:600px;height:100%;background:#fff;box-shadow:-2px 0 12px rgba(0,0,0,.15);z-index:2000;transition:right .3s;display:flex;flex-direction:column;">
+  <div class="drawer-header" style="padding:16px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-size:15px;font-weight:bold;color:var(--text-primary);">风险详情</div>
+    <div onclick="closeDetail()" style="font-size:20px;color:var(--text-muted);cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:3px;">&#10005;</div>
+  </div>
+  <div class="drawer-body" style="flex:1;overflow-y:auto;padding:20px;">
+    <div style="margin-bottom:24px;">
+      <div style="font-size:14px;font-weight:bold;color:var(--primary);margin-bottom:12px;padding-left:8px;border-left:3px solid var(--primary);">基本信息</div>
+      <div style="display:flex;padding:8px 0;border-bottom:1px dashed #f0f0f0;"><div style="width:120px;color:var(--text-secondary);flex-shrink:0;">业务场景</div><div style="flex:1;color:var(--text-primary);font-weight:bold;color:var(--warning);">违规准入分析</div></div>
+      <div style="display:flex;padding:8px 0;border-bottom:1px dashed #f0f0f0;"><div style="width:120px;color:var(--text-secondary);flex-shrink:0;">风险点</div><div style="flex:1;color:var(--text-primary);font-weight:bold;color:var(--warning);">万能供应商分析</div></div>
+      <div style="display:flex;padding:8px 0;border-bottom:1px dashed #f0f0f0;"><div style="width:120px;color:var(--text-secondary);flex-shrink:0;">供应商名称</div><div style="flex:1;color:var(--text-primary);">广西某铝业贸易有限公司</div></div>
+      <div style="display:flex;padding:8px 0;border-bottom:1px dashed #f0f0f0;"><div style="width:120px;color:var(--text-secondary);flex-shrink:0;">统一社会信用代码</div><div style="flex:1;color:var(--text-primary);">91450100MA5KEXXXXX</div></div>
+      <div style="display:flex;padding:8px 0;border-bottom:1px dashed #f0f0f0;"><div style="width:120px;color:var(--text-secondary);flex-shrink:0;">风险等级</div><div style="flex:1;color:var(--text-primary);font-weight:bold;color:var(--danger);">高风险</div></div>
+      <div style="display:flex;padding:8px 0;border-bottom:1px dashed #f0f0f0;"><div style="width:120px;color:var(--text-secondary);flex-shrink:0;">触发规则</div><div style="flex:1;color:var(--text-primary);">覆盖品类异常（超过15个品类）</div></div>
+      <div style="display:flex;padding:8px 0;border-bottom:1px dashed #f0f0f0;"><div style="width:120px;color:var(--text-secondary);flex-shrink:0;">发现时间</div><div style="flex:1;color:var(--text-primary);">2024-11-15 14:32:18</div></div>
+      <div style="display:flex;padding:8px 0;border-bottom:1px dashed #f0f0f0;"><div style="width:120px;color:var(--text-secondary);flex-shrink:0;">处理状态</div><div style="flex:1;color:var(--text-primary);font-weight:bold;color:var(--warning);">待处理</div></div>
+    </div>
+
+    <div style="margin-bottom:24px;">
+      <div style="font-size:14px;font-weight:bold;color:var(--primary);margin-bottom:12px;padding-left:8px;border-left:3px solid var(--primary);">风险证据链</div>
+      <div style="background:#fafafa;border-radius:4px;padding:12px;">
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;"><span style="color:var(--primary);font-size:8px;">&#9679;</span>该供应商当前覆盖品类数：18个，超过阈值（15个）</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;"><span style="color:var(--primary);font-size:8px;">&#9679;</span>合作企业数量：7家，集中在同一采购员名下</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;"><span style="color:var(--primary);font-size:8px;">&#9679;</span>近一年交易金额：2,580万元，占总采购额 12.3%</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;"><span style="color:var(--primary);font-size:8px;">&#9679;</span>关联采购员：张某（采购二部），该采购员名下单一来源采购占比 68%</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:6px 0;font-size:12px;"><span style="color:var(--primary);font-size:8px;">&#9679;</span>该供应商在集团内其他分公司也有合作记录，覆盖品类累计达 23 个</div>
+      </div>
+    </div>
+
+    <div style="margin-bottom:24px;">
+      <div style="font-size:14px;font-weight:bold;color:var(--primary);margin-bottom:12px;padding-left:8px;border-left:3px solid var(--primary);">关联业务单据</div>
+      <div style="display:flex;padding:8px 0;border-bottom:1px dashed #f0f0f0;"><div style="width:120px;color:var(--text-secondary);flex-shrink:0;">准入单号</div><div style="flex:1;color:var(--text-primary);"><span class="link">准入单-2024-00125</span></div></div>
+      <div style="display:flex;padding:8px 0;border-bottom:1px dashed #f0f0f0;"><div style="width:120px;color:var(--text-secondary);flex-shrink:0;">合同编号</div><div style="flex:1;color:var(--text-primary);"><span class="link">合同-2024-C00876</span>、<span class="link">合同-2024-C00877</span></div></div>
+      <div style="display:flex;padding:8px 0;border-bottom:1px dashed #f0f0f0;"><div style="width:120px;color:var(--text-secondary);flex-shrink:0;">采购订单</div><div style="flex:1;color:var(--text-primary);"><span class="link">PO-2024-11560</span> 等 6 笔</div></div>
+    </div>
+
+    <div style="margin-bottom:24px;">
+      <div style="font-size:14px;font-weight:bold;color:var(--primary);margin-bottom:12px;padding-left:8px;border-left:3px solid var(--primary);">处置操作</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-primary">生成监督任务</button>
+        <button class="btn btn-default">标记误报</button>
+        <button class="btn btn-default">加入黑名单</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+  PR.bindActions();
+
+  // ========== 级联数据映射 ==========
+  const sceneRiskMap = {
+    'all': [],
+    'zhunru': ['万能供应商分析', '准入即签约', '供应商带病准入'],
+    'jihua-danyi': ['单一来源计划最多品类', '单一来源专业户', '违规采取单一来源线索识别'],
+    'jihua-jinji': ['紧急计划提报总监', '紧急采购专业户', '紧急计划要货期过长', '要货期间隔长'],
+    'xunyuan-weichuan': ['涉嫌串标', '供应商IP地址相同', '供应商存在关联关系', '报价文件作者/修改者相同', '逢投必中&只陪不中'],
+    'xunyuan-yingzhao': ['应招未招', '分拆规避招标'],
+    'xunyuan-xietong': ['采购方式选择错误', '采购协同不足检查', '流废标占比较高'],
+    'zhixing': ['企业应结算未结算', '质量不合格仍全额结算', '企业应付款未付款'],
+    'jiesuan': ['超合同数量执行', '合同超过交货截止日仍未执行', '供应商预付款长期未核销', '合同标准模版使用率较低'],
+    'guazhang': ['供应商预付款长期未核销', '合同标准模版使用率较低'],
+    'shouxin': []
+  };
+
+  let currentScene = 'all';
+  let currentRiskPoint = null;
+  let isExpanded = true;
+
+  // ========== 卡片折叠 ==========
+  function toggleExpand() {
+    const row = document.getElementById('statRow');
+    const btn = document.getElementById('expandToggle');
+    const cards = row.querySelectorAll('.stat-card');
+    isExpanded = !isExpanded;
+
+    if (isExpanded) {
+      row.classList.remove('collapsed');
+      row.classList.add('expanded');
+      cards.forEach((c, i) => { if (i >= 10) c.style.display = ''; });
+      btn.innerHTML = '&#9650;';
+      btn.title = '收起';
+    } else {
+      row.classList.remove('expanded');
+      row.classList.add('collapsed');
+      cards.forEach((c, i) => { if (i >= 10) c.style.display = 'none'; });
+      btn.innerHTML = '&#9660;';
+      btn.title = '展开';
+    }
+  }
+
+  // ========== 选择业务场景 ==========
+  function selectScene(card, sceneType) {
+    document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+    card.classList.add('active');
+    currentScene = sceneType;
+    currentRiskPoint = null;
+
+    // 同步下拉框
+    document.getElementById('sceneSelect').value = sceneType;
+    updateRiskSelect(sceneType);
+
+    // 更新风险点标签区
+    updateRiskTags(sceneType);
+
+    // 筛选列表
+    filterTable();
+  }
+
+  function onSceneChange(sceneValue) {
+    const card = document.querySelector('.stat-card[data-scene="' + sceneValue + '"]');
+    if (card) selectScene(card, sceneValue);
+  }
+
+  function updateRiskSelect(sceneType) {
+    const sel = document.getElementById('riskPointSelect');
+    sel.innerHTML = '<option value="all">全部风险点</option>';
+    const risks = sceneRiskMap[sceneType] || [];
+    risks.forEach(r => {
+      const opt = document.createElement('option');
+      opt.value = r; opt.textContent = r;
+      sel.appendChild(opt);
+    });
+  }
+
+  // ========== 风险点标签区联动 ==========
+  function updateRiskTags(sceneType) {
+    const groups = document.querySelectorAll('.tag-group');
+    groups.forEach(g => {
+      if (sceneType === 'all' || g.dataset.scene === sceneType) {
+        g.classList.remove('hidden');
+      } else {
+        g.classList.add('hidden');
+      }
+    });
+
+    // 重置标签为全部active
+    document.querySelectorAll('.risk-tag').forEach(t => {
+      t.classList.add('active');
+      t.style.opacity = '';
+    });
+  }
+
+  // ========== 点击风险点标签 ==========
+  function selectRiskTag(tag) {
+    const riskName = tag.dataset.risk;
+    const allTags = document.querySelectorAll('.risk-tag');
+
+    // 单选逻辑：点击A -> A高亮，其他变暗；再次点击A -> 全部恢复
+    if (tag.classList.contains('active') && currentRiskPoint === riskName) {
+      // 取消筛选，恢复全部
+      currentRiskPoint = null;
+      allTags.forEach(t => {
+        t.classList.add('active');
+        t.style.opacity = '';
+      });
+    } else {
+      // 只高亮当前
+      currentRiskPoint = riskName;
+      allTags.forEach(t => {
+        if (t.dataset.risk === riskName) {
+          t.classList.add('active');
+          t.style.opacity = '';
+        } else {
+          t.classList.remove('active');
+          t.style.opacity = '0.4';
+        }
+      });
+    }
+
+    filterTable();
+  }
+
+  // ========== 列表筛选 ==========
+  function filterTable() {
+    const rows = document.querySelectorAll('#tableBody tr');
+    let visibleCount = 0;
+
+    rows.forEach(row => {
+      const rowScene = row.dataset.scene;
+      const rowRisk = row.dataset.risk;
+      let show = true;
+
+      if (currentScene !== 'all' && rowScene !== currentScene) {
+        show = false;
+      }
+      if (currentRiskPoint && rowRisk !== currentRiskPoint) {
+        show = false;
+      }
+
+      if (show) {
+        row.classList.remove('filtered-out');
+        visibleCount++;
+      } else {
+        row.classList.add('filtered-out');
+      }
+    });
+
+    document.getElementById('listCount').textContent = visibleCount;
+  }
+
+  // ========== 重置 ==========
+  function resetAll() {
+    currentScene = 'all';
+    currentRiskPoint = null;
+
+    // 重置卡片
+    document.querySelectorAll('.stat-card').forEach(c => c.classList.remove('active'));
+    document.querySelector('.stat-card[data-scene="all"]').classList.add('active');
+
+    // 重置下拉框
+    document.getElementById('sceneSelect').value = 'all';
+    updateRiskSelect('all');
+
+    // 重置标签
+    updateRiskTags('all');
+
+    // 重置列表
+    filterTable();
+  }
+
+  // ========== 详情抽屉 ==========
+  function openDetail() {
+    document.getElementById('detailDrawer').classList.add('open');
+    document.getElementById('overlay').classList.add('show');
+  }
+  function closeDetail() {
+    document.getElementById('detailDrawer').classList.remove('open');
+    document.getElementById('overlay').classList.remove('show');
+  }
+</script>

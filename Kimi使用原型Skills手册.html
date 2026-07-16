@@ -1,0 +1,162 @@
+<!DOCTYPE html><html><head>
+      <title>Kimi使用原型Skills手册</title>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      
+      <link rel="stylesheet" href="file:///c:\Users\sharp\.trae\extensions\shd101wyy.markdown-preview-enhanced-0.8.30-universal\crossnote\dependencies\katex\katex.min.css">
+      
+      
+      
+      
+      
+      
+      
+      <style>
+      code[class*=language-],pre[class*=language-]{color:#333;background:0 0;font-family:Consolas,"Liberation Mono",Menlo,Courier,monospace;text-align:left;white-space:pre;word-spacing:normal;word-break:normal;word-wrap:normal;line-height:1.4;-moz-tab-size:8;-o-tab-size:8;tab-size:8;-webkit-hyphens:none;-moz-hyphens:none;-ms-hyphens:none;hyphens:none}pre[class*=language-]{padding:.8em;overflow:auto;border-radius:3px;background:#f5f5f5}:not(pre)>code[class*=language-]{padding:.1em;border-radius:.3em;white-space:normal;background:#f5f5f5}.token.blockquote,.token.comment{color:#969896}.token.cdata{color:#183691}.token.doctype,.token.macro.property,.token.punctuation,.token.variable{color:#333}.token.builtin,.token.important,.token.keyword,.token.operator,.token.rule{color:#a71d5d}.token.attr-value,.token.regex,.token.string,.token.url{color:#183691}.token.atrule,.token.boolean,.token.code,.token.command,.token.constant,.token.entity,.token.number,.token.property,.token.symbol{color:#0086b3}.token.prolog,.token.selector,.token.tag{color:#63a35c}.token.attr-name,.token.class,.token.class-name,.token.function,.token.id,.token.namespace,.token.pseudo-class,.token.pseudo-element,.token.url-reference .token.variable{color:#795da3}.token.entity{cursor:help}.token.title,.token.title .token.punctuation{font-weight:700;color:#1d3e81}.token.list{color:#ed6a43}.token.inserted{background-color:#eaffea;color:#55a532}.token.deleted{background-color:#ffecec;color:#bd2c00}.token.bold{font-weight:700}.token.italic{font-style:italic}.language-json .token.property{color:#183691}.language-markup .token.tag .token.punctuation{color:#333}.language-css .token.function,code.language-css{color:#0086b3}.language-yaml .token.atrule{color:#63a35c}code.language-yaml{color:#183691}.language-ruby .token.function{color:#333}.language-markdown .token.url{color:#795da3}.language-makefile .token.symbol{color:#795da3}.language-makefile .token.variable{color:#183691}.language-makefile .token.builtin{color:#0086b3}.language-bash .token.keyword{color:#0086b3}pre[data-line]{position:relative;padding:1em 0 1em 3em}pre[data-line] .line-highlight-wrapper{position:absolute;top:0;left:0;background-color:transparent;display:block;width:100%}pre[data-line] .line-highlight{position:absolute;left:0;right:0;padding:inherit 0;margin-top:1em;background:hsla(24,20%,50%,.08);background:linear-gradient(to right,hsla(24,20%,50%,.1) 70%,hsla(24,20%,50%,0));pointer-events:none;line-height:inherit;white-space:pre}pre[data-line] .line-highlight:before,pre[data-line] .line-highlight[data-end]:after{content:attr(data-start);position:absolute;top:.4em;left:.6em;min-width:1em;padding:0 .5em;background-color:hsla(24,20%,50%,.4);color:#f4f1ef;font:bold 65%/1.5 sans-serif;text-align:center;vertical-align:.3em;border-radius:999px;text-shadow:none;box-shadow:0 1px #fff}pre[data-line] .line-highlight[data-end]:after{content:attr(data-end);top:auto;bottom:.4em}html body{font-family:'Helvetica Neue',Helvetica,'Segoe UI',Arial,freesans,sans-serif;font-size:16px;line-height:1.6;color:#333;background-color:#fff;overflow:initial;box-sizing:border-box;word-wrap:break-word}html body>:first-child{margin-top:0}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{line-height:1.2;margin-top:1em;margin-bottom:16px;color:#000}html body h1{font-size:2.25em;font-weight:300;padding-bottom:.3em}html body h2{font-size:1.75em;font-weight:400;padding-bottom:.3em}html body h3{font-size:1.5em;font-weight:500}html body h4{font-size:1.25em;font-weight:600}html body h5{font-size:1.1em;font-weight:600}html body h6{font-size:1em;font-weight:600}html body h1,html body h2,html body h3,html body h4,html body h5{font-weight:600}html body h5{font-size:1em}html body h6{color:#5c5c5c}html body strong{color:#000}html body del{color:#5c5c5c}html body a:not([href]){color:inherit;text-decoration:none}html body a{color:#08c;text-decoration:none}html body a:hover{color:#00a3f5;text-decoration:none}html body img{max-width:100%}html body>p{margin-top:0;margin-bottom:16px;word-wrap:break-word}html body>ol,html body>ul{margin-bottom:16px}html body ol,html body ul{padding-left:2em}html body ol.no-list,html body ul.no-list{padding:0;list-style-type:none}html body ol ol,html body ol ul,html body ul ol,html body ul ul{margin-top:0;margin-bottom:0}html body li{margin-bottom:0}html body li.task-list-item{list-style:none}html body li>p{margin-top:0;margin-bottom:0}html body .task-list-item-checkbox{margin:0 .2em .25em -1.8em;vertical-align:middle}html body .task-list-item-checkbox:hover{cursor:pointer}html body blockquote{margin:16px 0;font-size:inherit;padding:0 15px;color:#5c5c5c;background-color:#f0f0f0;border-left:4px solid #d6d6d6}html body blockquote>:first-child{margin-top:0}html body blockquote>:last-child{margin-bottom:0}html body hr{height:4px;margin:32px 0;background-color:#d6d6d6;border:0 none}html body table{margin:10px 0 15px 0;border-collapse:collapse;border-spacing:0;display:block;width:100%;overflow:auto;word-break:normal;word-break:keep-all}html body table th{font-weight:700;color:#000}html body table td,html body table th{border:1px solid #d6d6d6;padding:6px 13px}html body dl{padding:0}html body dl dt{padding:0;margin-top:16px;font-size:1em;font-style:italic;font-weight:700}html body dl dd{padding:0 16px;margin-bottom:16px}html body code{font-family:Menlo,Monaco,Consolas,'Courier New',monospace;font-size:.85em;color:#000;background-color:#f0f0f0;border-radius:3px;padding:.2em 0}html body code::after,html body code::before{letter-spacing:-.2em;content:'\00a0'}html body pre>code{padding:0;margin:0;word-break:normal;white-space:pre;background:0 0;border:0}html body .highlight{margin-bottom:16px}html body .highlight pre,html body pre{padding:1em;overflow:auto;line-height:1.45;border:#d6d6d6;border-radius:3px}html body .highlight pre{margin-bottom:0;word-break:normal}html body pre code,html body pre tt{display:inline;max-width:initial;padding:0;margin:0;overflow:initial;line-height:inherit;word-wrap:normal;background-color:transparent;border:0}html body pre code:after,html body pre code:before,html body pre tt:after,html body pre tt:before{content:normal}html body blockquote,html body dl,html body ol,html body p,html body pre,html body ul{margin-top:0;margin-bottom:16px}html body kbd{color:#000;border:1px solid #d6d6d6;border-bottom:2px solid #c7c7c7;padding:2px 4px;background-color:#f0f0f0;border-radius:3px}@media print{html body{background-color:#fff}html body h1,html body h2,html body h3,html body h4,html body h5,html body h6{color:#000;page-break-after:avoid}html body blockquote{color:#5c5c5c}html body pre{page-break-inside:avoid}html body table{display:table}html body img{display:block;max-width:100%;max-height:100%}html body code,html body pre{word-wrap:break-word;white-space:pre}}.markdown-preview{width:100%;height:100%;box-sizing:border-box}.markdown-preview ul{list-style:disc}.markdown-preview ul ul{list-style:circle}.markdown-preview ul ul ul{list-style:square}.markdown-preview ol{list-style:decimal}.markdown-preview ol ol,.markdown-preview ul ol{list-style-type:lower-roman}.markdown-preview ol ol ol,.markdown-preview ol ul ol,.markdown-preview ul ol ol,.markdown-preview ul ul ol{list-style-type:lower-alpha}.markdown-preview .newpage,.markdown-preview .pagebreak{page-break-before:always}.markdown-preview pre.line-numbers{position:relative;padding-left:3.8em;counter-reset:linenumber}.markdown-preview pre.line-numbers>code{position:relative}.markdown-preview pre.line-numbers .line-numbers-rows{position:absolute;pointer-events:none;top:1em;font-size:100%;left:0;width:3em;letter-spacing:-1px;border-right:1px solid #999;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none}.markdown-preview pre.line-numbers .line-numbers-rows>span{pointer-events:none;display:block;counter-increment:linenumber}.markdown-preview pre.line-numbers .line-numbers-rows>span:before{content:counter(linenumber);color:#999;display:block;padding-right:.8em;text-align:right}.markdown-preview .mathjax-exps .MathJax_Display{text-align:center!important}.markdown-preview:not([data-for=preview]) .code-chunk .code-chunk-btn-group{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .status{display:none}.markdown-preview:not([data-for=preview]) .code-chunk .output-div{margin-bottom:16px}.markdown-preview .md-toc{padding:0}.markdown-preview .md-toc .md-toc-details{margin:0;padding:0;border:none}.markdown-preview .md-toc summary.md-toc-link-wrapper{cursor:pointer;list-style-position:outside}.markdown-preview .md-toc summary.md-toc-link-wrapper::marker{font-size:.85em}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link div,.markdown-preview .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}.markdown-preview .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}.markdown-preview .md-toc .md-toc-link-wrapper[data-level='0']{margin-left:12px}.markdown-preview .md-toc .md-toc-link-wrapper[data-level='1']{margin-left:28px}.markdown-preview .md-toc .md-toc-link-wrapper[data-level='2']{margin-left:44px}.markdown-preview .md-toc .md-toc-link-wrapper[data-level='3']{margin-left:60px}.markdown-preview .md-toc .md-toc-link-wrapper[data-level='4']{margin-left:76px}.markdown-preview .md-toc .md-toc-link-wrapper[data-level='5']{margin-left:80px}.markdown-preview a.tag,.markdown-preview a.tag:active,.markdown-preview a.tag:link,.markdown-preview a.tag:visited,.markdown-preview span.tag:not(.token){display:inline-block;background-color:var(--vscode-badge-background,rgba(127,127,127,.18));color:var(--vscode-badge-foreground,currentColor);border-radius:2em;font-size:.85em;font-weight:500;padding:.05em .55em;line-height:1.5;white-space:nowrap;text-decoration:none;text-shadow:none;box-shadow:none;transition:background-color .12s ease,opacity .12s ease}.markdown-preview a.tag{cursor:pointer}.markdown-preview a.tag:focus,.markdown-preview a.tag:hover{background-color:var(--vscode-badge-background,rgba(127,127,127,.32));color:var(--vscode-badge-foreground,currentColor);opacity:.85;text-decoration:none;outline:0}.markdown-preview .wikilink-embed-content{border-left:3px solid var(--vscode-textBlockQuote-border,rgba(128,128,128,.3));background:var(--vscode-textBlockQuote-background,rgba(128,128,128,.05));margin:.5em 0;padding:.5em .75em;border-radius:0 3px 3px 0}.markdown-preview .wikilink-embed-content.wikilink-embed-error{border-left-color:var(--vscode-errorForeground,#cf222e);color:var(--vscode-errorForeground,#cf222e);font-style:italic;opacity:.8}.markdown-preview .wikilink-embed-content h1:first-child,.markdown-preview .wikilink-embed-content h2:first-child,.markdown-preview .wikilink-embed-content h3:first-child,.markdown-preview .wikilink-embed-content h4:first-child,.markdown-preview .wikilink-embed-content h5:first-child,.markdown-preview .wikilink-embed-content h6:first-child{margin-top:.25em}.markdown-preview .wikilink-embed-content .wikilink-embed-content{margin:.25em 0;padding:.25em .5em}.markdown-preview .block-id{display:none}.scrollbar-style::-webkit-scrollbar{width:8px}.scrollbar-style::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}.scrollbar-style::-webkit-scrollbar-thumb{border-radius:5px;background-color:var(--vscode-scrollbarSlider-background,rgba(150,150,150,.66));border:4px solid var(--vscode-scrollbarSlider-background,rgba(150,150,150,.66));background-clip:content-box}.scrollbar-style::-webkit-scrollbar-thumb:hover{background-color:var(--vscode-scrollbarSlider-hoverBackground,rgba(120,120,120,.66))}html body[for=html-export]:not([data-presentation-mode]){position:relative;width:100%;height:100%;top:0;left:0;margin:0;padding:0;overflow:auto}html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{position:relative;top:0;min-height:100vh}@media screen and (min-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em calc(50% - 457px + 2em)}}@media screen and (max-width:914px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode]) .markdown-preview{font-size:14px!important;padding:1em}}@media print{html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{display:none}}html body[for=html-export]:not([data-presentation-mode]) #sidebar-toc-btn{position:fixed;bottom:8px;left:8px;font-size:28px;cursor:pointer;color:inherit;z-index:99;width:32px;text-align:center;opacity:.4}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] #sidebar-toc-btn{opacity:1}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc{position:fixed;top:0;left:0;width:300px;height:100%;padding:32px 0 48px 0;font-size:14px;box-shadow:0 0 4px rgba(150,150,150,.33);box-sizing:border-box;overflow:auto;background-color:inherit}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar{width:8px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-track{border-radius:10px;background-color:transparent}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-thumb{border-radius:5px;background-color:var(--vscode-scrollbarSlider-background,rgba(150,150,150,.66));border:4px solid var(--vscode-scrollbarSlider-background,rgba(150,150,150,.66));background-clip:content-box}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc::-webkit-scrollbar-thumb:hover{background-color:var(--vscode-scrollbarSlider-hoverBackground,rgba(120,120,120,.66))}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc a{text-decoration:none}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc{padding:0 16px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-details{margin:0;padding:0;border:none}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link{display:inline;padding:.25rem 0}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link div,html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper .md-toc-link p{display:inline}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper.highlighted .md-toc-link{font-weight:800}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper[data-level='0']{padding-left:0}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper[data-level='1']{padding-left:16px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper[data-level='2']{padding-left:32px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper[data-level='3']{padding-left:48px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper[data-level='4']{padding-left:64px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .md-sidebar-toc .md-toc .md-toc-link-wrapper[data-level='5']{padding-left:80px}html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{left:300px;width:calc(100% - 300px);padding:2em calc(50% - 457px - 300px / 2);margin:0;box-sizing:border-box}@media screen and (max-width:1274px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{padding:2em}}@media screen and (max-width:450px){html body[for=html-export]:not([data-presentation-mode])[html-show-sidebar-toc] .markdown-preview{width:100%}}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .markdown-preview{left:50%;transform:translateX(-50%)}html body[for=html-export]:not([data-presentation-mode]):not([html-show-sidebar-toc]) .md-sidebar-toc{display:none}
+/* Please visit the URL below for more information: */
+/*   https://shd101wyy.github.io/markdown-preview-enhanced/#/customize-css */
+
+      </style>
+      <!-- The content below will be included at the end of the <head> element. -->
+<script type="text/javascript">
+  document.addEventListener("DOMContentLoaded", function () {
+    // your code here
+  });
+</script>
+    </head>
+    <body for="html-export">
+      <div class="crossnote markdown-preview  ">
+      
+<h1 id="kimi-使用原型-skills-手册">Kimi 使用原型 Skills 手册 </h1>
+<h2 id="1-从正确目录启动">1. 从正确目录启动 </h2>
+<p>所有同事都应从下面这个目录启动 Kimi：</p>
+<pre data-role="codeBlock" data-info="powershell" class="language-powershell powershell"><code>cd C:\work-project\psm-project\psm-ui\kimi-skill-project
+</code></pre><p>首次拉到本次兼容文件后，请关闭旧会话并从该目录新开 Kimi 会话。旧会话可能仍按旧版 <code>.kimi-code/AGENTS.md</code> 的详细剧本执行。</p>
+<p>项目中的完整公共规则位于 <code>skills/</code>；Kimi 直接读取这里的主 <code>SKILL.md</code>。<code>.agents/skills/</code> 是 Codex 专用发现入口，Kimi 不需要也不应读取它。</p>
+<h2 id="2-确认能读到-4-个-skill">2. 确认能读到 4 个 Skill </h2>
+<p>在 Kimi 中可以直接用自然语言调用，例如：</p>
+<pre data-role="codeBlock" data-info="text" class="language-text text"><code>使用 prototype-guide，根据我的业务需求逐页确认并生成 PSM 原型。
+</code></pre><p>如果 Kimi 没有自动进入对应 Skill 流程，可补充要求：</p>
+<pre data-role="codeBlock" data-info="text" class="language-text text"><code>请先完整读取 skills/prototype-guide/SKILL.md，再按其中规则执行。
+</code></pre><h2 id="3-四个-skill-怎么选">3. 四个 Skill 怎么选 </h2>
+<table>
+<thead>
+<tr>
+<th>Skill</th>
+<th>什么时候用</th>
+<th>不负责什么</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>prototype-guide</code></td>
+<td>输入还是需求描述、PRD、截图或旧 HTML，需要访谈、拆页、确认和编排</td>
+<td>不应跳过确认，直接假定所有页面规格</td>
+</tr>
+<tr>
+<td><code>prototype-site</code></td>
+<td>已经有一份确认过的单页/批次规格，需要生成或更新静态原型站点</td>
+<td>不负责从模糊需求重新做产品访谈</td>
+</tr>
+<tr>
+<td><code>prototype-vue3-framework</code></td>
+<td>需要创建或修复承载原型的隔离 Vue3 + Ant Design Vue 4 mock 演示壳</td>
+<td>不用于改造生产 <code>psm-ui</code> 的 Vue2 工程</td>
+</tr>
+<tr>
+<td><code>prototype-to-vue3</code></td>
+<td>静态页已生成并在菜单中注册，需要转换为 Vue3 页面、mock API 和菜单记录</td>
+<td>不负责未注册页，也不替代静态原型确认</td>
+</tr>
+</tbody>
+</table>
+<p>建议在提示词中显式写出 Skill 名，例如“使用 prototype-guide”。显式调用最容易得到稳定、可复现的流程。</p>
+<h2 id="4-常用提示词">4. 常用提示词 </h2>
+<h3 id="41-从产品需求开始">4.1 从产品需求开始 </h3>
+<pre data-role="codeBlock" data-info="text" class="language-text text"><code>使用 prototype-guide，根据 docs/某某需求.md 帮我梳理并生成原型。
+先识别页面清单和待确认项，按流程从首批 1 页开始，不要跳过确认。
+</code></pre><h3 id="42-从旧-html-重做原型">4.2 从旧 HTML 重做原型 </h3>
+<pre data-role="codeBlock" data-info="text" class="language-text text"><code>使用 prototype-guide，把我提供的旧 HTML 作为双输入之一进行翻译。
+保留业务数量和交互语义，先判断哪些文件是内嵌组件；内嵌组件合入宿主页，不注册独立菜单。
+</code></pre><p>旧 HTML 建议每批 2–3 页；复杂页面单页处理。若要提取旧系统视觉，请明确选择风格 B，并要求视觉覆盖写入 <code>theme.css</code>。</p>
+<h3 id="43-已有确认规格直接生成静态页">4.3 已有确认规格，直接生成静态页 </h3>
+<pre data-role="codeBlock" data-info="text" class="language-text text"><code>使用 prototype-site，根据 prompts/BMSP01-供应商准入申请.md 更新对应静态页。
+只处理这个提示词文件，完成后运行提示词和站点校验，并更新交接状态。
+</code></pre><h3 id="44-初始化-vue3-演示框架">4.4 初始化 Vue3 演示框架 </h3>
+<pre data-role="codeBlock" data-info="text" class="language-text text"><code>使用 prototype-vue3-framework，在隔离目录创建可运行的 Vue3 mock 演示框架。
+不要修改生产 psm-ui 的 Vue2 代码。
+</code></pre><h3 id="45-把静态原型转成-vue3">4.5 把静态原型转成 Vue3 </h3>
+<pre data-role="codeBlock" data-info="text" class="language-text text"><code>使用 prototype-to-vue3，把已注册的 BMSP01 静态原型转换到现有 Vue3 演示框架，
+生成页面、mock API 和菜单记录，并按 Skill 的校验要求验收。
+</code></pre><h3 id="46-接着上次进度继续">4.6 接着上次进度继续 </h3>
+<pre data-role="codeBlock" data-info="text" class="language-text text"><code>使用 prototype-guide，先读取 prototype-state.json、prototype-handoff.md
+和 prototype-change-log.md，从未完成批次继续；不要重复已经确认的首轮访谈。
+</code></pre><p>如果当前阶段已经是明确的静态页生成，也可把 <code>prototype-guide</code> 换成 <code>prototype-site</code>。</p>
+<h2 id="5-标准工作流">5. 标准工作流 </h2>
+<h3 id="新需求">新需求 </h3>
+<pre data-role="codeBlock" data-info="text" class="language-text text"><code>原始需求/PRD/截图
+  -&gt; prototype-guide 访谈、拆页、确认
+  -&gt; prototype-site 生成共享外壳静态页
+  -&gt; 提示词校验 + 站点校验
+  -&gt; 更新状态与交接文件
+</code></pre><h3 id="旧系统页面迁移">旧系统页面迁移 </h3>
+<pre data-role="codeBlock" data-info="text" class="language-text text"><code>旧 HTML + 业务说明
+  -&gt; prototype-guide 识别宿主页和内嵌组件
+  -&gt; 确认风格 A/B/C 与页面规格
+  -&gt; prototype-site 生成静态页
+  -&gt; 必要时 prototype-vue3-framework
+  -&gt; prototype-to-vue3
+</code></pre><h2 id="6-重要规则">6. 重要规则 </h2>
+<ul>
+<li>新编码使用 6 位格式；旧系统编码可保留 <code>^[A-Z]{2,6}[0-9]{2}$</code>。</li>
+<li>旧编码转 Vue 路径时，先去掉末尾两位数字，再按字母部分拆模块和子模块；不要截取前 4 位。</li>
+<li>普通独立页必须注册菜单；内嵌组件不注册菜单。</li>
+<li>页面 head 只引用 <code>assets/app.css</code>，由 <code>app.css</code> 在首部且仅一次导入 <code>theme.css</code>。</li>
+<li><code>theme.css</code> 只放皮肤和视觉覆盖，不放布局规则。</li>
+<li>页面禁止 <code>&lt;style&gt;</code> 块和任意内联布局样式；仅在规则允许的数据驱动场景使用白名单属性。</li>
+<li>文档输入通常 3–5 页/批，旧 HTML 通常 2–3 页/批，复杂页面单页处理，首次试跑 1 页。</li>
+<li>生产 <code>psm-ui</code> 是 Vue2 工程。除非任务明确要求生产改造，否则 Vue3 两个 Skill 只操作隔离演示框架。</li>
+</ul>
+<h2 id="7-校验命令">7. 校验命令 </h2>
+<h3 id="71-检查提示词">7.1 检查提示词 </h3>
+<p>在项目根目录执行指定文件校验：</p>
+<pre data-role="codeBlock" data-info="powershell" class="language-powershell powershell"><code>node <span class="token punctuation">.</span>\skills\prototype-site\assets\check-prompts<span class="token punctuation">.</span>js prompts\BMSP01-供应商准入申请<span class="token punctuation">.</span>md
+</code></pre><p>只检查旧 HTML 来源的提示词：</p>
+<pre data-role="codeBlock" data-info="powershell" class="language-powershell powershell"><code>node <span class="token punctuation">.</span>\skills\prototype-site\assets\check-prompts<span class="token punctuation">.</span>js <span class="token operator">--</span>html-only prompts\BMSP01-供应商准入申请<span class="token punctuation">.</span>md
+</code></pre><p>不传具体文件时会扫描默认提示词目录；续跑单批次时更推荐显式传文件，避免被无关历史批次阻塞。</p>
+<h3 id="72-检查静态站点">7.2 检查静态站点 </h3>
+<p>先进入待验收静态站点的根目录，确保当前目录下有 <code>menu.config.js</code>、<code>assets/</code> 和 <code>pages/</code>，再执行：</p>
+<pre data-role="codeBlock" data-info="powershell" class="language-powershell powershell"><code>node C:\work-project\psm-project\psm-ui\kimi-skill-project\skills\prototype-site\assets\check-site<span class="token punctuation">.</span>js
+</code></pre><p>看到 C1–C10 全部通过，才能写“自动校验通过”。如果环境不能执行 Node，应在交接说明里明确写“未自动校验”。</p>
+<h2 id="8-输出和续跑文件">8. 输出和续跑文件 </h2>
+<p>以具体任务的输出目录为准，常见内容包括：</p>
+<ul>
+<li><code>prompts/</code>：逐页生成提示词；</li>
+<li><code>pages/</code>：静态原型页面；</li>
+<li><code>assets/app.css</code>、<code>assets/theme.css</code>：公共布局样式与主题皮肤；</li>
+<li><code>menu.config.js</code>：独立页面菜单注册；</li>
+<li><code>prototype-state.json</code>：机器可读进度；</li>
+<li><code>prototype-handoff.md</code>：给下一位同事/下一轮会话的交接；</li>
+<li><code>prototype-change-log.md</code>：变更记录。</li>
+</ul>
+<p>续跑前先读状态和交接文件，不要只凭对话上下文猜进度。</p>
+<h2 id="9-常见问题">9. 常见问题 </h2>
+<h3 id="kimi-没有按-skill-流程执行">Kimi 没有按 Skill 流程执行 </h3>
+<p>确认 Kimi 是从 <code>C:\work-project\psm-project\psm-ui\kimi-skill-project</code> 启动，而不是从上层 <code>psm-project</code> 或 <code>psm-ui</code> 启动；上层目录可能会加载到另一套 Skill。</p>
+<h3 id="需要强制读取主-skill">需要强制读取主 Skill </h3>
+<p>如果 Kimi 只读了 <code>.kimi-code/AGENTS.md</code> 就开始执行，可补一句：</p>
+<pre data-role="codeBlock" data-info="text" class="language-text text"><code>请按 skills/prototype-guide/SKILL.md 的完整规则执行，不要只按 AGENTS.md 路由文件简化执行。
+</code></pre><h3 id="codex-还能不能使用">Codex 还能不能使用 </h3>
+<p>可以。公共规则仍在原来的 <code>skills/</code>；Codex 新增的是 <code>.agents/skills</code> 轻量入口。Codex 同事应继续从本目录启动，并参考 <code>Codex使用原型Skills手册.md</code>。</p>
+
+      </div>
+      
+      
+    
+    
+    
+    
+    
+    
+  
+    </body></html>

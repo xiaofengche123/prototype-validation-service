@@ -1,0 +1,4 @@
+interface:
+  display_name: "ERP 静态原型站点"
+  short_description: "按已确认规格生成高端 ERP 静态原型页面并完成校验"
+  default_prompt: "使用 $erp-prototype-site 根据已确认的页面规格创建或更新 ERP 静态原型站点。"

@@ -56,26 +56,42 @@ AI 驱动的原型验证服务。通过 Claude Code Skills 体系，让非技术
 | 参数配置页 | 开关/输入框/下拉框配置 |
 | 复杂清单页 | 树形结构 + 多层级数据展示 |
 
+## Skills 体系（11 个）
+
+```
+skills/
+├── prototype-guide/            PM 对话引导
+├── prototype-site/             原型页面生成引擎
+├── prototype-to-vue3/          静态页面 → Vue 3 转换
+├── prototype-vue3-framework/   Vue 3 项目框架
+├── erp-prototype-guide/        [ERP 变体] PM 引导
+├── erp-prototype-site/         [ERP 变体] 生成引擎
+├── erp-prototype-to-vue3/      [ERP 变体] Vue 转换
+├── erp-prototype-vue3-framework/ [ERP 变体] 项目框架
+├── template-distill/           风格包提炼（从旧系统/设计稿提取视觉契约）
+├── template-calibrate/         风格包校准（批量循环 + 问题分类 + 收敛冻结）
+└── template-wizard/            模板向导（访谈式引导，免写提示词）
+```
+
 ## 生成结果展示
 
-12 个已生成原型页面（`/pages/`）：
+67 个已生成原型页面（`/pages/`），覆盖 5 大业务模块：
 
 ```
 pages/
-├── 基础信息管理/
-│   └── 供应商准入申请.html
-├── 风险管理/
-│   ├── 风险驾驶舱.html
-│   ├── 统计报表.html
-│   ├── 风险监督场景.html
-│   ├── 风险管理清单.html
-│   ├── 风险登记录入.html
-│   ├── 风险事件详情.html
-│   └── 等级调整审核.html
-└── 任务管理/
-    ├── 任务驾驶舱.html
-    ├── 任务管理列表.html
-    └── 任务创建.html
+├── 风险管理/          (7 页)
+├── 任务管理/          (4 页)
+├── 基础信息管理/       (1 页)
+├── login/             (1 页)
+└── management-console/ (54 页)
+    ├── apps-catalog
+    ├── dashboard
+    ├── identity-*       (用户/组织/权限管理 11 页)
+    ├── notification-*   (消息通道 3 页)
+    ├── oauth2-*         (OAuth2 客户端 2 页)
+    ├── operations-*     (工单/公告/工作流 10 页)
+    ├── platform-*       (审计/导出 2 页)
+    └── developer-oauth2 (1 页)
 ```
 
 打开 `index.html` 即可浏览全部页面。
@@ -140,6 +156,31 @@ prototype-validation-service/
 - 菜单注册幂等（按 `code` 去重）
 
 这些约束是为了保证：AI 生成的页面能稳定地被下一个 AI（prototype-to-vue3）理解和转换。本质上是一个 **AI 到 AI 的契约设计**。
+
+## 模板风格管线（template-distill → template-calibrate）
+
+支持从三种来源提炼风格包并校准为新 Skill 家族：
+
+| 阶段 | Skill | 输入 | 输出 |
+|---|---|---|---|
+| 提炼 | `template-distill` | 旧 Vue 系统 / 设计稿 / 高质量原型 | 风格包（contract.md + golden page + parity-checklist） |
+| 校准 | `template-calibrate` | 风格包（distill 产出） | 冻结 v1.0 风格包 + 新三件套 Skill 家族 |
+| 向导 | `template-wizard` | 访谈式引导，免写提示词 | 驱动 distill + calibrate 两个引擎 |
+
+风格包包含：视觉契约（contract.md）、原型侧投影（app.css + page-template.html）、Vue 侧黄金页面、数值化一致性检查清单。
+
+## 测试体系
+
+- `test-scenarios/` — 6 批结构化测试场景（batch1-6）+ 问题追踪 + 验收报告
+- `prompts/` — 22 个单页提示词模板（.md + .source.html），覆盖风险/任务/模型/首页模块
+- `pmtest/` — PM 手动测试案例
+
+## 多工具支持
+
+- Claude Code：`.claude/skills/` + `CLAUDE.md`
+- Kimi Code：`skills/` + `AGENTS.md` + `.kimi-code/AGENTS.md`
+- Codex：`skills/` + `Codex使用原型Skills手册.md`
+- 跨工具兼容：`docs/Codex-Kimi双工具兼容维护交接说明-20260714.md`
 
 ## 快速开始
 

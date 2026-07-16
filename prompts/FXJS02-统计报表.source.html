@@ -1,0 +1,382 @@
+<!-- 剥壳后的业务内容：统计报表 -->
+<!-- 来源：原型/风险管理/风险驾驶舱/2.统计报表.html -->
+<!-- 外壳已剥离：移除 top-header / sidebar / page-tabs / layout 外壳 -->
+
+<div id="page-content" data-page="FXJS02">
+  <!-- 页头 -->
+  <div class="page-header">
+    <div class="page-title">统计报表 - 综合查询</div>
+    <div class="actions">
+      <button class="btn btn-success" id="btnExport" disabled>&#128229; 导出 Excel</button>
+    </div>
+  </div>
+
+  <!-- 条件栏（动态显示） -->
+  <div class="condition-bar" id="conditionBar" style="display:none;">
+    <span class="label">当前筛选：</span>
+    <span class="condition-tag">风险等级: 全部 <span class="remove">&#10005;</span></span>
+    <span class="condition-tag">发现日期: 2024-07-01 ~ 2024-12-31 <span class="remove">&#10005;</span></span>
+    <span class="clear" id="clearAll">清除全部</span>
+  </div>
+
+  <!-- 主内容区：左右布局 -->
+  <div class="main-content" style="display:flex;gap:12px;flex:1;overflow:hidden;">
+    <!-- 左侧查询条件边栏 -->
+    <div class="query-panel" style="width:260px;background:#fff;border:1px solid var(--border);border-radius:4px;display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;">
+      <div class="card-head">
+        <div class="title"><span class="bar"></span>查询条件</div>
+      </div>
+      <div class="query-panel-body" style="flex:1;overflow-y:auto;padding:12px 14px;">
+        <div class="query-section" style="margin-bottom:14px;">
+          <div class="sec-label" style="font-size:12px;font-weight:bold;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:4px;">
+            <span style="width:3px;height:12px;background:var(--primary);border-radius:2px;"></span>风险编号/标题
+          </div>
+          <input type="text" placeholder="请输入关键词" style="width:100%;height:32px;border:1px solid var(--border);border-radius:4px;padding:0 10px;font-size:13px;outline:none;">
+        </div>
+
+        <div class="query-section" style="margin-bottom:14px;">
+          <div class="sec-label" style="font-size:12px;font-weight:bold;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:4px;">
+            <span style="width:3px;height:12px;background:var(--primary);border-radius:2px;"></span>风险等级
+          </div>
+          <div class="tag-group" style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span class="tag-option active-red" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--danger);color:#fff;border-color:var(--danger);">高风险</span>
+            <span class="tag-option active-orange" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--warning);color:#fff;border-color:var(--warning);">中风险</span>
+            <span class="tag-option active-green" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--success);color:#fff;border-color:var(--success);">低风险</span>
+          </div>
+        </div>
+
+        <div class="query-section" style="margin-bottom:14px;">
+          <div class="sec-label" style="font-size:12px;font-weight:bold;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:4px;">
+            <span style="width:3px;height:12px;background:var(--primary);border-radius:2px;"></span>风险状态
+          </div>
+          <div class="tag-group" style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span class="tag-option active" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--primary);color:#fff;border-color:var(--primary);">全部</span>
+            <span class="tag-option" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">待处置</span>
+            <span class="tag-option" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">处置中</span>
+            <span class="tag-option" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">已关闭</span>
+            <span class="tag-option" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">已超期</span>
+          </div>
+        </div>
+
+        <div class="query-section" style="margin-bottom:14px;">
+          <div class="sec-label" style="font-size:12px;font-weight:bold;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:4px;">
+            <span style="width:3px;height:12px;background:var(--primary);border-radius:2px;"></span>责任部门
+          </div>
+          <select style="width:100%;height:32px;border:1px solid var(--border);border-radius:4px;padding:0 10px;font-size:13px;outline:none;">
+            <option>全部部门</option>
+            <option>采购部</option>
+            <option>财务部</option>
+            <option>仓储物流部</option>
+            <option>质量管理部</option>
+            <option>销售部</option>
+            <option>生产运营部</option>
+          </select>
+        </div>
+
+        <div class="query-section" style="margin-bottom:14px;">
+          <div class="sec-label" style="font-size:12px;font-weight:bold;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:4px;">
+            <span style="width:3px;height:12px;background:var(--primary);border-radius:2px;"></span>发现日期
+          </div>
+          <div class="date-range" style="display:flex;align-items:center;gap:6px;">
+            <input type="text" value="2024-07-01" placeholder="开始日期" style="flex:1;height:32px;border:1px solid var(--border);border-radius:4px;padding:0 10px;font-size:13px;outline:none;">
+            <span class="sep" style="color:var(--text3);font-size:12px;">~</span>
+            <input type="text" value="2024-12-31" placeholder="结束日期" style="flex:1;height:32px;border:1px solid var(--border);border-radius:4px;padding:0 10px;font-size:13px;outline:none;">
+          </div>
+        </div>
+
+        <div class="query-section" style="margin-bottom:14px;">
+          <div class="sec-label" style="font-size:12px;font-weight:bold;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:4px;">
+            <span style="width:3px;height:12px;background:var(--primary);border-radius:2px;"></span>业务场景（多选）
+          </div>
+          <div class="tag-group" id="bizSceneGroup" style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span class="tag-option" data-value="违规准入分析" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">违规准入分析</span>
+            <span class="tag-option" data-value="单一来源合理性分析" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">单一来源合理性分析</span>
+            <span class="tag-option" data-value="采购方案合理性分析" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">采购方案合理性分析</span>
+            <span class="tag-option" data-value="围串标识别分析" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">围串标识别分析</span>
+            <span class="tag-option" data-value="应招未招识别分析" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">应招未招识别分析</span>
+            <span class="tag-option" data-value="采购执行管理" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">采购执行管理</span>
+            <span class="tag-option" data-value="采购结算管理" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">采购结算管理</span>
+            <span class="tag-option" data-value="挂账付款" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">挂账付款</span>
+            <span class="tag-option" data-value="授信管理" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">授信管理</span>
+          </div>
+        </div>
+
+        <div class="query-section" style="margin-bottom:14px;">
+          <div class="sec-label" style="font-size:12px;font-weight:bold;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:4px;">
+            <span style="width:3px;height:12px;background:var(--primary);border-radius:2px;"></span>风险点（多选·级联）
+          </div>
+          <div class="tag-group" id="riskPointGroup" style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span class="tag-option" style="padding:4px 10px;border-radius:3px;border:1px dashed var(--border);font-size:12px;cursor:default;background:#fff;color:var(--text3);opacity:.5;">请先选择业务场景</span>
+          </div>
+        </div>
+
+        <div class="query-section" style="margin-bottom:14px;">
+          <div class="sec-label" style="font-size:12px;font-weight:bold;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:4px;">
+            <span style="width:3px;height:12px;background:var(--primary);border-radius:2px;"></span>处置责任人
+          </div>
+          <input type="text" placeholder="请输入责任人姓名" style="width:100%;height:32px;border:1px solid var(--border);border-radius:4px;padding:0 10px;font-size:13px;outline:none;">
+        </div>
+
+        <div class="query-section" style="margin-bottom:14px;">
+          <div class="sec-label" style="font-size:12px;font-weight:bold;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:4px;">
+            <span style="width:3px;height:12px;background:var(--primary);border-radius:2px;"></span>处置期限
+          </div>
+          <div class="date-range" style="display:flex;align-items:center;gap:6px;">
+            <input type="text" placeholder="开始日期" style="flex:1;height:32px;border:1px solid var(--border);border-radius:4px;padding:0 10px;font-size:13px;outline:none;">
+            <span class="sep" style="color:var(--text3);font-size:12px;">~</span>
+            <input type="text" placeholder="结束日期" style="flex:1;height:32px;border:1px solid var(--border);border-radius:4px;padding:0 10px;font-size:13px;outline:none;">
+          </div>
+        </div>
+
+        <div class="query-section" style="margin-bottom:14px;">
+          <div class="sec-label" style="font-size:12px;font-weight:bold;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:4px;">
+            <span style="width:3px;height:12px;background:var(--primary);border-radius:2px;"></span>超期状态
+          </div>
+          <div class="tag-group" style="display:flex;flex-wrap:wrap;gap:6px;">
+            <span class="tag-option active" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:var(--primary);color:#fff;border-color:var(--primary);">全部</span>
+            <span class="tag-option" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">正常</span>
+            <span class="tag-option" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">即将超期</span>
+            <span class="tag-option" style="padding:4px 10px;border-radius:3px;border:1px solid var(--border);font-size:12px;cursor:pointer;background:#fff;color:var(--text2);">已超期</span>
+          </div>
+        </div>
+
+        <div class="query-section" style="margin-bottom:14px;">
+          <div class="sec-label" style="font-size:12px;font-weight:bold;color:var(--text);margin-bottom:8px;display:flex;align-items:center;gap:4px;">
+            <span style="width:3px;height:12px;background:var(--primary);border-radius:2px;"></span>排序方式
+          </div>
+          <select style="width:100%;height:32px;border:1px solid var(--border);border-radius:4px;padding:0 10px;font-size:13px;outline:none;">
+            <option>发现日期 ↓</option>
+            <option>发现日期 ↑</option>
+            <option>风险等级 ↓</option>
+            <option>风险等级 ↑</option>
+            <option>处置期限 ↓</option>
+            <option>处置期限 ↑</option>
+          </select>
+        </div>
+      </div>
+      <div class="query-actions" style="padding:12px 14px;border-top:1px solid var(--border);display:flex;gap:8px;flex-shrink:0;">
+        <button class="btn btn-primary" id="btnQuery" style="flex:1;height:32px;">&#128269; 查询</button>
+        <button class="btn btn-default" id="btnReset" style="flex:1;height:32px;">&#8634; 重置</button>
+      </div>
+    </div>
+
+    <!-- 右侧结果区域 -->
+    <div class="result-area" style="flex:1;display:flex;flex-direction:column;overflow:hidden;">
+      <div class="card" style="flex:1;display:flex;flex-direction:column;overflow:hidden;margin-bottom:0;">
+        <div class="card-head">
+          <div class="title"><span class="bar"></span>查询结果</div>
+          <div class="actions">
+            <span style="font-size:12px;color:var(--text2);">共检索到 <strong style="color:var(--primary);">312</strong> 条记录</span>
+          </div>
+        </div>
+        <div class="table-wrap" style="flex:1;overflow:auto;">
+          <table class="table-fit" style="width:100%;border-collapse:collapse;font-size:12px;">
+            <thead>
+              <tr>
+                <th>风险编号 <span class="sort active">&#9662;</span></th>
+                <th>风险标题</th>
+                <th style="width:60px;">等级</th>
+                <th style="width:70px;">状态</th>
+                <th>风险场景</th>
+                <th>风险点</th>
+                <th>责任部门</th>
+                <th>处置责任人</th>
+                <th style="width:80px;">发现日期</th>
+                <th style="width:80px;">处置期限</th>
+                <th style="width:60px;">超期天数</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>FX20241201001</td><td>围标串标风险-氧化铝采购</td><td><span class="tag reject">高风险</span></td><td><span class="tag pending">处置中</span></td><td>围标串标</td><td>氧化铝采购</td><td>采购部</td><td>王建国</td><td>2024-12-01</td><td>2024-12-15</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241201002</td><td>价格异常波动-铝锭采购</td><td><span class="tag warn-yellow">中风险</span></td><td><span class="tag draft">待处置</span></td><td>价格异常</td><td>铝锭采购</td><td>财务部</td><td>李晓明</td><td>2024-12-01</td><td>2024-12-10</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241128003</td><td>供应商关联关系未披露</td><td><span class="tag reject">高风险</span></td><td><span class="tag reject">已超期</span></td><td>供应商关联</td><td>原料入库</td><td>采购部</td><td>张丽娟</td><td>2024-11-28</td><td>2024-12-01</td><td class="cell-center text-danger">+6</td></tr>
+              <tr><td>FX20241125004</td><td>合同变更未履行审批流程</td><td><span class="tag warn-yellow">中风险</span></td><td><span class="tag pending">处置中</span></td><td>合同合规</td><td>合同变更</td><td>法务部</td><td>赵志强</td><td>2024-11-25</td><td>2024-12-05</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241122005</td><td>质检数据异常-原料入库检验</td><td><span class="tag pass">低风险</span></td><td><span class="tag pass">已关闭</span></td><td>质检造假</td><td>原料入库</td><td>质量管理部</td><td>刘婷婷</td><td>2024-11-22</td><td>2024-11-30</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241120006</td><td>库存损耗异常-铝锭仓储</td><td><span class="tag pass">低风险</span></td><td><span class="tag draft">待处置</span></td><td>库存损耗</td><td>物流运输</td><td>仓储物流部</td><td>陈建华</td><td>2024-11-20</td><td>2024-12-08</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241118007</td><td>采购价格偏离市场价15%以上</td><td><span class="tag reject">高风险</span></td><td><span class="tag reject">已超期</span></td><td>价格异常</td><td>铝锭采购</td><td>采购部</td><td>王建国</td><td>2024-11-18</td><td>2024-11-25</td><td class="cell-center text-danger">+12</td></tr>
+              <tr><td>FX20241115008</td><td>供应商资质过期未更新</td><td><span class="tag warn-yellow">中风险</span></td><td><span class="tag pending">处置中</span></td><td>供应商关联</td><td>氧化铝采购</td><td>采购部</td><td>孙伟明</td><td>2024-11-15</td><td>2024-12-03</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241112009</td><td>销售合同条款存在合规漏洞</td><td><span class="tag warn-yellow">中风险</span></td><td><span class="tag pass">已关闭</span></td><td>合同合规</td><td>合同变更</td><td>销售部</td><td>周丽萍</td><td>2024-11-12</td><td>2024-11-20</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241110010</td><td>质检报告造假嫌疑</td><td><span class="tag reject">高风险</span></td><td><span class="tag pending">处置中</span></td><td>质检造假</td><td>质检报告</td><td>质量管理部</td><td>刘婷婷</td><td>2024-11-10</td><td>2024-12-06</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241108011</td><td>围标嫌疑-铝锭供应商招标</td><td><span class="tag reject">高风险</span></td><td><span class="tag draft">待处置</span></td><td>围标串标</td><td>铝锭采购</td><td>采购部</td><td>王建国</td><td>2024-11-08</td><td>2024-12-12</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241105012</td><td>运输损耗率异常偏高</td><td><span class="tag pass">低风险</span></td><td><span class="tag pending">处置中</span></td><td>库存损耗</td><td>物流运输</td><td>仓储物流部</td><td>陈建华</td><td>2024-11-05</td><td>2024-12-01</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241101013</td><td>关联供应商报价异常一致</td><td><span class="tag warn-yellow">中风险</span></td><td><span class="tag reject">已超期</span></td><td>供应商关联</td><td>氧化铝采购</td><td>采购部</td><td>张丽娟</td><td>2024-11-01</td><td>2024-11-10</td><td class="cell-center text-danger">+26</td></tr>
+              <tr><td>FX20241028014</td><td>质检报告数据与实物不符</td><td><span class="tag reject">高风险</span></td><td><span class="tag pass">已关闭</span></td><td>质检造假</td><td>质检报告</td><td>质量管理部</td><td>刘婷婷</td><td>2024-10-28</td><td>2024-11-15</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241025015</td><td>合同付款条款偏离标准模板</td><td><span class="tag warn-yellow">中风险</span></td><td><span class="tag pending">处置中</span></td><td>合同合规</td><td>合同变更</td><td>法务部</td><td>赵志强</td><td>2024-10-25</td><td>2024-11-30</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241022016</td><td>铝锭采购价格环比上涨20%</td><td><span class="tag reject">高风险</span></td><td><span class="tag reject">已超期</span></td><td>价格异常</td><td>铝锭采购</td><td>财务部</td><td>李晓明</td><td>2024-10-22</td><td>2024-10-30</td><td class="cell-center text-danger">+37</td></tr>
+              <tr><td>FX20241018017</td><td>氧化铝入库数量与单据不符</td><td><span class="tag warn-yellow">中风险</span></td><td><span class="tag pass">已关闭</span></td><td>库存损耗</td><td>原料入库</td><td>仓储物流部</td><td>陈建华</td><td>2024-10-18</td><td>2024-10-25</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241015018</td><td>新供应商资质审核遗漏</td><td><span class="tag pass">低风险</span></td><td><span class="tag draft">待处置</span></td><td>供应商关联</td><td>氧化铝采购</td><td>采购部</td><td>孙伟明</td><td>2024-10-15</td><td>2024-11-20</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241010019</td><td>围标串标-氧化铝采购招标</td><td><span class="tag reject">高风险</span></td><td><span class="tag pass">已关闭</span></td><td>围标串标</td><td>氧化铝采购</td><td>采购部</td><td>王建国</td><td>2024-10-10</td><td>2024-10-20</td><td class="cell-center">-</td></tr>
+              <tr><td>FX20241005020</td><td>销售回款周期异常延长</td><td><span class="tag warn-yellow">中风险</span></td><td><span class="tag pending">处置中</span></td><td>合同合规</td><td>合同变更</td><td>销售部</td><td>周丽萍</td><td>2024-10-05</td><td>2024-11-10</td><td class="cell-center">-</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pager" style="border-top:1px solid var(--border);padding:8px 16px;">
+          <span class="total">共 312 条</span>
+          <button class="pg" disabled>&#9664;</button>
+          <button class="pg active">1</button>
+          <button class="pg">2</button>
+          <button class="pg">3</button>
+          <button class="pg">4</button>
+          <span style="color:var(--text3);">...</span>
+          <button class="pg">16</button>
+          <button class="pg">&#9654;</button>
+          <span style="font-size:12px;color:var(--text2);">第 1 / 16 页</span>
+          <select class="pg-size">
+            <option>10 条/页</option>
+            <option>20 条/页</option>
+            <option>50 条/页</option>
+            <option selected>100 条/页</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+  PR.bindActions();
+
+  // 标签多选交互（排除业务场景和风险点组，它们由各自的逻辑单独管理）
+  document.querySelectorAll('.tag-group:not(#bizSceneGroup):not(#riskPointGroup)').forEach(function(group) {
+    var tags = group.querySelectorAll('.tag-option');
+    tags.forEach(function(tag) {
+      tag.addEventListener('click', function() {
+        if (this.textContent === '全部') {
+          tags.forEach(function(t) { t.classList.remove('active', 'active-red', 'active-orange', 'active-green'); });
+          this.classList.add('active');
+        } else {
+          var allTag = group.querySelector('.tag-option:first-child');
+          if (allTag && allTag.textContent === '全部') {
+            allTag.classList.remove('active');
+          }
+          var activeClass = '';
+          if (this.textContent === '高风险') activeClass = 'active-red';
+          else if (this.textContent === '中风险') activeClass = 'active-orange';
+          else if (this.textContent === '低风险') activeClass = 'active-green';
+          else activeClass = 'active';
+          this.classList.toggle(activeClass);
+          var anyActive = false;
+          tags.forEach(function(t) {
+            if (t.classList.contains('active') || t.classList.contains('active-red') || t.classList.contains('active-orange') || t.classList.contains('active-green')) {
+              anyActive = true;
+            }
+          });
+          if (!anyActive && allTag && allTag.textContent === '全部') {
+            allTag.classList.add('active');
+          }
+        }
+      });
+    });
+  });
+
+  // 查询按钮
+  document.getElementById('btnQuery').addEventListener('click', function() {
+    document.getElementById('conditionBar').style.display = 'flex';
+    document.getElementById('btnExport').disabled = false;
+  });
+
+  // 重置按钮
+  document.getElementById('btnReset').addEventListener('click', function() {
+    document.getElementById('conditionBar').style.display = 'none';
+    document.getElementById('btnExport').disabled = true;
+    document.querySelectorAll('.tag-option').forEach(function(tag) {
+      tag.classList.remove('active', 'active-red', 'active-orange', 'active-green');
+    });
+    var defaults = { '高风险': 'active-red', '中风险': 'active-orange', '低风险': 'active-green' };
+    document.querySelectorAll('.tag-option').forEach(function(tag) {
+      if (defaults[tag.textContent]) {
+        tag.classList.add(defaults[tag.textContent]);
+      } else if (tag.textContent === '全部' && !tag.parentElement.querySelector('.active-red')) {
+        tag.classList.add('active');
+      }
+    });
+    document.querySelectorAll('.query-section input[type="text"]').forEach(function(input) {
+      if (!input.classList.contains('date')) input.value = '';
+    });
+    document.querySelectorAll('.query-section select').forEach(function(select) {
+      select.selectedIndex = 0;
+    });
+  });
+
+  // 清除全部条件
+  document.getElementById('clearAll').addEventListener('click', function() {
+    document.getElementById('btnReset').click();
+  });
+
+  // 业务场景 → 风险点 级联映射（参考 PDF 业务场景设计图）
+  var cascadeMap = {
+    '违规准入分析': ['万能供应商分析', '准入制造商', '供应商等级准入'],
+    '单一来源合理性分析': ['单一来源计划量多的品类', '单一来源专业户分析', '违规采取单一来源线索识别'],
+    '采购方案合理性分析': ['紧急计划数据过频', '紧急采购专业户分析', '紧急计划或紧急采购过多', '紧急计划签报周期过长', '紧急计划要货周期延长', '采购方式选择错误', '采购协同不足检查'],
+    '围串标识别分析': ['虚报少中及只报不中', '供应商评价数据异常', '供应商存在关联关系', '报价文件作者修改者相同'],
+    '应招未招识别分析': ['应招未招', '流量采购占比标', '分类和报告分析'],
+    '采购执行管理': ['合同标准模板使用率低企业识别'],
+    '采购结算管理': ['企业应结未结算分析', '供应商提供的商品质量不合格仍结算', '企业应付账款支付次数分析'],
+    '挂账付款': ['超合同数量执行', '合同超过交货截止日期但仍未执行', '供应商合同超期未执行', '供应商付款账长期未核销'],
+    '授信管理': []
+  };
+
+  function updateRiskPoints() {
+    var sceneGroup = document.getElementById('bizSceneGroup');
+    var pointGroup = document.getElementById('riskPointGroup');
+    var selectedScenes = [];
+    sceneGroup.querySelectorAll('.tag-option.active').forEach(function(tag) {
+      selectedScenes.push(tag.dataset.value);
+    });
+
+    var availablePoints = [];
+    selectedScenes.forEach(function(scene) {
+      if (cascadeMap[scene]) {
+        cascadeMap[scene].forEach(function(point) {
+          if (availablePoints.indexOf(point) === -1) {
+            availablePoints.push(point);
+          }
+        });
+      }
+    });
+
+    var selectedPoints = [];
+    pointGroup.querySelectorAll('.tag-option.active').forEach(function(tag) {
+      if (tag.dataset.value) selectedPoints.push(tag.dataset.value);
+    });
+
+    pointGroup.innerHTML = '';
+    if (availablePoints.length === 0) {
+      pointGroup.innerHTML = '<span class="tag-option" style="opacity:.5;cursor:default;border-style:dashed;">请先选择业务场景</span>';
+    } else {
+      availablePoints.forEach(function(point) {
+        var span = document.createElement('span');
+        span.className = 'tag-option';
+        if (selectedPoints.indexOf(point) !== -1) {
+          span.classList.add('active');
+        }
+        span.dataset.value = point;
+        span.textContent = point;
+        pointGroup.appendChild(span);
+      });
+    }
+  }
+
+  // 为业务场景标签绑定级联更新
+  document.getElementById('bizSceneGroup').querySelectorAll('.tag-option').forEach(function(tag) {
+    tag.addEventListener('click', function() {
+      this.classList.toggle('active');
+      updateRiskPoints();
+    });
+  });
+
+  // 风险点标签点击（动态生成的标签需要委托或重新绑定）
+  document.getElementById('riskPointGroup').addEventListener('click', function(e) {
+    var tag = e.target.closest('.tag-option');
+    if (tag && !tag.style.opacity && tag.dataset.value) {
+      tag.classList.toggle('active');
+    }
+  });
+
+  // 重置时恢复风险点提示
+  document.getElementById('btnReset').addEventListener('click', function() {
+    var pointGroup = document.getElementById('riskPointGroup');
+    pointGroup.innerHTML = '<span class="tag-option" style="opacity:.5;cursor:default;border-style:dashed;">请先选择业务场景</span>';
+  });
+</script>

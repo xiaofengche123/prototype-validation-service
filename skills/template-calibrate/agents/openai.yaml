@@ -1,0 +1,4 @@
+interface:
+  display_name: "Template Calibrate"
+  short_description: "Calibrate a style pack into a converged prototype/Vue skill family."
+  default_prompt: "Use this skill to instantiate a skill family from a style pack and run batched page calibration with problem triage and atomic feed-back until convergence, or to re-calibrate a drifted family."

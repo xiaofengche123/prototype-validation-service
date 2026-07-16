@@ -1,0 +1,279 @@
+<!-- 剥壳后的业务内容：风险驾驶舱 -->
+<!-- 来源：原型/风险管理/风险驾驶舱/1.风险驾驶舱.html -->
+<!-- 外壳已剥离：移除 top-header / sidebar / page-tabs / layout 外壳 -->
+
+<div id="page-content" data-page="FXJS01">
+  <!-- 页头 -->
+  <div class="page-header">
+    <div class="page-title">风险驾驶舱</div>
+    <div class="actions">
+      <button class="btn btn-primary" data-action="nav-report" data-nav="FXJS02">进入统计报表</button>
+    </div>
+  </div>
+
+  <!-- 统计卡行：6张 -->
+  <div class="stat-row">
+    <div class="stat-card rich">
+      <div class="stat-icon ico-blue">&#128202;</div>
+      <div class="stat-info">
+        <div class="stat-value num-primary">312</div>
+        <div class="stat-label">当前全部风险</div>
+        <div class="stat-change trend-up">&#8593; 较上月 +18</div>
+      </div>
+    </div>
+    <div class="stat-card rich">
+      <div class="stat-icon ico-red">&#9888;</div>
+      <div class="stat-info">
+        <div class="stat-value num-danger">46</div>
+        <div class="stat-label">高风险数</div>
+        <div class="stat-change trend-up">&#8593; 较上周 +5</div>
+      </div>
+    </div>
+    <div class="stat-card rich">
+      <div class="stat-icon ico-orange">&#128227;</div>
+      <div class="stat-info">
+        <div class="stat-value num-warning">89</div>
+        <div class="stat-label">中风险数</div>
+        <div class="stat-change trend-flat">占比 28.5%</div>
+      </div>
+    </div>
+    <div class="stat-card rich">
+      <div class="stat-icon ico-yellow">&#128012;</div>
+      <div class="stat-info">
+        <div class="stat-value num-orange">142</div>
+        <div class="stat-label">低风险数</div>
+        <div class="stat-change trend-flat">占比 45.5%</div>
+      </div>
+    </div>
+    <div class="stat-card rich">
+      <div class="stat-icon ico-gray">&#9200;</div>
+      <div class="stat-info">
+        <div class="stat-value num-muted">23</div>
+        <div class="stat-label">超期数</div>
+        <div class="stat-change trend-up">&#8593; 较上周 +3</div>
+      </div>
+    </div>
+    <div class="stat-card rich">
+      <div class="stat-icon ico-green">&#128451;</div>
+      <div class="stat-info">
+        <div class="stat-value num-success">156</div>
+        <div class="stat-label">已累计关闭风险</div>
+        <div class="stat-change trend-down">&#8595; 本月关闭 +12</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 图表行1：趋势 + 饼图 -->
+  <div class="dash-grid-21">
+    <div class="card">
+      <div class="card-head">
+        <div class="title"><span class="bar"></span>风险趋势分析（近6个月）</div>
+      </div>
+      <div class="chart-wrap">
+        <div class="chart-line">
+          <div class="chart-y-axis">
+            <span>60</span><span>45</span><span>30</span><span>15</span><span>0</span>
+          </div>
+          <div class="chart-grid">
+            <div class="chart-grid-line top-0"></div>
+            <div class="chart-grid-line top-25"></div>
+            <div class="chart-grid-line top-50"></div>
+            <div class="chart-grid-line top-75"></div>
+          </div>
+          <div class="chart-area">
+            <svg preserveAspectRatio="none" viewBox="0 0 100 100" style="width:100%;height:100%;">
+              <polyline points="8,55 25,50 42,38 58,30 75,22 92,18" fill="none" stroke="#e53935" stroke-width="2"/>
+              <circle cx="8" cy="55" r="3" fill="#e53935"/>
+              <circle cx="25" cy="50" r="3" fill="#e53935"/>
+              <circle cx="42" cy="38" r="3" fill="#e53935"/>
+              <circle cx="58" cy="30" r="3" fill="#e53935"/>
+              <circle cx="75" cy="22" r="3" fill="#e53935"/>
+              <circle cx="92" cy="18" r="3" fill="#e53935"/>
+              <polyline points="8,40 25,42 42,35 58,32 75,28 92,25" fill="none" stroke="#fb8c00" stroke-width="2"/>
+              <circle cx="8" cy="40" r="3" fill="#fb8c00"/>
+              <circle cx="25" cy="42" r="3" fill="#fb8c00"/>
+              <circle cx="42" cy="35" r="3" fill="#fb8c00"/>
+              <circle cx="58" cy="32" r="3" fill="#fb8c00"/>
+              <circle cx="75" cy="28" r="3" fill="#fb8c00"/>
+              <circle cx="92" cy="25" r="3" fill="#fb8c00"/>
+              <polyline points="8,25 25,28 42,22 58,20 75,18 92,15" fill="none" stroke="#f57f17" stroke-width="2"/>
+              <circle cx="8" cy="25" r="3" fill="#f57f17"/>
+              <circle cx="25" cy="28" r="3" fill="#f57f17"/>
+              <circle cx="42" cy="22" r="3" fill="#f57f17"/>
+              <circle cx="58" cy="20" r="3" fill="#f57f17"/>
+              <circle cx="75" cy="18" r="3" fill="#f57f17"/>
+              <circle cx="92" cy="15" r="3" fill="#f57f17"/>
+            </svg>
+          </div>
+          <div class="chart-x-axis">
+            <span>7月</span><span>8月</span><span>9月</span><span>10月</span><span>11月</span><span>12月</span>
+          </div>
+        </div>
+        <div class="chart-legend">
+          <span class="chart-legend-item"><span class="chart-legend-bar" style="background:#e53935"></span>高风险</span>
+          <span class="chart-legend-item"><span class="chart-legend-bar" style="background:#fb8c00"></span>中风险</span>
+          <span class="chart-legend-item"><span class="chart-legend-bar" style="background:#f57f17"></span>低风险</span>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="title"><span class="bar"></span>风险状态分布</div>
+      </div>
+      <div class="chart-wrap">
+        <div class="pie-wrap">
+          <div class="pie" style="background:conic-gradient(#e53935 0% 14.7%, #fb8c00 14.7% 43.3%, #43a047 43.3% 88.8%, #757575 88.8% 100%);">
+            <div class="pie-hole">312</div>
+          </div>
+          <div class="pie-legend">
+            <div class="pie-legend-item"><span class="pie-legend-dot" style="background:#e53935"></span>高风险 14.7%</div>
+            <div class="pie-legend-item"><span class="pie-legend-dot" style="background:#fb8c00"></span>中风险 28.5%</div>
+            <div class="pie-legend-item"><span class="pie-legend-dot" style="background:#43a047"></span>低风险 45.5%</div>
+            <div class="pie-legend-item"><span class="pie-legend-dot" style="background:#757575"></span>已关闭 11.3%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 图表行2：排名 + 预警 -->
+  <div class="two-col-grid">
+    <div class="card">
+      <div class="card-head">
+        <div class="title"><span class="bar"></span>部门风险排名（本月）</div>
+      </div>
+      <div class="table-wrap">
+        <table class="table-fit">
+          <thead>
+            <tr>
+              <th style="width:50px">排名</th>
+              <th>部门</th>
+              <th>风险数</th>
+              <th>高风险</th>
+              <th>超期率</th>
+              <th style="width:120px">处置进度</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td><span class="rank-num top">1</span></td><td>采购部</td><td>58</td><td><span class="tag level-high">12</span></td><td class="text-success">3.4%</td><td><div class="progress-track"><div class="progress-fill blue" style="width:78%"></div></div></td></tr>
+            <tr><td><span class="rank-num top">2</span></td><td>财务部</td><td>45</td><td><span class="tag level-high">8</span></td><td class="text-warning">6.7%</td><td><div class="progress-track"><div class="progress-fill blue" style="width:65%"></div></div></td></tr>
+            <tr><td><span class="rank-num top">3</span></td><td>仓储物流部</td><td>42</td><td><span class="tag level-high">9</span></td><td class="text-danger">11.9%</td><td><div class="progress-track"><div class="progress-fill orange" style="width:52%"></div></div></td></tr>
+            <tr><td><span class="rank-num">4</span></td><td>质量管理部</td><td>35</td><td><span class="tag level-mid">5</span></td><td class="text-success">2.9%</td><td><div class="progress-track"><div class="progress-fill blue" style="width:71%"></div></div></td></tr>
+            <tr><td><span class="rank-num">5</span></td><td>销售部</td><td>28</td><td><span class="tag level-mid">4</span></td><td class="text-warning">7.1%</td><td><div class="progress-track"><div class="progress-fill blue" style="width:61%"></div></div></td></tr>
+            <tr><td><span class="rank-num">6</span></td><td>生产运营部</td><td>24</td><td><span class="tag level-high">6</span></td><td class="text-danger">12.5%</td><td><div class="progress-track"><div class="progress-fill red" style="width:48%"></div></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="title"><span class="bar"></span>超期预警列表</div>
+      </div>
+      <div class="table-wrap">
+        <table class="table-fit">
+          <thead>
+            <tr>
+              <th>风险编号</th>
+              <th>风险标题</th>
+              <th>责任部门</th>
+              <th>截止日</th>
+              <th>超期天数</th>
+              <th>预警等级</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>FX20241101005</td><td>围标串标风险-氧化铝采购</td><td>采购部</td><td>2024-11-30</td><td class="text-danger">+7天</td><td><span class="warn-tag warn-red">红色</span></td></tr>
+            <tr><td>FX20241108012</td><td>供应商关联关系未披露</td><td>采购部</td><td>2024-12-01</td><td class="text-danger">+6天</td><td><span class="warn-tag warn-red">红色</span></td></tr>
+            <tr><td>FX20241115008</td><td>价格异常波动-铝锭采购</td><td>财务部</td><td>2024-12-03</td><td class="text-danger">+4天</td><td><span class="warn-tag warn-red">红色</span></td></tr>
+            <tr><td>FX20241120003</td><td>合同变更未履行审批</td><td>法务部</td><td>2024-12-05</td><td class="text-warning">+2天</td><td><span class="warn-tag warn-orange">橙色</span></td></tr>
+            <tr><td>FX20241125006</td><td>质检数据异常-原料入库</td><td>质量管理部</td><td>2024-12-06</td><td class="text-warning">今日到期</td><td><span class="warn-tag warn-yellow">黄色</span></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- 图表行3：场景分布 + 处置时效 -->
+  <div class="two-col-grid">
+    <div class="card">
+      <div class="card-head">
+        <div class="title"><span class="bar"></span>风险场景分布</div>
+      </div>
+      <div class="chart-wrap">
+        <div class="scene-bar-row">
+          <div class="scene-bar-label">围标串标</div>
+          <div class="scene-bar-track"><div class="scene-bar-fill" style="width:85%;background:var(--primary)">58</div></div>
+          <div class="scene-bar-value">58</div>
+        </div>
+        <div class="scene-bar-row">
+          <div class="scene-bar-label">价格异常</div>
+          <div class="scene-bar-track"><div class="scene-bar-fill" style="width:72%;background:var(--warning)">49</div></div>
+          <div class="scene-bar-value">49</div>
+        </div>
+        <div class="scene-bar-row">
+          <div class="scene-bar-label">供应商关联</div>
+          <div class="scene-bar-track"><div class="scene-bar-fill" style="width:60%;background:var(--info)">41</div></div>
+          <div class="scene-bar-value">41</div>
+        </div>
+        <div class="scene-bar-row">
+          <div class="scene-bar-label">合同合规</div>
+          <div class="scene-bar-track"><div class="scene-bar-fill" style="width:48%;background:var(--danger)">33</div></div>
+          <div class="scene-bar-value">33</div>
+        </div>
+        <div class="scene-bar-row">
+          <div class="scene-bar-label">质检造假</div>
+          <div class="scene-bar-track"><div class="scene-bar-fill" style="width:42%;background:#00897b">29</div></div>
+          <div class="scene-bar-value">29</div>
+        </div>
+        <div class="scene-bar-row">
+          <div class="scene-bar-label">库存损耗</div>
+          <div class="scene-bar-track"><div class="scene-bar-fill" style="width:35%;background:var(--success)">24</div></div>
+          <div class="scene-bar-value">24</div>
+        </div>
+        <div class="scene-bar-row">
+          <div class="scene-bar-label">其他</div>
+          <div class="scene-bar-track"><div class="scene-bar-fill" style="width:22%;background:var(--primary)">15</div></div>
+          <div class="scene-bar-value">15</div>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-head">
+        <div class="title"><span class="bar"></span>风险处置时效分析</div>
+      </div>
+      <div class="chart-wrap">
+        <div class="efficiency-chart">
+          <div class="efficiency-bar">
+            <div class="efficiency-bar-value">85</div>
+            <div class="efficiency-bar-fill" style="height:35%;background:var(--success)"></div>
+            <div class="efficiency-bar-label">≤3天</div>
+          </div>
+          <div class="efficiency-bar">
+            <div class="efficiency-bar-value">132</div>
+            <div class="efficiency-bar-fill" style="height:55%;background:var(--primary-light)"></div>
+            <div class="efficiency-bar-label">4-7天</div>
+          </div>
+          <div class="efficiency-bar">
+            <div class="efficiency-bar-value">68</div>
+            <div class="efficiency-bar-fill" style="height:28%;background:var(--warning)"></div>
+            <div class="efficiency-bar-label">8-15天</div>
+          </div>
+          <div class="efficiency-bar">
+            <div class="efficiency-bar-value">27</div>
+            <div class="efficiency-bar-fill" style="height:15%;background:var(--danger)"></div>
+            <div class="efficiency-bar-label">>15天</div>
+          </div>
+        </div>
+        <div class="efficiency-summary">
+          <span>平均处置时长: <strong style="color:var(--primary)">6.8天</strong></span>
+          <span>环比: <strong style="color:var(--success)">↓ 0.5天</strong></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+  PR.bindActions();
+</script>

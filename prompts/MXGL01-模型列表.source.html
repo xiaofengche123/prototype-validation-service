@@ -1,0 +1,236 @@
+<!-- 剥壳源文件：模型列表.html → 仅保留业务内容区（main-content 内全部内容） -->
+<!-- 外壳已剥离：顶栏/侧边栏/页签由 erp-prototype-site 共享外壳提供 -->
+
+<!-- 面包屑 -->
+<div class="breadcrumb"><a>模型中心</a><span class="sep">&gt;</span><span>模型列表</span></div>
+
+<!-- 页面标题 + 顶部操作 -->
+<div class="page-header">
+    <div class="page-title"><span>模型列表</span></div>
+    <div class="top-actions">
+        <button class="btn btn-default">&#128229; 批量导出</button>
+    </div>
+</div>
+
+<!-- 查询区 -->
+<div class="query-section">
+    <div class="section-header">
+        <div><span class="section-icon"></span><span>查询信息</span></div>
+        <div class="section-actions">
+            <button class="btn btn-default" onclick="resetQuery()">&#8634; 重置</button>
+            <button class="btn btn-primary" onclick="doQuery()">&#128269; 查询</button>
+        </div>
+    </div>
+    <div class="query-form">
+        <div class="form-item"><label class="form-label">模型编号/名称</label><input type="text" class="form-input" id="qKeyword" placeholder="关键词搜索"></div>
+        <div class="form-item">
+            <label class="form-label">生命周期环节</label>
+            <select class="form-select" id="qStage"><option value="">全部</option><option>准入</option><option>寻源</option><option>履约结算</option></select>
+        </div>
+        <div class="form-item">
+            <label class="form-label">模型类型</label>
+            <select class="form-select" id="qType"><option value="">全部</option><option>规则模型</option><option>指标模型</option><option>综合模型</option></select>
+        </div>
+        <div class="form-item">
+            <label class="form-label">执行频率</label>
+            <select class="form-select" id="qFreq"><option value="">全部</option><option>实时</option><option>每日</option><option>每周</option><option>每月</option></select>
+        </div>
+        <div class="form-item">
+            <label class="form-label">状态</label>
+            <select class="form-select" id="qStatus"><option value="">全部</option><option>上线</option><option>下线</option></select>
+        </div>
+    </div>
+</div>
+
+<!-- 列表区 -->
+<div class="list-section">
+    <div class="list-toolbar">
+        <div class="toolbar-left"><span class="section-title">&#9776; 风险模型清单 <span class="title-badge" id="totalCount">29</span></span></div>
+    </div>
+    <div class="batch-bar" id="batchBar">
+        <span class="batch-info">已选择 <strong id="batchCount">0</strong> 项</span>
+        <button class="btn btn-success btn-sm">批量上线</button>
+        <button class="btn btn-warning btn-sm">批量下线</button>
+    </div>
+    <div class="data-table-wrapper">
+        <div class="table-scroll-area">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th style="width:40px;"><input type="checkbox" onchange="toggleAll(this)"></th>
+                        <th style="width:50px;">序号</th>
+                        <th style="width:100px;">风险模型编号</th>
+                        <th style="width:180px;">风险模型名称</th>
+                        <th style="width:140px;">所属业务模型</th>
+                        <th style="width:80px;">业务环节</th>
+                        <th style="width:90px;">模型类型</th>
+                        <th style="width:70px;">版本</th>
+                        <th style="width:70px;">状态</th>
+                        <th style="width:70px;">执行频率</th>
+                        <th style="width:90px;">最近执行时间</th>
+                        <th style="width:60px;">负责人</th>
+                        <th class="op-col" style="width:220px;">操作</th>
+                    </tr>
+                </thead>
+                <tbody id="modelTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+    <div class="pagination-bar">
+        <span class="page-info">共 <strong id="pageTotal">29</strong> 条</span>
+        <div class="page-btns">
+            <button class="page-btn disabled">&lt;</button>
+            <button class="page-btn active">1</button>
+            <button class="page-btn disabled">&gt;</button>
+        </div>
+    </div>
+</div>
+
+<!-- 页面脚本：29个风险模型数据 + 渲染/查询/操作逻辑 -->
+<script>
+// 29个风险模型数据（F-001 ~ F-029）
+const riskModels = [
+    // 准入环节
+    { fm:'F-001', name:'万能供应商分析',   mm:'M-01', mname:'万能供应商识别',       stage:'准入', type:'规则模型', ver:'v1', freq:'实时', lastRun:'2026-06-29 08:15', owner:'张明', enabled:true },
+    { fm:'F-002', name:'准入即签约',         mm:'M-02', mname:'供应商准入风险分析',   stage:'准入', type:'规则模型', ver:'v1', freq:'每日', lastRun:'2026-06-29 06:00', owner:'张明', enabled:true },
+    { fm:'F-003', name:'供应商带病准入',     mm:'M-02', mname:'供应商准入风险分析',   stage:'准入', type:'规则模型', ver:'v1', freq:'每日', lastRun:'2026-06-29 06:00', owner:'李华', enabled:true },
+    // 寻源环节
+    { fm:'F-004', name:'直接采购计划最多的品类', mm:'M-03', mname:'直接采购合理性分析', stage:'寻源', type:'指标模型', ver:'v2', freq:'每周', lastRun:'2026-06-28 23:55', owner:'李华', enabled:true },
+    { fm:'F-005', name:'直接采购专业户分析', mm:'M-03', mname:'直接采购合理性分析',   stage:'寻源', type:'指标模型', ver:'v1', freq:'每周', lastRun:'2026-06-28 23:55', owner:'李华', enabled:true },
+    { fm:'F-006', name:'违规采取直接采购线索识别', mm:'M-03', mname:'直接采购合理性分析', stage:'寻源', type:'综合模型', ver:'v1', freq:'每月', lastRun:'2026-06-01 03:00', owner:'陈思', enabled:false },
+    { fm:'F-007', name:'紧急计划提报总览',   mm:'M-04', mname:'紧急采购合理性分析',   stage:'寻源', type:'指标模型', ver:'v1', freq:'每日', lastRun:'2026-06-29 06:00', owner:'李华', enabled:true },
+    { fm:'F-008', name:'紧急采购专业户分析', mm:'M-04', mname:'紧急采购合理性分析',   stage:'寻源', type:'指标模型', ver:'v1', freq:'每日', lastRun:'2026-06-29 06:00', owner:'李华', enabled:true },
+    { fm:'F-009', name:'滥用紧急采购权',     mm:'M-04', mname:'紧急采购合理性分析',   stage:'寻源', type:'指标模型', ver:'v1', freq:'每日', lastRun:'2026-06-29 06:00', owner:'王磊', enabled:true },
+    { fm:'F-010', name:'紧急计划的审批时长过长', mm:'M-04', mname:'紧急采购合理性分析', stage:'寻源', type:'规则模型', ver:'v2', freq:'实时', lastRun:'2026-06-29 08:22', owner:'王磊', enabled:true },
+    { fm:'F-011', name:'紧急计划要货期间隔长', mm:'M-04', mname:'紧急采购合理性分析',  stage:'寻源', type:'规则模型', ver:'v2', freq:'实时', lastRun:'2026-06-29 08:22', owner:'王磊', enabled:true },
+    { fm:'F-012', name:'采购方式选择错误',   mm:'M-05', mname:'采购协同性检查',       stage:'寻源', type:'规则模型', ver:'v1', freq:'实时', lastRun:'2026-06-29 08:20', owner:'张明', enabled:true },
+    { fm:'F-013', name:'采购协同不足检查',   mm:'M-05', mname:'采购协同性检查',       stage:'寻源', type:'规则模型', ver:'v1', freq:'实时', lastRun:'2026-06-29 08:20', owner:'张明', enabled:true },
+    { fm:'F-014', name:'流废标占比较高',     mm:'M-06', mname:'流废标情况分析',       stage:'寻源', type:'指标模型', ver:'v1', freq:'每周', lastRun:'2026-06-28 23:50', owner:'陈思', enabled:true },
+    { fm:'F-015', name:'流废标原因分析',     mm:'M-06', mname:'流废标情况分析',       stage:'寻源', type:'指标模型', ver:'v2', freq:'每周', lastRun:'2026-06-28 23:50', owner:'陈思', enabled:true },
+    { fm:'F-016', name:'应招未招',           mm:'M-07', mname:'应招未招线索核查',     stage:'寻源', type:'规则模型', ver:'v1', freq:'实时', lastRun:'2026-06-29 08:18', owner:'李华', enabled:true },
+    { fm:'F-017', name:'分拆规避招标',       mm:'M-07', mname:'应招未招线索核查',     stage:'寻源', type:'规则模型', ver:'v1', freq:'实时', lastRun:'2026-06-29 08:18', owner:'李华', enabled:true },
+    { fm:'F-018', name:'供应商IP地址相同',   mm:'M-08', mname:'涉嫌串通报价',         stage:'寻源', type:'规则模型', ver:'v1', freq:'实时', lastRun:'2026-06-29 08:21', owner:'王磊', enabled:true },
+    { fm:'F-019', name:'报价人注册地址、联系方式相同或存在股权关系', mm:'M-08', mname:'涉嫌串通报价', stage:'寻源', type:'综合模型', ver:'v1', freq:'每日', lastRun:'2026-06-29 06:00', owner:'王磊', enabled:true },
+    { fm:'F-020', name:'报价文件作者、修改者相同', mm:'M-08', mname:'涉嫌串通报价',   stage:'寻源', type:'规则模型', ver:'v1', freq:'实时', lastRun:'2026-06-29 08:21', owner:'王磊', enabled:true },
+    { fm:'F-021', name:'逢投必中&只陪不中',  mm:'M-08', mname:'涉嫌串通报价',         stage:'寻源', type:'规则模型', ver:'v1', freq:'每日', lastRun:'2026-06-29 06:00', owner:'陈思', enabled:true },
+    // 履约结算环节
+    { fm:'F-022', name:'企业应结算未结算分析', mm:'M-09', mname:'结算异常分析',       stage:'履约结算', type:'规则模型', ver:'v1', freq:'每日', lastRun:'2026-06-29 06:00', owner:'赵丽', enabled:true },
+    { fm:'F-023', name:'商品质量不合格仍全额结算', mm:'M-09', mname:'结算异常分析',   stage:'履约结算', type:'规则模型', ver:'v1', freq:'每日', lastRun:'2026-06-28 06:00', owner:'赵丽', enabled:false },
+    { fm:'F-024', name:'企业应付款未付款分析', mm:'M-09', mname:'结算异常分析',       stage:'履约结算', type:'规则模型', ver:'v1', freq:'每日', lastRun:'2026-06-29 06:00', owner:'赵丽', enabled:true },
+    { fm:'F-025', name:'供应商预付账款长期未核销', mm:'M-10', mname:'供应商授信检查', stage:'履约结算', type:'规则模型', ver:'v1', freq:'每周', lastRun:'2026-06-27 23:50', owner:'赵丽', enabled:true },
+    { fm:'F-026', name:'合同标准模板使用率较低企业识别', mm:'M-11', mname:'合同标准模板使用分析', stage:'履约结算', type:'指标模型', ver:'v1', freq:'每月', lastRun:'2026-06-01 03:00', owner:'陈思', enabled:true },
+    { fm:'F-027', name:'超合同数量执行',     mm:'M-12', mname:'合同执行率分析',       stage:'履约结算', type:'规则模型', ver:'v1', freq:'实时', lastRun:'2026-06-29 08:19', owner:'张明', enabled:true },
+    { fm:'F-028', name:'合同超过交货截止日期仍未执行', mm:'M-13', mname:'合同超期执行检查', stage:'履约结算', type:'规则模型', ver:'v1', freq:'每日', lastRun:'2026-06-29 06:00', owner:'赵丽', enabled:true },
+    { fm:'F-029', name:'供应商合同到期/超期未执行', mm:'M-13', mname:'合同超期执行检查', stage:'履约结算', type:'规则模型', ver:'v2', freq:'每日', lastRun:'2026-06-29 06:00', owner:'赵丽', enabled:true }
+];
+
+let filteredData = [...riskModels];
+
+function renderTable(data) {
+    const tbody = document.getElementById('modelTableBody');
+    tbody.innerHTML = data.map((m, i) => {
+        const statusHtml = m.enabled
+            ? '<span class="cell-status-tag cell-enabled">上线</span>'
+            : '<span class="cell-status-tag cell-disabled">下线</span>';
+        const typeClass = m.type === '规则模型' ? 'type-rule' : m.type === '指标模型' ? 'type-indicator' : 'type-comprehensive';
+        const typeHtml = `<span class="cell-type-tag ${typeClass}">${m.type}</span>`;
+        const viewLink = m.type === '综合模型' ? 'javascript:alert("综合模型详情页（后续开放）")' : getViewUrl(m);
+        const editLink = m.type === '综合模型' ? 'javascript:alert("综合模型编辑（后续开放）")' : getEditUrl(m);
+        const freqTagClass = m.freq === '实时' ? 'cell-type-tag type-rule' : m.freq === '每日' ? 'cell-type-tag type-indicator' : 'cell-type-tag type-comprehensive';
+        return `<tr>
+            <td><input type="checkbox" value="${m.fm}"></td>
+            <td>${i + 1}</td>
+            <td><a class="col-link" href="${viewLink}">${m.fm}</a></td>
+            <td style="text-align:left;">${m.name}</td>
+            <td style="text-align:left;font-size:11px;color:var(--text-secondary);">${m.mm} ${m.mname}</td>
+            <td>${m.stage}</td>
+            <td>${typeHtml}</td>
+            <td>${m.ver}</td>
+            <td><span class="cell-type-tag ${freqTagClass}">${m.freq}</span></td>
+            <td style="font-size:11px;color:var(--text-secondary);">${m.lastRun}</td>
+            <td>${m.owner}</td>
+            <td>${statusHtml}</td>
+            <td>
+                <div class="op-btns">
+                    <a class="op-btn" href="${viewLink}">查看</a>
+                    <a class="op-btn" href="${editLink}">编辑</a>
+                    <button class="op-btn success" onclick="manualExec('${m.fm}')">手工执行</button>
+                    <button class="op-btn ${m.enabled ? 'warning' : 'success'}" onclick="toggleModel('${m.fm}')">${m.enabled ? '下线' : '上线'}</button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+    document.getElementById('totalCount').textContent = data.length;
+    document.getElementById('pageTotal').textContent = data.length;
+}
+
+function getViewUrl(m) {
+    if (m.type === '规则模型') return '../模型中心/规则引擎/规则配置管理.html';
+    if (m.type === '指标模型') return '../模型中心/模型库/指标管理.html';
+    return '#';
+}
+
+function getEditUrl(m) {
+    if (m.type === '规则模型') return '../模型中心/规则引擎/规则配置编辑.html';
+    if (m.type === '指标模型') return '../模型中心/模型库/指标新增.html';
+    return '#';
+}
+
+function manualExec(fm) {
+    const m = riskModels.find(x => x.fm === fm);
+    if (!m) return;
+    if (!m.enabled) { alert('模型【' + m.fm + ' ' + m.name + '】已下线，请先上线后再执行。'); return; }
+    const now = new Date();
+    const pad = n => String(n).padStart(2,'0');
+    m.lastRun = now.getFullYear() + '-' + pad(now.getMonth()+1) + '-' + pad(now.getDate()) + ' ' + pad(now.getHours()) + ':' + pad(now.getMinutes());
+    alert('模型【' + m.fm + ' ' + m.name + '】手工执行已触发，请稍后在执行日志中查看结果。');
+    doQuery();
+}
+
+function toggleModel(fm) {
+    const m = riskModels.find(x => x.fm === fm);
+    if (m) { m.enabled = !m.enabled; doQuery(); }
+}
+
+function toggleAll(cb) {
+    document.querySelectorAll('#modelTableBody input[type=checkbox]').forEach(c => c.checked = cb.checked);
+    updateBatchBar();
+}
+
+function updateBatchBar() {
+    const checked = document.querySelectorAll('#modelTableBody input:checked').length;
+    const bar = document.getElementById('batchBar');
+    document.getElementById('batchCount').textContent = checked;
+    bar.classList.toggle('show', checked > 0);
+}
+
+function resetQuery() {
+    document.getElementById('qKeyword').value = '';
+    document.getElementById('qStage').value = '';
+    document.getElementById('qType').value = '';
+    document.getElementById('qFreq').value = '';
+    document.getElementById('qStatus').value = '';
+    doQuery();
+}
+
+function doQuery() {
+    const keyword = document.getElementById('qKeyword').value.trim().toLowerCase();
+    const stage = document.getElementById('qStage').value;
+    const type = document.getElementById('qType').value;
+    const freq = document.getElementById('qFreq').value;
+    const status = document.getElementById('qStatus').value;
+    filteredData = riskModels.filter(m => {
+        if (keyword && !m.fm.toLowerCase().includes(keyword) && !m.name.toLowerCase().includes(keyword) && !m.mname.toLowerCase().includes(keyword) && !m.owner.toLowerCase().includes(keyword)) return false;
+        if (stage && m.stage !== stage) return false;
+        if (type && m.type !== type) return false;
+        if (freq && m.freq !== freq) return false;
+        if (status === '上线' && !m.enabled) return false;
+        if (status === '下线' && m.enabled) return false;
+        return true;
+    });
+    renderTable(filteredData);
+}
+
+// Initial render
+renderTable(riskModels);
+</script>

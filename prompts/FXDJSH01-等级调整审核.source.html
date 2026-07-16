@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <title>等级调整审核</title>
+  <link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body>
+  <div class="page" data-page="FXDJSH01">
+    <!-- 信息卡片 -->
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-title">风险信息</h3>
+      </div>
+      <div class="card-body">
+        <div class="info-grid">
+          <div class="info-item">
+            <span class="info-label">风险编号</span>
+            <span class="info-value">FX-2024-001</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">风险分类</span>
+            <span class="info-value">市场风险</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">风险标题</span>
+            <span class="info-value">原材料价格波动风险</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">涉及金额</span>
+            <span class="info-value">500,000 元</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">当前等级</span>
+            <span class="info-value level-red">红色-重大</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">责任部门/人</span>
+            <span class="info-value">采购部/张三</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 表单区 -->
+    <div class="card">
+      <div class="card-head">
+        <h3 class="card-title">调整审核</h3>
+      </div>
+      <div class="card-body">
+        <div class="form-grid">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">调整后等级</label>
+              <select class="form-control" name="level">
+                <option value="">请选择</option>
+                <option value="red">红色-重大</option>
+                <option value="orange" selected>橙色-较大</option>
+                <option value="yellow">黄色-一般</option>
+                <option value="blue">蓝色-关注</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label required">影响程度</label>
+              <select class="form-control" name="impact">
+                <option value="">请选择</option>
+                <option value="4">重大(4)</option>
+                <option value="3" selected>较大(3)</option>
+                <option value="2">一般(2)</option>
+                <option value="1">轻微(1)</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label required">发生概率</label>
+              <select class="form-control" name="probability">
+                <option value="">请选择</option>
+                <option value="4">高(4)</option>
+                <option value="3" selected>较高(3)</option>
+                <option value="2">中(2)</option>
+                <option value="1">低(1)</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label">调整后分值</label>
+              <input type="text" class="form-control" name="score" value="9" readonly>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label class="form-label required">调整原因</label>
+              <textarea class="form-control" name="reason" rows="3" readonly>因近期原材料价格持续下降，风险影响程度降低，申请将风险等级从红色-重大调整为橙色-较大。</textarea>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group full-width">
+              <label class="form-label required">审批意见</label>
+              <textarea class="form-control" name="comment" rows="3" placeholder="请输入审批意见"></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部操作栏 -->
+    <div class="footer-bar">
+      <button type="button" class="btn btn-default" data-action="cancel" data-nav="FXGL01">取消</button>
+      <button type="button" class="btn btn-danger" data-action="reject">驳回</button>
+      <button type="button" class="btn btn-primary" data-action="approve">审核通过</button>
+    </div>
+  </div>
+
+  <script src="../../assets/page-runtime.js"></script>
+  <script>PR.bindActions();</script>
+</body>
+</html>

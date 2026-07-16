@@ -1,0 +1,4 @@
+interface:
+  display_name: "ERP Vue3 演示框架"
+  short_description: "创建或修复承载 ERP 原型转换结果的隔离 Vue3 演示框架"
+  default_prompt: "使用 $erp-prototype-vue3-framework 创建或修复隔离的 ERP Vue3 mock 演示框架。"

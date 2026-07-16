@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!--
+  ============================================================================
+  业务页骨架 —— 由「原型制作 skill」复制到 站点/pages/<分组中文>/<页面中文名>.html 后填充
+  铁律：
+    1. 本文件【只写业务内容】，外壳(顶栏/菜单/页签)由 index.html 提供，别再写
+    2. 放置路径 = 菜单分组：pages/<分组中文名>/<页面中文名>.html（文件名用中文，方便查找）
+       因嵌一层分组目录，引用资源用 ../../assets/
+    3. <head> 只 <link> app.css，不写 <style> 块；app.css 会自动加载 theme.css
+    4. 业务根节点 #page-content 上挂 data-page="<英文编码>"（转 Vue 的锚点+编码真源；文件名虽中文，编码仍英文）
+    5. 每个按钮挂 data-action；弹窗挂 data-modal；跨页跳转挂 data-nav="<目标编码>"（不用 location.href）
+    6. 列表数据驱动（JS 数组 + render），不手写 <tr>
+    7. 别忘了往 menu.config.js 对应分组加一行 { code, cname, icon, file:'<分组中文>/<页面中文名>.html' }
+  填充时全局替换：BMXX01=英文编码  页面名称=中文功能名  并改 规格卡/字段/列/数据/弹窗
+  ============================================================================
+  规格卡（转 Vue 的唯一真源）—— 复制后据实填写
+  编码：BMXX01    名称：页面名称    类型：列表查询页
+  查询字段：…
+  统计卡片：…
+  表格列：…（含哪列可点 data-nav 去哪）
+  行操作：…（按状态）→ 各自 data-action
+  顶部操作：…
+  弹窗 editForm：…
+  状态key：<key1>/<key2>/…（⚠ 原型临时编码，接真后端时以字典值为准，勿直接当接口枚举）
+  ─────────────────────────────
+  确认项（PM 亲口给出或确认过的）：
+    · <逐条列出，如：查询字段、表格列、状态分类>
+  补位项（AI 替 PM 补的默认值，研发/PM 均需 review）：
+    · 【补位】<逐条列出，含技术性补位：编码、菜单分组、跳转占位、示例数据条数>
+    · 【补位】<业务性补位：PM 选了"(A) 先补位出一版"的项>
+    ·（若无补位项，必须显式写"无"，不得留空或删除本栏）
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../assets/app.css">
+<title>页面名称</title>
+</head>
+<body class="page-body">
+
+<!-- ============ data-page 容器：转 Vue 时【只取这里面】============ -->
+<div id="page-content" data-page="BMXX01">
+
+  <!-- 统计卡片（可选，无则删；联动 filter.status） -->
+  <div class="stat-row" id="statRow">
+    <div class="stat-card active" data-status="all"><div class="label">全部</div><div class="num">0</div></div>
+    <!-- … 按状态补卡片 … -->
+  </div>
+
+  <!-- 查询区 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>查询信息</div>
+      <div class="actions">
+        <button class="btn" data-action="reset">重置</button>
+        <button class="btn btn-primary" data-action="search">查询</button>
+        <button class="btn btn-primary" data-action="open-add" data-modal-target="editForm">＋ 新增</button>
+      </div>
+    </div>
+    <div class="query-grid">
+      <div class="form-item"><label>字段一</label><input placeholder="请输入"></div>
+      <!-- … 按需补查询字段（input/select/date-range）… -->
+    </div>
+  </div>
+
+  <!-- 列表 -->
+  <div class="card list-card" id="listCard">
+    <div class="list-toolbar">
+      <div class="title">📋 清单</div>
+      <div class="actions"><button class="btn btn-sm" data-action="batch-export">批量导出</button></div>
+    </div>
+    <div class="batch-bar">已选择 <b id="selCount">0</b> 项
+      <button class="btn btn-sm" data-action="batch-delete">批量删除</button>
+    </div>
+    <div class="status-tabs" id="statusTabs">
+      <div class="status-tab active" data-status="all">全部</div>
+      <!-- … 按状态补页签 … -->
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:40px"><input type="checkbox" id="ckAll" onclick="toggleAll(this)"></th>
+          <th>序号</th><th>字段一</th><th>状态</th><th>操作</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span class="total">共 <b id="total">0</b> 条</span>
+      <span class="pg active">1</span><span class="pg">›</span>
+    </div>
+  </div>
+
+</div><!-- /#page-content -->
+
+<!-- 弹窗：data-modal 容器，转 Vue 成 a-modal -->
+<div class="modal-mask" id="editFormMask" data-modal="editForm">
+  <div class="modal">
+    <div class="modal-title">新增/编辑</div>
+    <div class="modal-body">
+      <div class="form-item"><label>字段一<span class="req">*</span></label><input id="f_1"></div>
+      <!-- … 表单字段 … -->
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-action="close-modal" data-modal-target="editForm">取消</button>
+      <button class="btn btn-primary" data-action="save" data-modal-target="editForm">确定</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+/* ====== 数据驱动（转 Vue → <编码小写>Api.js 的 MOCK_DATA + a-table）====== */
+const STATUS={ /* key:{c:'css类',t:'显示名'} 按状态补 */ };
+const OPS={ /* 各状态对应的行操作按钮 HTML（带 data-action）*/ };
+const DATA=[ /* 样例数据，覆盖各状态/类型 */ ];
+
+let curStatus='all';
+function render(){
+  const list=DATA.filter(d=>curStatus==='all'||d.status===curStatus).slice(0,20);
+  document.getElementById('total').textContent=DATA.filter(d=>curStatus==='all'||d.status===curStatus).length;
+  document.getElementById('tbody').innerHTML=list.map((d,i)=>`<tr>
+    <td><input type="checkbox" class="rk" onclick="onCk()"></td><td>${i+1}</td>
+    <td>${d.f1||''}</td><td>${d.status||''}</td><td>${OPS[d.status]||''}</td></tr>`).join('');
+  PR.bindActions();
+}
+function setStatus(s){curStatus=s;
+  document.querySelectorAll('#statRow .stat-card,#statusTabs .status-tab').forEach(t=>t.classList.toggle('active',t.dataset.status===s));
+  render();}
+document.querySelectorAll('#statRow .stat-card,#statusTabs .status-tab').forEach(el=>el.addEventListener('click',()=>setStatus(el.dataset.status)));
+function toggleAll(cb){document.querySelectorAll('.rk').forEach(c=>c.checked=cb.checked);onCk();}
+function onCk(){const n=document.querySelectorAll('.rk:checked').length;document.getElementById('selCount').textContent=n;document.getElementById('listCard').classList.toggle('has-sel',n>0);}
+
+/* ====== 本页动作注册（联动渲染/自定义动作交给 PR；未注册的自动给"待实现"桩）====== */
+PR.on('search', render);
+PR.on('reset', ()=>{ setStatus('all'); });
+// PR.on('approve', ()=>PR.toast('「审核」待实现'));  // 自定义业务动作示例
+
+render();
+</script>
+</body>
+</html>

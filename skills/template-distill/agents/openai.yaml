@@ -1,0 +1,4 @@
+interface:
+  display_name: "Template Distill"
+  short_description: "Distill a style pack from a Vue system, UI designs, or static prototypes."
+  default_prompt: "Use this skill to extract a style pack (visual contract + prototype-side golden page + parity checklist) from a style source, as the single source of truth for a new prototype/Vue skill family."

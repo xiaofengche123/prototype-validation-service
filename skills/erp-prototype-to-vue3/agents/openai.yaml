@@ -1,0 +1,4 @@
+interface:
+  display_name: "ERP 原型转 Vue3"
+  short_description: "把已注册的 ERP 静态原型页转换为 Vue3 演示页面和 mock API"
+  default_prompt: "使用 $erp-prototype-to-vue3 把指定 ERP 静态原型页转换到 Vue3 演示框架。"

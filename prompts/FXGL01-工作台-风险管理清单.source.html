@@ -1,0 +1,378 @@
+<!-- 剥壳后的业务内容：工作台-风险管理清单 -->
+<!-- 来源：原型/风险管理/风险事件池/8.工作台-风险管理清单.html -->
+<!-- 外壳已剥离：移除 top-header / sidebar / page-tabs / layout 外壳 -->
+
+<div id="page-content" data-page="FXGL01">
+  <!-- 查询区 -->
+  <div class="query-section">
+    <div class="section-header">
+      <div class="header-left-part">
+        <span class="section-icon"></span>
+        <span>查询信息</span>
+      </div>
+      <div class="section-actions">
+        <button class="btn btn-default" onclick="resetForm()">&#8634; 重置</button>
+        <button class="btn btn-primary" onclick="doSearch()">&#128269; 查询</button>
+      </div>
+    </div>
+    <div class="query-form">
+      <div class="form-item"><label class="form-label">风险编号</label><input type="text" class="form-input" placeholder="请输入风险编号"></div>
+      <div class="form-item"><label class="form-label">风险标题</label><input type="text" class="form-input" placeholder="请输入风险标题"></div>
+      <div class="form-item">
+        <label class="form-label">风险分类</label>
+        <select class="form-select">
+          <option value="">请选择</option>
+          <option value="A">计划管理风险</option>
+          <option value="B">供应商管理风险</option>
+          <option value="C">招投标风险</option>
+          <option value="D">合同管理风险</option>
+          <option value="E">价格与结算风险</option>
+          <option value="F">质量与库存风险</option>
+          <option value="G">廉洁合规风险</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label class="form-label">风险等级</label>
+        <select class="form-select" id="levelFilter">
+          <option value="">全部等级</option>
+          <option value="red">红色-重大</option>
+          <option value="orange">橙色-较大</option>
+          <option value="yellow">黄色-一般</option>
+          <option value="blue">蓝色-关注</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label class="form-label">发现来源</label>
+        <select class="form-select">
+          <option value="">请选择</option>
+          <option value="system">系统监测</option>
+          <option value="audit">审计移送</option>
+          <option value="business">业务报告</option>
+          <option value="report">举报线索</option>
+          <option value="external">外部舆情</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label class="form-label">责任部门</label>
+        <select class="form-select">
+          <option value="">请选择</option>
+          <option value="purchase">采购部</option>
+          <option value="finance">财务部</option>
+          <option value="quality">质量管理部</option>
+          <option value="legal">法务部</option>
+          <option value="audit">审计部</option>
+        </select>
+      </div>
+      <div class="form-item date-range">
+        <label class="form-label">发现时间</label>
+        <input type="date" class="form-input" value="2024-10-01"><span class="date-sep">至</span><input type="date" class="form-input" value="2024-12-31">
+      </div>
+      <div class="form-item">
+        <label class="form-label">当前状态</label>
+        <select class="form-select" id="statusFilter">
+          <option value="">全部状态</option>
+          <option value="wait">待签收</option>
+          <option value="process">处置中</option>
+          <option value="check">待验收</option>
+          <option value="done">已办结</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 列表区 -->
+  <div class="list-section">
+    <div class="list-toolbar">
+      <div class="toolbar-left"><span class="section-title">&#9776; 风险管理清单 <span class="title-badge" id="totalBadge">128</span></span></div>
+      <div class="toolbar-right">
+        <button class="btn btn-default">&#128229; 批量导出</button>
+        <button class="btn btn-success">&#10004; 批量签收</button>
+      </div>
+    </div>
+
+    <div class="batch-bar" id="batchBar">
+      <span class="batch-info">已选择 <strong id="batchCount">0</strong> 项</span>
+      <button class="btn btn-primary" style="height:26px;padding:0 12px;font-size:11px;">批量签收</button>
+      <button class="btn btn-danger" style="height:26px;padding:0 12px;font-size:11px;">批量派单</button>
+    </div>
+
+    <div class="data-table-wrapper">
+      <div class="status-tabs">
+        <div class="status-tab active" data-status="all" onclick="filterByStatusTab(this)"><span class="st-dot"></span><span>全部</span><span class="st-count">128</span></div>
+        <div class="status-tab" data-status="wait" onclick="filterByStatusTab(this)"><span class="st-dot"></span><span>待签收</span><span class="st-count">15</span></div>
+        <div class="status-tab" data-status="process" onclick="filterByStatusTab(this)"><span class="st-dot"></span><span>处置中</span><span class="st-count">42</span></div>
+        <div class="status-tab" data-status="check" onclick="filterByStatusTab(this)"><span class="st-dot"></span><span>待验收</span><span class="st-count">28</span></div>
+        <div class="status-tab" data-status="done" onclick="filterByStatusTab(this)"><span class="st-dot"></span><span>已办结</span><span class="st-count">43</span></div>
+      </div>
+      <div class="table-scroll-area">
+        <table class="data-table" id="dataTable">
+          <thead>
+            <tr>
+              <th class="checkbox-col"><input type="checkbox" id="checkAll" onchange="toggleCheckAll()"></th>
+              <th><div class="th-content"><span>序号</span></div></th>
+              <th><div class="th-content"><span>风险编号</span></div></th>
+              <th><div class="th-content"><span>风险标题</span></div></th>
+              <th><div class="th-content"><span>风险分类</span></div></th>
+              <th><div class="th-content"><span>风险等级</span></div></th>
+              <th><div class="th-content"><span>涉及金额(万元)</span></div></th>
+              <th><div class="th-content"><span>责任部门</span></div></th>
+              <th><div class="th-content"><span>责任人</span></div></th>
+              <th><div class="th-content"><span>发现时间</span></div></th>
+              <th><div class="th-content"><span>当前状态</span></div></th>
+              <th class="op-col"><div class="th-content"><span>操作</span></div></th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr data-status="wait" data-level="red">
+              <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+              <td>1</td>
+              <td><a href="#" class="col-link">FX20241201001</a></td>
+              <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">某招标项目三家投标人MAC地址重合涉嫌围标</td>
+              <td>招投标风险</td>
+              <td><span class="level-tag level-red">红色-重大</span></td>
+              <td>386.50</td>
+              <td>招标办</td>
+              <td>王建国</td>
+              <td>2024-12-01 09:30</td>
+              <td><span class="cell-status-tag st-wait">待签收</span></td>
+              <td>
+                <div class="op-btns">
+                  <a href="等级调整审核.html" class="op-btn">签收</a>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="wait" data-level="orange">
+              <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+              <td>2</td>
+              <td><a href="#" class="col-link">FX20241201002</a></td>
+              <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">供应商A与供应商B存在隐性关联关系未披露</td>
+              <td>供应商管理风险</td>
+              <td><span class="level-tag level-orange">橙色-较大</span></td>
+              <td>125.00</td>
+              <td>采购部</td>
+              <td>李晓明</td>
+              <td>2024-12-01 10:15</td>
+              <td><span class="cell-status-tag st-wait">待签收</span></td>
+              <td>
+                <div class="op-btns">
+                  <a href="等级调整审核.html" class="op-btn">签收</a>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="process" data-level="red">
+              <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+              <td>3</td>
+              <td><a href="#" class="col-link">FX20241128003</a></td>
+              <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">某单一来源采购定价显著高于市场价15%</td>
+              <td>价格与结算风险</td>
+              <td><span class="level-tag level-red">红色-重大</span></td>
+              <td>520.80</td>
+              <td>财务部</td>
+              <td>张丽娟</td>
+              <td>2024-11-28 14:20</td>
+              <td><span class="cell-status-tag st-process">处置中</span></td>
+              <td>
+                <div class="op-btns">
+                  <a href="#" class="op-btn warning">填报进度</a>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="process" data-level="yellow">
+              <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+              <td>4</td>
+              <td><a href="#" class="col-link">FX20241125004</a></td>
+              <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">合同变更未履行审批程序，金额超50万</td>
+              <td>合同管理风险</td>
+              <td><span class="level-tag level-yellow">黄色-一般</span></td>
+              <td>68.50</td>
+              <td>法务部</td>
+              <td>赵志强</td>
+              <td>2024-11-25 11:00</td>
+              <td><span class="cell-status-tag st-process">处置中</span></td>
+              <td>
+                <div class="op-btns">
+                  <a href="#" class="op-btn warning">填报进度</a>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="check" data-level="orange">
+              <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+              <td>5</td>
+              <td><a href="#" class="col-link">FX20241120005</a></td>
+              <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">质检数据造假，不合格耐火材料流入生产环节</td>
+              <td>质量与库存风险</td>
+              <td><span class="level-tag level-orange">橙色-较大</span></td>
+              <td>210.00</td>
+              <td>质量管理部</td>
+              <td>刘婷婷</td>
+              <td>2024-11-20 16:45</td>
+              <td><span class="cell-status-tag st-check">待验收</span></td>
+              <td>
+                <div class="op-btns">
+                  <a href="#" class="op-btn success">提交验收</a>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="check" data-level="blue">
+              <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+              <td>6</td>
+              <td><a href="#" class="col-link">FX20241118006</a></td>
+              <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">某物资库存周转异常，存在呆滞积压风险</td>
+              <td>质量与库存风险</td>
+              <td><span class="level-tag level-blue">蓝色-关注</span></td>
+              <td>32.60</td>
+              <td>仓储部</td>
+              <td>陈大伟</td>
+              <td>2024-11-18 09:10</td>
+              <td><span class="cell-status-tag st-check">待验收</span></td>
+              <td>
+                <div class="op-btns">
+                  <a href="#" class="op-btn success">提交验收</a>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="done" data-level="red">
+              <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+              <td>7</td>
+              <td><a href="#" class="col-link">FX20241110007</a></td>
+              <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">围标串标专项调查：三家关联企业轮流中标</td>
+              <td>招投标风险</td>
+              <td><span class="level-tag level-red">红色-重大</span></td>
+              <td>890.00</td>
+              <td>审计部</td>
+              <td>孙丽华</td>
+              <td>2024-11-10 08:30</td>
+              <td><span class="cell-status-tag st-done">已办结</span></td>
+              <td>
+                <div class="op-btns">
+                  <a href="#" class="op-btn">归档</a>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="done" data-level="yellow">
+              <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+              <td>8</td>
+              <td><a href="#" class="col-link">FX20241105008</a></td>
+              <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">紧急采购占比异常升高，存在拆分规避招标嫌疑</td>
+              <td>计划管理风险</td>
+              <td><span class="level-tag level-yellow">黄色-一般</span></td>
+              <td>45.20</td>
+              <td>采购部</td>
+              <td>周建国</td>
+              <td>2024-11-05 13:50</td>
+              <td><span class="cell-status-tag st-done">已办结</span></td>
+              <td>
+                <div class="op-btns">
+                  <a href="#" class="op-btn">归档</a>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="process" data-level="orange">
+              <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+              <td>9</td>
+              <td><a href="#" class="col-link">FX20241101009</a></td>
+              <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">付款账期显著偏离合同约定，提前支付货款</td>
+              <td>价格与结算风险</td>
+              <td><span class="level-tag level-orange">橙色-较大</span></td>
+              <td>156.80</td>
+              <td>财务部</td>
+              <td>吴海燕</td>
+              <td>2024-11-01 10:25</td>
+              <td><span class="cell-status-tag st-process">处置中</span></td>
+              <td>
+                <div class="op-btns">
+                  <a href="#" class="op-btn warning">填报进度</a>
+                </div>
+              </td>
+            </tr>
+            <tr data-status="wait" data-level="blue">
+              <td><input type="checkbox" class="row-check" onchange="updateBatch()"></td>
+              <td>10</td>
+              <td><a href="#" class="col-link">FX20241028010</a></td>
+              <td style="text-align:left;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">单一供应商年度采购额占比超60%，集中度过高</td>
+              <td>供应商管理风险</td>
+              <td><span class="level-tag level-blue">蓝色-关注</span></td>
+              <td>--</td>
+              <td>采购部</td>
+              <td>郑伟明</td>
+              <td>2024-10-28 15:40</td>
+              <td><span class="cell-status-tag st-wait">待签收</span></td>
+              <td>
+                <div class="op-btns">
+                  <a href="等级调整审核.html" class="op-btn">签收</a>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="empty-state" id="emptyState">
+          <div class="empty-state-icon">&#128196;</div>
+          <div class="empty-state-text">暂无数据</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pagination-bar">
+      <span class="page-info">共 128 条</span>
+      <select class="page-size-select">
+        <option>10 条/页</option><option selected>20 条/页</option><option>50 条/页</option>
+      </select>
+      <div class="page-btns">
+        <button class="page-btn disabled">&lt;&lt;</button>
+        <button class="page-btn disabled">&lt;</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn">3</button>
+        <button class="page-btn">4</button>
+        <button class="page-btn">5</button>
+        <button class="page-btn">&gt;</button>
+        <button class="page-btn">&gt;&gt;</button>
+      </div>
+      <div class="page-jump">前往 <input type="text" value="1"> 页</div>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+  PR.bindActions();
+
+  function toggleCheckAll() {
+    const checked = document.getElementById('checkAll').checked;
+    document.querySelectorAll('.row-check').forEach(cb => cb.checked = checked);
+    updateBatch();
+  }
+  function updateBatch() {
+    const checked = document.querySelectorAll('.row-check:checked');
+    document.getElementById('batchBar').classList.toggle('show', checked.length > 0);
+    document.getElementById('batchCount').textContent = checked.length;
+  }
+  function filterByStatusTab(tabEl) {
+    document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+    tabEl.classList.add('active');
+    const status = tabEl.dataset.status;
+    const rows = document.querySelectorAll('#tableBody tr');
+    let count = 0;
+    rows.forEach(row => {
+      const show = status === 'all' || row.dataset.status === status;
+      row.style.display = show ? '' : 'none';
+      if (show) { row.cells[1].textContent = ++count; }
+    });
+    document.getElementById('emptyState').classList.toggle('show', count === 0);
+    document.getElementById('totalBadge').textContent = count;
+  }
+  function resetForm() {
+    document.querySelectorAll('.query-form input, .query-form select').forEach(el => {
+      if (el.type === 'date') { el.value = el.getAttribute('value') || ''; }
+      else { el.value = ''; }
+    });
+    document.querySelectorAll('.status-tab').forEach(t => t.classList.remove('active'));
+    document.querySelector('.status-tab[data-status="all"]').classList.add('active');
+    document.querySelectorAll('#tableBody tr').forEach((row, idx) => {
+      row.style.display = '';
+      row.cells[1].textContent = idx + 1;
+    });
+    document.getElementById('totalBadge').textContent = '10';
+  }
+  function doSearch() { alert('查询中...'); }
+</script>

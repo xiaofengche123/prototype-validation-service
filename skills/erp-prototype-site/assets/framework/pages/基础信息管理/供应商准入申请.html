@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<!--
+  规格卡（转 Vue 的唯一真源）
+  编码：BMSP01    名称：供应商准入申请    类型：列表查询页
+  查询字段：申请单号(输入) / 供应商名称(输入,必填) / 申请类型(下拉) / 申请状态(下拉) / 提交日期(日期范围)
+  统计卡片：全部 / 草稿 / 待审核 / 已通过 / 已驳回（联动 filter.status）
+  表格列：序号 / 申请单号(可点→nav BMSP02) / 供应商名称 / 统一社会信用代码 / 申请类型 / 申请状态(标签) / 提交人 / 提交时间 / 操作
+  行操作：草稿=编辑(modal editForm)+删除 | 待审核=查看+审核+撤回 | 已通过=查看+打印 | 已驳回=查看+重新提交
+  顶部操作：新增申请(modal editForm) / 批量导出 / 批量审批
+  弹窗 editForm：供应商名称(必填) / 统一社会信用代码 / 申请类型 / 提交人
+  状态key：draft/pending/pass/reject（⚠ 原型临时编码，接真后端时以字典值为准）
+  ─────────────────────────────
+  确认项（PM 亲口给出或确认过的）：
+    · 查询字段 / 表格列 / 行操作分支 / 顶部操作
+  补位项（AI 替 PM 补的默认值，研发/PM 均需 review）：
+    · 【补位】编码 BMSP01（按 menu.config.js BM 模块顺延）
+    · 【补位】菜单分组「基础信息管理」（按页面性质归组）
+    · 【补位】单号列跳转目标 BMSP02（占位详情页，未与 PM 确认是否要做）
+    · 【补位】示例数据 10 条（覆盖各状态）
+-->
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="../../assets/app.css">
+<title>供应商准入申请</title>
+</head>
+<body class="page-body">
+
+<!-- ============ data-page 容器：转 Vue 时【只取这里面】============ -->
+<div id="page-content" data-page="BMSP01">
+
+  <div class="stat-row" id="statRow">
+    <div class="stat-card active" data-status="all"><div class="label">全部</div><div class="num">128</div></div>
+    <div class="stat-card" data-status="draft"><div class="label"><span class="dot" style="background:#8c8c8c"></span>草稿</div><div class="num">12</div></div>
+    <div class="stat-card" data-status="pending"><div class="label"><span class="dot" style="background:#1677ff"></span>待审核</div><div class="num">36</div></div>
+    <div class="stat-card" data-status="pass"><div class="label"><span class="dot" style="background:#389e0d"></span>已通过</div><div class="num">52</div></div>
+    <div class="stat-card" data-status="reject"><div class="label"><span class="dot" style="background:#cf1322"></span>已驳回</div><div class="num">10</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>查询信息</div>
+      <div class="actions">
+        <button class="btn" data-action="reset">重置</button>
+        <button class="btn btn-primary" data-action="search">查询</button>
+        <button class="btn btn-primary" data-action="open-add" data-modal-target="editForm">＋ 新增申请</button>
+      </div>
+    </div>
+    <div class="query-grid">
+      <div class="form-item"><label>申请单号</label><input placeholder="请输入申请单号"></div>
+      <div class="form-item"><label>供应商名称<span class="req">*</span></label><input placeholder="请输入供应商名称"></div>
+      <div class="form-item"><label>申请类型</label><select><option value="">全部</option><option>新增准入</option><option>信息变更</option><option>续签延期</option></select></div>
+      <div class="form-item"><label>申请状态</label>
+        <select id="statusSelect" onchange="setStatus(this.value)">
+          <option value="all">全部</option><option value="draft">草稿</option><option value="pending">待审核</option><option value="pass">已通过</option><option value="reject">已驳回</option>
+        </select>
+      </div>
+      <div class="form-item"><label>提交日期</label><div class="date-range"><input type="date" value="2024-05-01"><span class="sep">至</span><input type="date" value="2024-05-21"></div></div>
+    </div>
+  </div>
+
+  <div class="card list-card" id="listCard">
+    <div class="list-toolbar">
+      <div class="title">📋 供应商准入申请清单</div>
+      <div class="actions">
+        <button class="btn btn-sm" data-action="batch-export">批量导出</button>
+        <button class="btn btn-sm btn-success" data-action="batch-approve">批量审批</button>
+      </div>
+    </div>
+    <div class="batch-bar">已选择 <b id="selCount">0</b> 项
+      <button class="btn btn-sm btn-primary" data-action="batch-submit">批量提交</button>
+      <button class="btn btn-sm" data-action="batch-delete">批量删除</button>
+    </div>
+    <div class="status-tabs" id="statusTabs">
+      <div class="status-tab active" data-status="all">全部 (128)</div>
+      <div class="status-tab" data-status="draft">草稿 (12)</div>
+      <div class="status-tab" data-status="pending">待审核 (36)</div>
+      <div class="status-tab" data-status="pass">已通过 (52)</div>
+      <div class="status-tab" data-status="reject">已驳回 (10)</div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th style="width:40px"><input type="checkbox" id="ckAll" onclick="toggleAll(this)"></th>
+          <th>序号</th><th>申请单号</th><th>供应商名称</th><th>统一社会信用代码</th>
+          <th>申请类型</th><th>申请状态</th><th>提交人</th><th>提交时间</th><th>操作</th>
+        </tr></thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+    <div class="pager">
+      <span class="total">共 <b id="total">128</b> 条</span>
+      <span class="pg active">1</span><span class="pg">2</span><span class="pg">3</span><span class="pg">›</span>
+    </div>
+  </div>
+
+</div><!-- /#page-content -->
+
+<!-- 弹窗：data-modal 容器，转 Vue 成 a-modal -->
+<div class="modal-mask" id="editFormMask" data-modal="editForm">
+  <div class="modal">
+    <div class="modal-title">编辑供应商准入申请</div>
+    <div class="modal-body">
+      <div class="form-item"><label>供应商名称<span class="req">*</span></label><input id="f_name"></div>
+      <div class="form-item"><label>统一社会信用代码</label><input id="f_code"></div>
+      <div class="form-item"><label>申请类型</label><select><option>新增准入</option><option>信息变更</option><option>续签延期</option></select></div>
+      <div class="form-item"><label>提交人</label><input id="f_person"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" data-action="close-modal" data-modal-target="editForm">取消</button>
+      <button class="btn btn-primary" data-action="save" data-modal-target="editForm">确定</button>
+    </div>
+  </div>
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+/* ====== 数据驱动（转 Vue → bmsp01Api.js 的 MOCK_DATA + a-table）====== */
+const STATUS={draft:{c:'draft',t:'草稿'},pending:{c:'pending',t:'待审核'},pass:{c:'pass',t:'已通过'},reject:{c:'reject',t:'已驳回'}};
+const OPS={
+  draft:'<button class="op blue" data-action="open-edit" data-modal-target="editForm">编辑</button><button class="op red" data-action="delete-row">删除</button>',
+  pending:'<button class="op blue" data-action="open-view">查看</button><button class="op green" data-action="approve">审核</button><button class="op blue" data-action="recall">撤回</button>',
+  pass:'<button class="op blue" data-action="open-view">查看</button><button class="op blue" data-action="print">打印</button>',
+  reject:'<button class="op blue" data-action="open-view">查看</button><button class="op blue" data-action="resubmit">重新提交</button>'
+};
+const names=["华信电气设备","广西铝模科技","南方智能装备","中铝物流运输","桂海建筑工程","鼎盛矿业技术","云岭信息服务","恒通钢材贸易"];
+const types=["新增准入","信息变更","续签延期"]; const pool=["draft","pending","pending","pass","pass","pass","reject"]; const persons=["张伟","李娜","王芳","刘洋","陈静"];
+const DATA=[]; for(let i=1;i<=128;i++){const st=pool[i%pool.length];DATA.push({id:i,no:'ZRSQ2024'+(10000+i),name:names[i%names.length]+"有限公司",code:'91450'+(100000000000+i),type:types[i%types.length],status:st,person:persons[i%persons.length],time:'2024-05-'+String(1+i%21).padStart(2,'0')});}
+
+let curStatus='all';
+function render(){
+  const list=DATA.filter(d=>curStatus==='all'||d.status===curStatus).slice(0,20);
+  document.getElementById('total').textContent=DATA.filter(d=>curStatus==='all'||d.status===curStatus).length;
+  document.getElementById('tbody').innerHTML=list.map((d,i)=>{const m=STATUS[d.status];return `<tr>
+    <td><input type="checkbox" class="rk" onclick="onCk()"></td><td>${i+1}</td>
+    <td><span class="link" data-nav="BMSP02">${d.no}</span></td>
+    <td style="text-align:left">${d.name}</td><td>${d.code}</td><td>${d.type}</td>
+    <td><span class="tag ${m.c}"><span class="td"></span>${m.t}</span></td>
+    <td>${d.person}</td><td>${d.time}</td><td>${OPS[d.status]}</td></tr>`;}).join('');
+  PR.bindActions();
+}
+function setStatus(s){curStatus=s;
+  document.querySelectorAll('#statRow .stat-card').forEach(c=>c.classList.toggle('active',c.dataset.status===s));
+  document.querySelectorAll('#statusTabs .status-tab').forEach(t=>t.classList.toggle('active',t.dataset.status===s));
+  document.getElementById('statusSelect').value=s; render();}
+document.querySelectorAll('#statRow .stat-card,#statusTabs .status-tab').forEach(el=>el.addEventListener('click',()=>setStatus(el.dataset.status)));
+function toggleAll(cb){document.querySelectorAll('.rk').forEach(c=>c.checked=cb.checked);onCk();}
+function onCk(){const n=document.querySelectorAll('.rk:checked').length;document.getElementById('selCount').textContent=n;document.getElementById('listCard').classList.toggle('has-sel',n>0);}
+
+/* ====== 本页动作注册（联动渲染的动作交给 PR）====== */
+PR.on('search', render);
+PR.on('reset', ()=>{ setStatus('all'); });
+PR.on('approve', ()=>PR.toast('「审核」待实现'));
+PR.on('recall', ()=>PR.toast('「撤回」待实现'));
+PR.on('print', ()=>PR.toast('「打印」待实现'));
+PR.on('resubmit', ()=>PR.toast('「重新提交」待实现'));
+PR.on('batch-export', ()=>PR.toast('批量导出'));
+PR.on('batch-approve', ()=>PR.toast('批量审批'));
+PR.on('batch-submit', ()=>PR.toast('批量提交'));
+PR.on('batch-delete', ()=>PR.toast('批量删除'));
+
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>风险登记录入 - 绿星链通</title>
+<link rel="stylesheet" href="../../assets/app.css">
+</head>
+<body class="page-body">
+<div id="page-content" class="prototype-page has-fixed-actions" data-page="FXDJ01">
+
+  <!-- 规格卡 · FXDJ01-风险登记录入 -->
+  <!-- 状态key: 无（录入页无状态标签） -->
+  <!-- 确认项: 步骤条(风险识别/信息录入/初步评估/提交确认) / 风险识别表单(风险来源/发现方式/涉及业务/风险描述) / 信息录入表单(涉及金额/涉及供应商/涉及项目/证据材料) / 初步评估表单(风险等级/影响范围/紧急程度) / 底部固定操作栏(保存/提交) / 跳转FXGLQD01 -->
+  <!-- 补位项: 无 -->
+
+  <!-- 页面标题 -->
+  <div class="page-header">
+    <div class="page-title">风险登记录入</div>
+    <div class="page-sub">绿星链通 · 风险事件信息录入</div>
+  </div>
+
+  <!-- 步骤条 -->
+  <div class="prototype-steps">
+    <div class="prototype-step active">
+      <span class="step-num">1</span>
+      <span>风险识别</span>
+    </div>
+    <div class="prototype-step-line"></div>
+    <div class="prototype-step">
+      <span class="step-num">2</span>
+      <span>信息录入</span>
+    </div>
+    <div class="prototype-step-line"></div>
+    <div class="prototype-step">
+      <span class="step-num">3</span>
+      <span>初步评估</span>
+    </div>
+    <div class="prototype-step-line"></div>
+    <div class="prototype-step">
+      <span class="step-num">4</span>
+      <span>提交确认</span>
+    </div>
+  </div>
+
+  <!-- 风险识别卡片 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>风险识别</div>
+    </div>
+    <div class="query-grid">
+      <div class="form-item">
+        <label>风险编号<span class="req">*</span></label>
+        <input type="text" id="riskCode" value="FX202412150009" readonly style="background:#f5f5f5;">
+      </div>
+      <div class="form-item">
+        <label>风险标题<span class="req">*</span></label>
+        <input type="text" id="riskTitle" placeholder="请输入风险标题">
+      </div>
+      <div class="form-item">
+        <label>风险来源<span class="req">*</span></label>
+        <select id="riskSource">
+          <option value="">请选择</option>
+          <option value="system">系统预警</option>
+          <option value="manual">人工发现</option>
+          <option value="audit">审计发现</option>
+          <option value="external">外部举报</option>
+          <option value="inspection">监督检查</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>发现方式<span class="req">*</span></label>
+        <select id="discoveryMethod">
+          <option value="">请选择</option>
+          <option value="routine">例行检查</option>
+          <option value="spot">突击检查</option>
+          <option value="report">举报受理</option>
+          <option value="monitor">监控预警</option>
+          <option value="other">其他</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>涉及业务<span class="req">*</span></label>
+        <select id="involvedBusiness">
+          <option value="">请选择</option>
+          <option value="purchase">采购业务</option>
+          <option value="contract">合同管理</option>
+          <option value="supplier">供应商管理</option>
+          <option value="finance">财务管理</option>
+          <option value="quality">质量管理</option>
+          <option value="logistics">物流仓储</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>发现时间<span class="req">*</span></label>
+        <input type="date" id="discoveryDate">
+      </div>
+      <div class="form-item">
+        <label>登记人</label>
+        <input type="text" value="潘冬妮" readonly style="background:#f5f5f5;">
+      </div>
+      <div class="form-item">
+        <label>登记时间</label>
+        <input type="text" value="2024-12-15 09:30" readonly style="background:#f5f5f5;">
+      </div>
+    </div>
+    <div style="padding:0 16px 16px;">
+      <div class="form-item field-block">
+        <label>风险描述<span class="req">*</span></label>
+        <textarea id="riskDesc" rows="4" placeholder="请详细描述风险事件的具体情况、触发原因及可能的影响..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 信息录入卡片 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>信息录入</div>
+    </div>
+    <div class="query-grid">
+      <div class="form-item">
+        <label>涉及金额(万元)<span class="req">*</span></label>
+        <input type="text" id="involvedAmount" placeholder="请输入涉及金额">
+      </div>
+      <div class="form-item">
+        <label>涉及供应商</label>
+        <input type="text" id="supplierName" placeholder="请输入供应商名称">
+      </div>
+      <div class="form-item">
+        <label>涉及项目</label>
+        <input type="text" id="involvedProject" placeholder="请输入涉及项目名称">
+      </div>
+      <div class="form-item">
+        <label>涉及合同号</label>
+        <input type="text" id="contractNo" placeholder="请输入合同编号">
+      </div>
+    </div>
+    <div style="padding:0 16px 16px;">
+      <div class="form-item field-block">
+        <label>证据材料</label>
+        <div style="flex:1;">
+          <div style="border:1px dashed var(--border);border-radius:4px;padding:16px;text-align:center;background:#fafafa;">
+            <div style="font-size:24px;color:var(--text3);margin-bottom:8px;">📎</div>
+            <div style="font-size:13px;color:var(--text2);">点击上传或拖拽文件到此处</div>
+            <div style="font-size:12px;color:var(--text3);margin-top:4px;">支持 PDF、Word、图片等格式，单个文件不超过 20MB</div>
+            <button class="btn btn-sm" style="margin-top:12px;" data-action="upload-file">选择文件</button>
+          </div>
+          <div id="fileList" style="margin-top:8px;"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 初步评估卡片 -->
+  <div class="card">
+    <div class="card-head">
+      <div class="title"><span class="bar"></span>初步评估</div>
+    </div>
+    <div class="query-grid">
+      <div class="form-item">
+        <label>风险等级<span class="req">*</span></label>
+        <select id="riskLevel">
+          <option value="">请选择</option>
+          <option value="high">高风险</option>
+          <option value="mid">中风险</option>
+          <option value="low">低风险</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>影响范围<span class="req">*</span></label>
+        <select id="impactScope">
+          <option value="">请选择</option>
+          <option value="company">全公司</option>
+          <option value="dept">全部门</option>
+          <option value="team">团队内部</option>
+          <option value="individual">个别岗位</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>紧急程度<span class="req">*</span></label>
+        <select id="urgency">
+          <option value="">请选择</option>
+          <option value="urgent">紧急（24小时内处理）</option>
+          <option value="important">重要（3个工作日内处理）</option>
+          <option value="normal">一般（7个工作日内处理）</option>
+          <option value="low">低（30个工作日内处理）</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>影响程度<span class="req">*</span></label>
+        <select id="impactDegree">
+          <option value="">请选择</option>
+          <option value="5">极高（5分）</option>
+          <option value="4">高（4分）</option>
+          <option value="3">中（3分）</option>
+          <option value="2">低（2分）</option>
+          <option value="1">极低（1分）</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>发生概率<span class="req">*</span></label>
+        <select id="probability">
+          <option value="">请选择</option>
+          <option value="5">极高（5分）</option>
+          <option value="4">高（4分）</option>
+          <option value="3">中（3分）</option>
+          <option value="2">低（2分）</option>
+          <option value="1">极低（1分）</option>
+        </select>
+      </div>
+      <div class="form-item">
+        <label>风险分值</label>
+        <input type="text" id="riskScore" placeholder="自动计算" readonly style="background:#f5f5f5;">
+      </div>
+    </div>
+    <div style="padding:0 16px 16px;">
+      <div class="form-item field-block">
+        <label>评估说明</label>
+        <textarea id="assessmentDesc" rows="3" placeholder="请填写初步评估的说明和依据..."></textarea>
+      </div>
+    </div>
+  </div>
+
+  <!-- 固定底部操作栏 -->
+  <div class="fixed-bottom-bar between">
+    <button class="btn" data-action="return-list" data-nav="FXGLQD01">返回列表</button>
+    <div style="display:flex;gap:12px;">
+      <button class="btn" data-action="save-draft" data-modal-target="draftModal">保存</button>
+      <button class="btn btn-primary" data-action="submit-confirm" data-modal-target="submitModal">提交</button>
+    </div>
+  </div>
+
+  <!-- 保存确认弹窗 -->
+  <div class="modal-mask" id="draftModalMask" data-modal="draftModal">
+    <div class="modal modal-sm">
+      <div class="modal-title">保存草稿</div>
+      <div class="modal-body modal-body-block" style="text-align:center;">
+        <p style="font-size:14px;color:var(--text);">确定保存为草稿吗？</p>
+        <p style="font-size:12px;color:var(--text3);margin-top:8px;">草稿可在"我的工作台"中继续编辑。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-action="close-modal" data-modal-target="draftModal">取消</button>
+        <button class="btn btn-primary" data-action="confirm-draft" data-modal-target="draftModal">确认保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 提交确认弹窗 -->
+  <div class="modal-mask" id="submitModalMask" data-modal="submitModal">
+    <div class="modal">
+      <div class="modal-title">提交确认</div>
+      <div class="modal-body modal-body-block">
+        <p style="font-size:13px;color:var(--text2);margin-bottom:16px;">请确认以下信息无误后提交：</p>
+        <div class="info-grid" style="gap:8px 16px;">
+          <div class="info-item">
+            <span class="info-label">风险标题：</span>
+            <span class="info-value normal" id="previewTitle">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">风险来源：</span>
+            <span class="info-value normal" id="previewSource">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">风险等级：</span>
+            <span class="info-value normal" id="previewLevel">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">涉及金额：</span>
+            <span class="info-value normal" id="previewAmount">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">紧急程度：</span>
+            <span class="info-value normal" id="previewUrgency">-</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">风险分值：</span>
+            <span class="info-value normal" id="previewScore">-</span>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" data-action="close-modal" data-modal-target="submitModal">取消</button>
+        <button class="btn btn-primary" data-action="confirm-submit" data-modal-target="submitModal">确认提交</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="../../assets/page-runtime.js"></script>
+<script>
+(function() {
+  function calcScore() {
+    var impact = parseInt(document.getElementById('impactDegree').value) || 0;
+    var prob = parseInt(document.getElementById('probability').value) || 0;
+    var score = impact * prob;
+    document.getElementById('riskScore').value = score > 0 ? score : '';
+  }
+
+  document.getElementById('impactDegree').addEventListener('change', calcScore);
+  document.getElementById('probability').addEventListener('change', calcScore);
+
+  PR.on('upload-file', function() { PR.toast('文件上传功能待实现'); });
+  PR.on('save-draft', function() { PR.openModal('draftModal'); });
+  PR.on('confirm-draft', function() { PR.closeModal('draftModal'); PR.toast('草稿已保存'); });
+  PR.on('submit-confirm', function() {
+    document.getElementById('previewTitle').textContent = document.getElementById('riskTitle').value || '-';
+    document.getElementById('previewSource').textContent = document.getElementById('riskSource').options[document.getElementById('riskSource').selectedIndex].text || '-';
+    document.getElementById('previewLevel').textContent = document.getElementById('riskLevel').options[document.getElementById('riskLevel').selectedIndex].text || '-';
+    document.getElementById('previewAmount').textContent = (document.getElementById('involvedAmount').value || '-') + ' 万元';
+    document.getElementById('previewUrgency').textContent = document.getElementById('urgency').options[document.getElementById('urgency').selectedIndex].text || '-';
+    document.getElementById('previewScore').textContent = document.getElementById('riskScore').value || '-';
+    PR.openModal('submitModal');
+  });
+  PR.on('confirm-submit', function() { PR.closeModal('submitModal'); PR.toast('提交成功'); });
+
+  PR.bindActions();
+})();
+</script>
+</body>
+</html>
